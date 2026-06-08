@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interlaboratorio · OLEOFLORES S.A.S</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f0f2f5;--white:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--light:#94a3b8;--hero-bg:linear-gradient(135deg,#3730a3 0%,#5b21b6 40%,#7c3aed 80%,#9333ea 100%);--violet:#7c3aed;--violet-bg:#f5f3ff;--green:#16a34a;--red:#dc2626;--red-bg:#fef2f2;--amber:#d97706}
+body{font-family:'Inter',system-ui,sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh}
+#splash{position:fixed;inset:0;background:linear-gradient(135deg,#1e1b4b,#312e81,#7c3aed);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s}
+#splash-logo{width:80px;height:80px;background:rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:42px;margin-bottom:12px;animation:sP 1s ease infinite alternate}
+#splash-text{color:#fff;font-size:22px;font-weight:800}
+#splash-sub{color:rgba(255,255,255,.6);font-size:12px;margin-top:6px}
+#splash-bar{width:200px;height:3px;background:rgba(255,255,255,.2);border-radius:100px;margin-top:24px;overflow:hidden}
+#splash-bar-fill{height:100%;background:#fff;border-radius:100px;animation:sB 1.6s ease forwards}
+@keyframes sP{from{transform:scale(1)}to{transform:scale(1.06)}}
+@keyframes sB{from{width:0}to{width:100%}}
+#login-screen{position:fixed;inset:0;z-index:9000;background:linear-gradient(135deg,#1e1b4b 0%,#2e1065 30%,#3b0764 60%,#4a044e 100%);display:none;align-items:center;justify-content:center}
+#login-screen::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 50%,rgba(124,58,237,.15) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(59,130,246,.1) 0%,transparent 50%);pointer-events:none}
+.login-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:40px 36px;width:100%;max-width:400px;backdrop-filter:blur(20px);position:relative;z-index:1;box-shadow:0 40px 80px rgba(0,0,0,.4)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;justify-content:center}
+.login-logo-icon{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#7c3aed,#3b82f6);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(124,58,237,.4)}
+.login-logo-title{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.login-logo-title span{background:linear-gradient(135deg,#c4b5fd,#93c5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-logo-sub{font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+.login-title{font-size:22px;font-weight:700;color:#fff;text-align:center;margin-bottom:6px}
+.login-sub{font-size:13px;color:rgba(255,255,255,.55);text-align:center;margin-bottom:28px}
+.login-label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:7px}
+.login-input{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:14px;color:#fff;font-family:'Inter',sans-serif;outline:none;transition:all .2s;margin-bottom:14px}
+.login-input::placeholder{color:rgba(255,255,255,.3)}
+.login-input:focus{border-color:#7c3aed;background:rgba(124,58,237,.15);box-shadow:0 0 0 3px rgba(124,58,237,.25)}
+.login-btn{width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:4px;transition:all .2s;letter-spacing:.3px}
+.login-btn:hover{opacity:.9;transform:translateY(-1px)}
+.login-error{background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#fca5a5;margin-bottom:14px;display:none;text-align:center}
+.login-footer{text-align:center;margin-top:20px;font-size:11px;color:rgba(255,255,255,.3)}
+.topbar{background:linear-gradient(135deg,#1e1b4b 0%,#2e1065 40%,#3b0764 80%,#4c0519 100%);padding:0 24px;display:flex;align-items:center;height:56px;gap:10px;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-icon{width:38px;height:38px;border-radius:10px;background:var(--hero-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-title{font-size:14px;font-weight:800;color:#fff}
+.logo-title span{background:linear-gradient(135deg,#c4b5fd,#93c5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.user-badge{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:100px;padding:4px 12px 4px 5px}
+.user-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.user-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.9)}
+.user-role-lbl{font-size:10px;color:rgba(255,255,255,.5)}
+.btn-logout{cursor:pointer;border:.5px solid rgba(255,255,255,.2);border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);padding:5px 10px;font-size:11px;font-weight:600;font-family:'Inter',sans-serif}
+.layout{display:flex;min-height:calc(100vh - 56px)}
+.sidebar{width:190px;background:linear-gradient(180deg,#3730a3 0%,#5b21b6 40%,#7c3aed 80%,#9333ea 100%);padding:10px 7px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;flex-shrink:0}
+.nav-section{font-size:9px;font-weight:600;color:rgba(255,255,255,.45);letter-spacing:1px;text-transform:uppercase;padding:8px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;margin-bottom:2px;font-size:12px;font-weight:500;color:rgba(255,255,255,.8);transition:all .15s;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,.15);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.2);color:#fff;font-weight:600}
+.main{flex:1;padding:14px 20px;overflow-x:hidden;min-width:0;max-width:1120px}
+.screen{display:none}.screen.active{display:block}
+/* Contenido de cada pantalla con ancho máximo */
+.screen > *{max-width:1060px}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.page-title{font-size:18px;font-weight:800;color:#1e293b}
+.page-sub{font-size:12px;color:#64748b;margin-top:2px}
+.screen-inner{max-width:1060px}
+.hero-card{background:var(--hero-bg);border-radius:12px;padding:16px 20px;margin-bottom:14px;position:relative;overflow:hidden}
+.hero-card::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 80% 20%,rgba(255,255,255,.08) 0%,transparent 50%);pointer-events:none}
+.hero-inner{position:relative;z-index:1}
+.hero-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.hero-icon{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px}
+.hero-title{font-size:15px;font-weight:700;color:#fff}
+.hero-desc{font-size:12px;color:rgba(255,255,255,.7);line-height:1.6}
+.hero-desc strong{color:rgba(255,255,255,.95)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.metric-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.metric-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.metric-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.metric-val{font-size:22px;font-weight:800;line-height:1;margin-bottom:2px}
+.metric-sub{font-size:10px;color:var(--light)}
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:8px 10px;text-align:left;font-size:9px;font-weight:600;color:var(--light);letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfc}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600;white-space:nowrap}
+.b-ok{background:#dcfce7;color:#15803d}
+.b-warn{background:#fef9c3;color:#a16207}
+.b-fail{background:#fee2e2;color:#b91c1c}
+.b-rbd{background:#dbeafe;color:#1d4ed8}
+.b-cpo{background:#fef9c3;color:#92400e}
+.b-gray{background:#f1f5f9;color:#475569}
+input[type=number],input[type=text],input[type=password],select{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border .15s;width:100%}
+input:focus,select:focus{border-color:var(--violet);box-shadow:0 0 0 3px rgba(124,58,237,.1);background:#fff}
+select{-webkit-appearance:none;appearance:none;background:#f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 9px center;background-size:13px;padding-right:28px}
+label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px}
+.fg{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--hero-bg);color:#fff}
+.btn-primary:hover{opacity:.9}
+.btn-ghost{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid #fecaca}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:6px}
+.alert{padding:9px 13px;border-radius:8px;font-size:12px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.alert-info{background:#E6F1FB;color:#185FA5;border:1px solid #B5D4F4}
+.alert-success{background:#EAF3DE;color:#3B6D11;border:1px solid #C0DD97}
+.alert-warn{background:#FAEEDA;color:#633806;border:1px solid #FCD34D}
+.z-ok{color:#16a34a;font-weight:700}
+.z-warn{color:#d97706;font-weight:700}
+.z-fail{color:#dc2626;font-weight:700}
+.code-badge{background:#1e1b4b;color:#c4b5fd;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;font-family:monospace;letter-spacing:1px}
+/* PODIO */
+.podio{display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:20px 0 10px}
+.podio-item{display:flex;flex-direction:column;align-items:center;gap:8px}
+.podio-photo{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.podio-photo-placeholder{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.podio-name{font-size:12px;font-weight:700;text-align:center;max-width:90px}
+.podio-score{font-size:11px;color:var(--muted)}
+.podio-bar{border-radius:8px 8px 0 0;width:80px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff}
+.podio-1 .podio-bar{height:100px;background:linear-gradient(135deg,#f59e0b,#d97706)}
+.podio-2 .podio-bar{height:75px;background:linear-gradient(135deg,#94a3b8,#64748b)}
+.podio-3 .podio-bar{height:55px;background:linear-gradient(135deg,#c07a3c,#92400e)}
+.podio-medal{font-size:28px;margin-bottom:2px}
+.analista-card{background:#f8f7ff;border:1px solid #ddd6fe;border-radius:14px;padding:14px;margin-bottom:16px}
+.analista-card-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.analista-photo{width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #a78bfa;flex-shrink:0}
+.analista-photo-placeholder{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0}
+.analista-card-info{flex:1}
+.analista-card-name{font-size:15px;font-weight:700;color:#1e293b}
+.analista-card-meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.mini-stat{background:#fff;border:1px solid #ede9fe;border-radius:8px;padding:8px;text-align:center}
+.mini-stat-val{font-size:18px;font-weight:800;color:#3730a3}
+.mini-stat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.params-detail{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.params-detail th{background:#ede9fe;color:#5b21b6;font-size:10px;font-weight:700;padding:6px 10px;text-align:center;border:1px solid #ddd6fe;text-transform:uppercase;letter-spacing:.5px}
+.params-detail td{padding:7px 10px;border:1px solid #ede9fe;text-align:center}
+.photo-upload-btn{background:#f5f3ff;border:2px dashed #a78bfa;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:600;color:#7c3aed;text-align:center;cursor:pointer}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:10px}
+.page-title{font-size:18px;font-weight:700;color:var(--text)}
+.page-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.sec-label{font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;margin-top:4px;display:flex;align-items:center;gap:6px}
+.sec-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#ddd6fe,transparent)}
+.part-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.part-item:last-child{border-bottom:none}
+.part-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0}
+
+/* ===== TRIPLICADO PANEL ===== */
+.param-block{background:#f8f7ff;border:1px solid #ddd6fe;border-radius:12px;padding:16px;margin-bottom:16px}
+.param-block-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.param-block-title{font-size:13px;font-weight:700;color:#3730a3;display:flex;align-items:center;gap:7px}
+.result-pill{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #a78bfa;border-radius:20px;padding:5px 14px}
+.result-pill-label{font-size:10px;color:#7c3aed;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.result-pill-val{font-size:17px;font-weight:800;color:#3730a3;font-family:monospace}
+.result-pill-unit{font-size:11px;color:#7c3aed;font-weight:500}
+.reps-table{width:100%;border-collapse:collapse;font-size:12px}
+.reps-table th{background:#ede9fe;color:#5b21b6;font-size:10px;font-weight:700;padding:7px 10px;text-align:center;border:1px solid #ddd6fe;text-transform:uppercase;letter-spacing:.5px}
+.reps-table td{padding:6px 8px;border:1px solid #ede9fe;text-align:center;vertical-align:middle}
+.reps-table tr:first-child td{border-top:none}
+.reps-table .row-label{text-align:left;font-weight:600;color:#5b21b6;font-size:11px;background:#f5f3ff;white-space:nowrap;padding:6px 10px}
+.reps-table .calc-row td{background:#ede9fe;font-weight:700;color:#3730a3}
+.reps-table .avg-row td{background:#7c3aed;color:#fff;font-weight:800}
+.reps-table input[type=number]{background:transparent;border:none;border-radius:0;padding:2px 4px;font-size:12px;text-align:center;width:100%;min-width:70px;font-family:'Inter',sans-serif}
+.reps-table input[type=number]:focus{background:rgba(124,58,237,.08);box-shadow:none;border-bottom:2px solid #7c3aed;outline:none}
+.common-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;padding:10px 12px;background:#fff;border-radius:8px;border:1px solid #ede9fe}
+</style>
+
+  <!-- ── FIREBASE ADMIN ──────────────────────────────────────── -->
+  <script type="module">
+    import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, query, orderBy }
+                                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AlzaSyBYkuaWE4e_-jWEHb6bJxtCHekDUHrgOuU",
+      authDomain:        "interlab-oleoflores.firebaseapp.com",
+      projectId:         "interlab-oleoflores",
+      storageBucket:     "interlab-oleoflores.firebasestorage.app",
+      messagingSenderId: "737093298066",
+      appId:             "1:737093298066:web:316b26872fc7b553e4c34b"
+    };
+
+    const app      = initializeApp(firebaseConfig);
+    const db       = getFirestore(app);
+
+
+    // ── Escuchar resultados en tiempo real ────────────────────
+    window._escucharResultados = function(callback) {
+      const q = query(collection(db, 'resultados'), orderBy('timestamp', 'desc'));
+      return onSnapshot(q, (snap) => {
+        const datos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        callback(datos);
+      });
+    };
+  </script>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div id="splash-logo">⚗️</div>
+  <div id="splash-text">OLEOFLORES S.A.S</div>
+  <div id="splash-sub">Cargando interlaboratorio...</div>
+  <div id="splash-bar"><div id="splash-bar-fill"></div></div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg width="28" height="28" viewBox="0 0 26 26" fill="none">
+          <circle cx="13" cy="8" r="3" fill="white" opacity="0.9"/>
+          <circle cx="7" cy="18" r="2.5" fill="white" opacity="0.7"/>
+          <circle cx="19" cy="18" r="2.5" fill="white" opacity="0.7"/>
+          <line x1="13" y1="11" x2="7" y2="15.5" stroke="white" stroke-width="1.5" opacity="0.8"/>
+          <line x1="13" y1="11" x2="19" y2="15.5" stroke="white" stroke-width="1.5" opacity="0.8"/>
+          <line x1="7" y1="18" x2="19" y2="18" stroke="white" stroke-width="1.5" opacity="0.6"/>
+          <circle cx="13" cy="8" r="1.2" fill="#a78bfa"/>
+          <circle cx="7" cy="18" r="1" fill="#60a5fa"/>
+          <circle cx="19" cy="18" r="1" fill="#34d399"/>
+        </svg>
+      </div>
+      <div>
+        <div class="login-logo-title">OLEO<span>FLORES</span> S.A.S</div>
+        <div class="login-logo-sub">⚗ Laboratorio Fisico Quimico</div>
+      </div>
+    </div>
+    <div class="login-title">Bienvenido</div>
+    <div class="login-sub">Inicia sesión para acceder al interlaboratorio</div>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+    <div style="position:relative">
+      <label class="login-label">Usuario</label>
+      <input class="login-input" id="login-user" type="text" placeholder="Tu usuario" autocomplete="off"
+        oninput="onUserInput(this.value)" onfocus="onUserInput(this.value)" onkeydown="onUserKeydown(event)">
+      <div id="user-suggest-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 2px);background:rgba(22,14,60,.98);border:1px solid rgba(255,255,255,.15);border-radius:12px;overflow:hidden;z-index:200;box-shadow:0 16px 40px rgba(0,0,0,.5)"></div>
+    </div>
+    <label class="login-label" style="margin-top:4px">Contraseña</label>
+    <input class="login-input" id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Ingresar al sistema →</button>
+    <div class="login-footer">Interlaboratorio v2 · OLEOFLORES S.A.S</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="logo-wrap">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+          <circle cx="13" cy="8" r="3" fill="white" opacity="0.9"/>
+          <circle cx="7" cy="18" r="2.5" fill="white" opacity="0.7"/>
+          <circle cx="19" cy="18" r="2.5" fill="white" opacity="0.7"/>
+          <line x1="13" y1="11" x2="7" y2="15.5" stroke="white" stroke-width="1.5" opacity="0.8"/>
+          <line x1="13" y1="11" x2="19" y2="15.5" stroke="white" stroke-width="1.5" opacity="0.8"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-title">OLEO<span>FLORES</span> · Interlaboratorio</div>
+        <div class="logo-sub">Aceite de Palma Africana</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="tb-avatar" style="background:linear-gradient(135deg,#7c3aed,#3b82f6)">AD</div>
+        <div>
+          <div class="user-name" id="tb-name">Admin</div>
+          <div class="user-role-lbl" id="tb-role">Administrador</div>
+        </div>
+      </div>
+      <span id="tb-code" class="code-badge" style="display:none"></span>
+      <button class="btn-logout" onclick="doLogout()">✕ Salir</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="nav-section">Menú</div>
+      <div class="nav-item active" id="nav-dashboard" onclick="gotoSection('dashboard',this)">📊 Panel</div>
+      <div class="nav-item" id="nav-ingreso" onclick="gotoSection('ingreso',this)">📝 Ingresar datos</div>
+      <div class="nav-item" id="nav-misresultados" onclick="gotoSection('misresultados',this)">🔬 Mis resultados</div>
+      <div class="nav-item" id="nav-resultados" onclick="gotoSection('resultados',this)">📋 Todos los resultados</div>
+      <div class="nav-item" id="nav-estadisticas" onclick="gotoSection('estadisticas',this)">📈 Estadísticas</div>
+      <div class="nav-item" id="nav-evaluacion" onclick="gotoSection('evaluacion',this)">🏆 Ranking &amp; Evaluación</div>
+      <div class="nav-section">Config.</div>
+      <div class="nav-item" id="nav-referencia" onclick="gotoSection('referencia',this)">🏛️ Lab. referencia</div>
+      <div class="nav-item" id="nav-participantes" onclick="gotoSection('participantes',this)">👥 Participantes</div>
+    </div>
+
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div id="sec-dashboard" class="screen active">
+        <div class="hero-card">
+          <div class="hero-inner">
+            <div class="hero-head"><div class="hero-icon">⚗️</div><div class="hero-title">Interlaboratorio · Aceite de Palma</div></div>
+            <div class="hero-desc">Datos primarios por <strong>triplicado</strong> con cálculo automático. Código de analista ciego para comparación imparcial.</div>
+          </div>
+        </div>
+        <div class="metrics" id="dashboard-metrics"></div>
+        <div class="grid2">
+          <div class="card"><div class="card-title">👥 Estado participantes</div><div id="dashboard-parts"></div></div>
+          <div class="card"><div class="card-title">📊 Desempeño</div><div style="position:relative;height:200px"><canvas id="dash-chart" role="img" aria-label="Desempeño"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- INGRESO -->
+      <div id="sec-ingreso" class="screen">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Ingreso de datos primarios</div>
+            <div class="page-sub">Triplicado por parámetro — el sistema calcula automáticamente</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--muted)">Código:</span>
+            <span id="ingreso-code" class="code-badge"></span>
+          </div>
+        </div>
+        <div class="alert alert-info">🔢 Ingresa los datos primarios de cada parámetro. Cada repetición calcula su propio resultado y al final se obtiene el <strong>promedio final</strong>.</div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="fgrid2">
+            <div class="fg"><label class="fl">Tipo de muestra</label>
+              <select id="ing-muestra" onchange="buildIngresoForm()">
+                <option value="rbd">Aceite Refinado (RBD)</option>
+                <option value="cpo">Aceite Crudo (CPO)</option>
+              </select>
+            </div>
+            <div class="fg"><label class="fl">Código de muestra</label>
+              <input type="text" id="ing-codigo-muestra" placeholder="Ej: M-2024-001">
+            </div>
+          </div>
+        </div>
+        <div id="ingreso-form-container"></div>
+        <div id="save-msg" style="display:none" class="alert alert-success">✅ Datos guardados correctamente.</div>
+        <button class="btn btn-primary" onclick="saveIngreso()">💾 Guardar todos los datos</button>
+      </div>
+
+      <!-- MIS RESULTADOS -->
+      <div id="sec-misresultados" class="screen">
+        <div class="page-header"><div><div class="page-title">Mis resultados calculados</div><div class="page-sub">Resultados finales a partir de tus datos primarios</div></div></div>
+        <div id="mis-resultados-content"></div>
+      </div>
+
+      <!-- TODOS (admin) -->
+      <div id="sec-resultados" class="screen">
+        <div class="page-header"><div><div class="page-title">Todos los resultados</div><div class="page-sub">Vista por código de analista (ciego)</div></div></div>
+        <div class="card"><div class="table-wrap"><table>
+          <thead><tr><th>Código</th><th>Muestra</th><th>Parámetro</th><th>Rep.1</th><th>Rep.2</th><th>Rep.3</th><th>Promedio</th><th>Referencia</th><th>Z-score</th><th>Calificación</th></tr></thead>
+          <tbody id="results-body"></tbody>
+        </table></div></div>
+      </div>
+
+      <!-- ESTADÍSTICAS -->
+      <div id="sec-estadisticas" class="screen">
+        <div class="page-header"><div><div class="page-title">Estadísticas</div><div class="page-sub">Z-score por parámetro</div></div></div>
+        <div class="card" style="margin-bottom:14px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
+            <div class="fg" style="flex:1;min-width:130px;margin:0"><label class="fl">Muestra</label>
+              <select id="stat-muestra" onchange="populateStatParams();refreshStatChart()">
+                <option value="rbd">RBD</option><option value="cpo">CPO</option>
+              </select></div>
+            <div class="fg" style="flex:2;min-width:180px;margin:0"><label class="fl">Parámetro</label>
+              <select id="stat-param" onchange="refreshStatChart()"></select></div>
+          </div>
+          <div style="position:relative;height:260px"><canvas id="stat-chart" role="img" aria-label="Comparación"></canvas></div>
+        </div>
+        <div class="card"><div class="card-title">📋 Tabla Z-scores</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Código</th><th>Muestra</th><th>Parámetro</th><th>Promedio</th><th>Ref.</th><th>σ</th><th>Z</th><th>Calificación</th></tr></thead>
+            <tbody id="zscore-body"></tbody>
+          </table></div></div>
+      </div>
+
+      <!-- REFERENCIA -->
+      <div id="sec-referencia" class="screen">
+        <div class="page-header"><div><div class="page-title">Laboratorio de referencia</div><div class="page-sub">Valores certificados</div></div></div>
+        <div class="card">
+          <div class="sec-label">🔵 Aceite RBD</div>
+          <div class="fgrid3" id="ref-rbd-form" style="margin-bottom:14px"></div>
+          <div class="sec-label">🟡 Aceite CPO</div>
+          <div class="fgrid3" id="ref-cpo-form" style="margin-bottom:14px"></div>
+          <div id="ref-saved" style="display:none" class="alert alert-success">✅ Valores guardados.</div>
+          <button class="btn btn-primary" onclick="saveRef()">💾 Guardar referencia</button>
+        </div>
+      </div>
+
+      <!-- PARTICIPANTES -->
+      <div id="sec-participantes" class="screen">
+        <div class="page-header"><div><div class="page-title">Participantes</div><div class="page-sub">Gestión de analistas y códigos</div></div></div>
+        <div class="grid2">
+          <div class="card"><div class="card-title">👥 Analistas</div><div id="part-list"></div></div>
+          <div class="card"><div class="card-title">➕ Agregar</div>
+            <div class="fg"><label class="fl">Nombre laboratorio</label><input type="text" id="new-name" placeholder="Ej: Ext Montería"></div>
+            <div class="fgrid2">
+              <div class="fg"><label class="fl">Código</label><input type="text" id="new-codigo" placeholder="LAB-05"></div>
+              <div class="fg"><label class="fl">Color</label>
+                <select id="new-color">
+                  <option value="#7c3aed">Violeta</option><option value="#0d9488">Teal</option>
+                  <option value="#2563eb">Azul</option><option value="#d97706">Ámbar</option>
+                  <option value="#dc2626">Rojo</option><option value="#16a34a">Verde</option>
+                </select></div>
+            </div>
+            <div class="fgrid2">
+              <div class="fg"><label class="fl">Usuario</label><input type="text" id="new-user" placeholder="usuario"></div>
+              <div class="fg"><label class="fl">Contraseña</label><input type="password" id="new-pass" placeholder="clave"></div>
+            </div>
+            <div class="fg"><label class="fl">Tipo</label>
+              <select id="new-tipo"><option value="participante">Participante (sin DOBI)</option><option value="fisicoquimico">Fisicoquímico (con DOBI)</option></select></div>
+            <div class="fg"><label class="fl">📷 Foto del analista</label>
+              <label style="display:flex;flex-direction:column;gap:8px;cursor:pointer">
+                <div class="photo-upload-btn" id="photo-btn-label">📷 Clic para seleccionar foto</div>
+                <input type="file" accept="image/*" id="new-photo" onchange="previewPhoto(this)" style="display:none">
+              </label>
+              <div id="photo-preview-wrap" style="display:none;margin-top:8px;display:flex;align-items:center;gap:10px">
+                <img id="photo-preview" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid #a78bfa">
+                <span id="photo-name" style="font-size:11px;color:var(--muted)"></span>
+              </div>
+            </div>
+            <div id="part-msg" style="display:none" class="alert alert-success">✅ Agregado.</div>
+            <button class="btn btn-primary btn-sm" onclick="addParticipant()">➕ Agregar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EVALUACIÓN & RANKING -->
+      <div id="sec-evaluacion" class="screen">
+        <div class="page-header">
+          <div>
+            <div class="page-title" id="eval-page-title">🏆 Evaluación & Ranking</div>
+            <div class="page-sub" id="eval-page-sub">Desempeño por analista — Z-score · CV% · Sesgo · Ranking final</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="renderEvaluacion()">🔄 Actualizar</button>
+        </div>
+
+        <!-- PODIO -->
+        <div id="podio-wrap" style="margin-bottom:20px"></div>
+
+        <!-- RANKING TABLE -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">📋 Ranking completo de analistas</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Analista</th><th>Código</th><th>Parámetros eval.</th><th>% Satisfactorios</th><th>CV% promedio</th><th>Sesgo% promedio</th><th>Puntuación</th><th>Calificación</th></tr></thead>
+              <tbody id="ranking-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- GRÁFICAS DE CONTROL -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">📈 Gráfica de control — Z-scores por parámetro</div>
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
+            <div class="fg" style="flex:1;min-width:140px;margin:0"><label class="fl">Muestra</label>
+              <select id="eval-muestra" onchange="populateEvalParams();renderControlChart()">
+                <option value="rbd">RBD</option><option value="cpo">CPO</option>
+              </select></div>
+            <div class="fg" style="flex:2;min-width:180px;margin:0"><label class="fl">Parámetro</label>
+              <select id="eval-param" onchange="renderControlChart()"></select></div>
+          </div>
+          <div style="position:relative;height:280px"><canvas id="control-chart" role="img" aria-label="Gráfica de control Z-score"></canvas></div>
+          <div style="display:flex;gap:10px;margin-top:10px;font-size:11px;flex-wrap:wrap">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:3px;background:#16a34a;display:inline-block;border-radius:2px"></span>Satisfactorio |Z|≤2</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:3px;background:#d97706;display:inline-block;border-radius:2px"></span>Cuestionable |Z|≤3</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:3px;background:#dc2626;display:inline-block;border-radius:2px"></span>No satisfactorio |Z|>3</span>
+          </div>
+        </div>
+
+        <!-- TARJETAS DE ANALISTA -->
+        <div class="card">
+          <div class="card-title">👤 Detalle por analista</div>
+          <div id="analista-cards"></div>
+        </div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /layout -->
+</div><!-- /app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// =========================================================
+// DEFINICIÓN DE PARÁMETROS
+// =========================================================
+const PARAMS_RBD = [
+  { id:'color_y',      nombre:'Color Lovibond Y',       unit:'Y',          tipo:'directo' },
+  { id:'color_r',      nombre:'Color Lovibond R',       unit:'R',          tipo:'directo' },
+  { id:'color_a',      nombre:'Color Lovibond A (Azul)',unit:'A',          tipo:'directo' },
+  { id:'acidez',       nombre:'Acidez (palmítico)',     unit:'%',          tipo:'acidez' },
+  { id:'humedad',      nombre:'Humedad',                unit:'%',          tipo:'directo' },
+  { id:'peroxido',     nombre:'Índice de Peróxido',     unit:'meq O₂/kg',  tipo:'peroxido' },
+  { id:'punto_fusion', nombre:'Punto de fusión',        unit:'°C',         tipo:'directo' },
+  { id:'indice_yodo',  nombre:'Índice de Yodo',         unit:'g I₂/100g',  tipo:'yodo' },
+  { id:'sfc_20',       nombre:'SFC 20°C',               unit:'%',          tipo:'directo' },
+  { id:'sfc_30',       nombre:'SFC 30°C',               unit:'%',          tipo:'directo' },
+  { id:'sfc_35',       nombre:'SFC 35°C',               unit:'%',          tipo:'directo' },
+  { id:'sfc_40',       nombre:'SFC 40°C',               unit:'%',          tipo:'directo' },
+];
+
+const PARAMS_CPO = [
+  { id:'color_y',      nombre:'Color Lovibond Y',        unit:'Y',          tipo:'directo' },
+  { id:'color_r',      nombre:'Color Lovibond R',        unit:'R',          tipo:'directo' },
+  { id:'color_a',      nombre:'Color Lovibond A (Azul)', unit:'A',          tipo:'directo' },
+  { id:'acidez',       nombre:'Acidez (palmítico)',      unit:'%',          tipo:'acidez' },
+  { id:'humedad',      nombre:'Humedad',                 unit:'%',          tipo:'directo' },
+  { id:'impurezas',    nombre:'Impurezas',               unit:'%',          tipo:'directo' },
+  { id:'indice_yodo',  nombre:'Índice de Yodo',          unit:'g I₂/100g',  tipo:'yodo' },
+  { id:'dobi',         nombre:'DOBI',                    unit:'',           tipo:'dobi', dobi:true },
+];
+
+// =========================================================
+// FÓRMULAS INDIVIDUALES POR REPETICIÓN
+// =========================================================
+function calcRep(tipo, pm, v, extra) {
+  if(!pm || !v) return null;
+  switch(tipo) {
+    case 'acidez':   return (v * extra.n * 25.6) / pm;
+    case 'peroxido': return (v * 10) / pm;
+    case 'yodo':     return ((extra.vb - v) * extra.n * 12.69) / pm;
+    default:         return null;
+  }
+}
+
+// =========================================================
+// ESTADO
+// =========================================================
+let USERS = [
+  { user:'admin',     pass:'1234', rol:'admin',          nombre:'Administrador',           codigo:'ADM',    color:'#7c3aed' },
+  { user:'analista1', pass:'1234', rol:'fisicoquimico',  nombre:'Oleoflores Fisicoquímico', codigo:'LAB-01', color:'#7c3aed' },
+  { user:'analista2', pass:'1234', rol:'participante',   nombre:'Ext Maria la Baja',        codigo:'LAB-02', color:'#0d9488' },
+  { user:'analista3', pass:'1234', rol:'participante',   nombre:'Ext AGC',                  codigo:'LAB-03', color:'#2563eb' },
+  { user:'analista4', pass:'1234', rol:'participante',   nombre:'Ext Sinú',                 codigo:'LAB-04', color:'#d97706' },
+];
+let REF = { rbd:{}, cpo:{} };
+let RESULTADOS = [];
+let SESSION = null;
+let statChart = null, dashChart = null;
+let _sugHL = -1;
+const SUG_COLORS = ['#7c3aed','#0d9488','#2563eb','#d97706','#dc2626','#16a34a'];
+
+// =========================================================
+// SPLASH
+// =========================================================
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const s = document.getElementById('splash');
+    s.style.opacity = '0';
+    setTimeout(() => { s.style.display='none'; document.getElementById('login-screen').style.display='flex'; }, 600);
+  }, 1700);
+});
+
+function ini(n){ return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+
+// =========================================================
+// LOGIN
+// =========================================================
+function onUserInput(val) {
+  const list = document.getElementById('user-suggest-list');
+  const q = val.trim().toLowerCase();
+  const matches = USERS.filter(u => !q || u.user.toLowerCase().includes(q) || u.nombre.toLowerCase().includes(q));
+  if(!matches.length){ list.style.display='none'; return; }
+  _sugHL = -1;
+  list.innerHTML = matches.map((u,i) => {
+    const c = u.color || SUG_COLORS[i%SUG_COLORS.length];
+    const rl = u.rol==='admin'?'Administrador':u.rol==='fisicoquimico'?'Fisicoquímico':'Participante';
+    return `<div class="user-suggest-item" data-user="${u.user}" onclick="selUser('${u.user}')" onmouseenter="hlSug(${i})"
+      style="display:flex;align-items:center;gap:11px;padding:11px 15px;cursor:pointer;transition:background .12s;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div style="width:36px;height:36px;border-radius:50%;background:${c};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">${ini(u.nombre)}</div>
+      <div><div style="font-size:14px;font-weight:600;color:#fff">${u.nombre}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">${rl} · <span style="color:#a78bfa;font-family:monospace">${u.codigo}</span></div></div>
+    </div>`;
+  }).join('');
+  list.style.display='block';
+}
+function hlSug(i){ _sugHL=i; document.querySelectorAll('.user-suggest-item').forEach((el,j)=>{ el.style.background=j===i?'rgba(124,58,237,.35)':''; }); }
+function onUserKeydown(e){
+  const l=document.getElementById('user-suggest-list'), items=document.querySelectorAll('.user-suggest-item');
+  if(l.style.display==='none'||!items.length) return;
+  if(e.key==='ArrowDown'){e.preventDefault();hlSug(Math.min(_sugHL+1,items.length-1));}
+  else if(e.key==='ArrowUp'){e.preventDefault();hlSug(Math.max(_sugHL-1,0));}
+  else if(e.key==='Enter'&&_sugHL>=0){e.preventDefault();selUser(items[_sugHL].dataset.user);}
+  else if(e.key==='Escape'){l.style.display='none';}
+}
+function selUser(u){ document.getElementById('login-user').value=u; document.getElementById('user-suggest-list').style.display='none'; document.getElementById('login-error').style.display='none'; setTimeout(()=>document.getElementById('login-pass').focus(),100); }
+document.addEventListener('click',e=>{ const l=document.getElementById('user-suggest-list'),i=document.getElementById('login-user'); if(l&&!l.contains(e.target)&&e.target!==i) l.style.display='none'; });
+
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-error');
+  if(!u){err.textContent='Selecciona un usuario';err.style.display='block';return;}
+  if(!p){err.textContent='Ingresa tu contraseña';err.style.display='block';return;}
+  const found=USERS.find(x=>x.user===u&&x.pass===p);
+  if(!found){err.textContent='Contraseña incorrecta';err.style.display='block';document.getElementById('login-pass').value='';document.getElementById('login-pass').focus();return;}
+  err.style.display='none'; SESSION=found;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('tb-name').textContent=found.nombre;
+  document.getElementById('tb-role').textContent=found.rol==='admin'?'Administrador':found.rol==='fisicoquimico'?'Fisicoquímico':'Participante';
+  document.getElementById('tb-avatar').textContent=ini(found.nombre);
+  document.getElementById('tb-avatar').style.background=found.color||'linear-gradient(135deg,#7c3aed,#3b82f6)';
+  const ce=document.getElementById('tb-code');
+  if(found.rol!=='admin'){ ce.textContent=found.codigo; ce.style.display='inline'; } else ce.style.display='none';
+  setupNav(); buildIngresoForm(); buildRefForms();
+  gotoSection('dashboard',document.getElementById('nav-dashboard'));
+  // Si es admin, escuchar resultados en tiempo real desde Firestore
+  if(found.rol==='admin' && typeof window._escucharResultados === 'function'){
+    if(window._unsubscribe) window._unsubscribe();
+    window._unsubscribe = window._escucharResultados(function(datos){
+      RESULTADOS = [];
+      datos.forEach(d => {
+        (d.datos||[]).forEach(p => {
+          RESULTADOS.push({
+            user: d.laboratorio, codigo: d.codigo,
+            nombre: d.laboratorio, analista: d.analista,
+            cargo: d.cargo, muestra: p.muestra||d.muestra,
+            codigoMuestra: d.codigoMuestra, fecha: d.fecha,
+            paramId: p.paramId, paramNombre: p.paramNombre,
+            unit: p.unit, reps: p.reps, promedio: p.promedio
+          });
+        });
+      });
+      // Refrescar pantalla activa
+      const sec = document.querySelector('.screen.active');
+      if(sec){
+        const name = sec.id.replace('sec-','');
+        if(name==='dashboard')   renderDashboard && renderDashboard();
+        if(name==='resultados')  renderAllResults && renderAllResults();
+        if(name==='estadisticas'){ refreshStatChart && refreshStatChart(); renderZScores && renderZScores(); }
+        if(name==='evaluacion')  renderEvaluacion && renderEvaluacion();
+      }
+    });
+  }
+}
+function doLogout(){ if(!confirm('¿Cerrar sesión?')) return; if(window._unsubscribe){window._unsubscribe();window._unsubscribe=null;} SESSION=null; document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; document.getElementById('login-user').value=''; document.getElementById('login-pass').value=''; document.getElementById('login-error').style.display='none'; }
+
+// =========================================================
+// NAV
+// =========================================================
+function setupNav(){
+  const isAdmin=SESSION.rol==='admin';
+  ['resultados','estadisticas','referencia','participantes'].forEach(id=>{ document.getElementById('nav-'+id).style.display=isAdmin?'flex':'none'; });
+  const evalNav=document.getElementById('nav-evaluacion'); if(evalNav) evalNav.style.display='flex';
+  document.getElementById('nav-misresultados').style.display=isAdmin?'none':'flex';
+  document.getElementById('nav-ingreso').style.display=isAdmin?'none':'flex';
+}
+function gotoSection(name,el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(name==='dashboard') refreshDashboard();
+  if(name==='resultados') renderAllResults();
+  if(name==='estadisticas'){ refreshStatChart(); renderZScores(); }
+  if(name==='participantes') renderParticipants();
+  if(name==='misresultados') renderMisResultados();
+}
+
+// =========================================================
+// CONSTRUCCIÓN DEL FORMULARIO DE DATOS PRIMARIOS
+// =========================================================
+function buildIngresoForm(){
+  if(!SESSION || SESSION.rol==='admin') return;
+  const muestra = document.getElementById('ing-muestra').value;
+  const showDobi = SESSION.rol==='fisicoquimico';
+  const params = (muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO).filter(p=>!p.dobi||showDobi);
+  document.getElementById('ingreso-code').textContent = SESSION.codigo;
+  let html = '';
+
+  params.forEach(p => {
+    const pid = p.id;
+    html += `<div class="param-block" id="block_${pid}">
+      <div class="param-block-header">
+        <div class="param-block-title">🧪 ${p.nombre}</div>
+        <div class="result-pill">
+          <span class="result-pill-label">Promedio final</span>
+          <span class="result-pill-val" id="res_${pid}">—</span>
+          <span class="result-pill-unit">${p.unit}</span>
+        </div>
+      </div>`;
+
+    if(p.tipo === 'directo') {
+      // Tabla simple 3 lecturas → promedio
+      html += `<table class="reps-table">
+        <thead><tr><th>Repetición</th><th>Lectura (${p.unit})</th><th>Resultado</th></tr></thead>
+        <tbody>`;
+      for(let i=1;i<=3;i++){
+        html += `<tr>
+          <td class="row-label">Rep. ${i}</td>
+          <td><input type="number" step="0.001" id="${pid}_r${i}" placeholder="0.000" oninput="calcDirecto('${pid}')"></td>
+          <td id="${pid}_calc${i}" style="color:#7c3aed;font-weight:600">—</td>
+        </tr>`;
+      }
+      html += `<tr class="avg-row">
+        <td colspan="2" style="text-align:right;padding:8px 12px">📊 Promedio</td>
+        <td id="${pid}_avg">—</td>
+      </tr></tbody></table>`;
+
+    } else if(p.tipo === 'acidez') {
+      html += `<div class="common-fields">
+        <div class="fg"><label class="fl">Normalidad NaOH</label><input type="number" step="0.001" id="${pid}_n" placeholder="0.1000" oninput="calcTitulacion('${pid}','acidez')"></div>
+      </div>
+      <table class="reps-table">
+        <thead><tr><th>Rep.</th><th>Peso muestra (g)</th><th>Vol. NaOH (mL)</th><th>Resultado (%)</th></tr></thead>
+        <tbody>`;
+      for(let i=1;i<=3;i++){
+        html += `<tr>
+          <td class="row-label">Rep. ${i}</td>
+          <td><input type="number" step="0.0001" id="${pid}_pm${i}" placeholder="0.0000" oninput="calcTitulacion('${pid}','acidez')"></td>
+          <td><input type="number" step="0.0001" id="${pid}_v${i}"  placeholder="0.0000" oninput="calcTitulacion('${pid}','acidez')"></td>
+          <td id="${pid}_calc${i}" style="color:#7c3aed;font-weight:600">—</td>
+        </tr>`;
+      }
+      html += `<tr class="avg-row">
+        <td colspan="3" style="text-align:right;padding:8px 12px">📊 Promedio</td>
+        <td id="${pid}_avg">—</td>
+      </tr></tbody></table>`;
+
+    } else if(p.tipo === 'peroxido') {
+      html += `<table class="reps-table">
+        <thead><tr><th>Rep.</th><th>Peso muestra (g)</th><th>Vol. Na₂S₂O₃ (mL)</th><th>Resultado (meq O₂/kg)</th></tr></thead>
+        <tbody>`;
+      for(let i=1;i<=3;i++){
+        html += `<tr>
+          <td class="row-label">Rep. ${i}</td>
+          <td><input type="number" step="0.0001" id="${pid}_pm${i}" placeholder="0.0000" oninput="calcTitulacion('${pid}','peroxido')"></td>
+          <td><input type="number" step="0.0001" id="${pid}_v${i}"  placeholder="0.0000" oninput="calcTitulacion('${pid}','peroxido')"></td>
+          <td id="${pid}_calc${i}" style="color:#7c3aed;font-weight:600">—</td>
+        </tr>`;
+      }
+      html += `<tr class="avg-row">
+        <td colspan="3" style="text-align:right;padding:8px 12px">📊 Promedio</td>
+        <td id="${pid}_avg">—</td>
+      </tr></tbody></table>`;
+
+    } else if(p.tipo === 'yodo') {
+      html += `<div class="common-fields">
+        <div class="fg"><label class="fl">Normalidad tiosulfato</label><input type="number" step="0.001" id="${pid}_n" placeholder="0.1000" oninput="calcYodo('${pid}')"></div>
+        <div class="fg"><label class="fl">Vol. blanco (mL)</label><input type="number" step="0.0001" id="${pid}_vb" placeholder="0.0000" oninput="calcYodo('${pid}')"></div>
+      </div>
+      <table class="reps-table">
+        <thead><tr><th>Rep.</th><th>Peso muestra (g)</th><th>Vol. tiosulfato (mL)</th><th>Resultado (${p.unit})</th></tr></thead>
+        <tbody>`;
+      for(let i=1;i<=3;i++){
+        html += `<tr>
+          <td class="row-label">Rep. ${i}</td>
+          <td><input type="number" step="0.0001" id="${pid}_pm${i}" placeholder="0.0000" oninput="calcYodo('${pid}')"></td>
+          <td><input type="number" step="0.0001" id="${pid}_v${i}"  placeholder="0.0000" oninput="calcYodo('${pid}')"></td>
+          <td id="${pid}_calc${i}" style="color:#7c3aed;font-weight:600">—</td>
+        </tr>`;
+      }
+      html += `<tr class="avg-row">
+        <td colspan="3" style="text-align:right;padding:8px 12px">📊 Promedio</td>
+        <td id="${pid}_avg">—</td>
+      </tr></tbody></table>`;
+
+    } else if(p.tipo === 'dobi') {
+      html += `<table class="reps-table">
+        <thead><tr><th>Rep.</th><th>A₂₆₉</th><th>A₄₄₆</th><th>A₅₀₈</th><th>DOBI calc.</th></tr></thead>
+        <tbody>`;
+      for(let i=1;i<=3;i++){
+        html += `<tr>
+          <td class="row-label">Rep. ${i}</td>
+          <td><input type="number" step="0.001" id="${pid}_a269_${i}" placeholder="0.000" oninput="calcDobi('${pid}')"></td>
+          <td><input type="number" step="0.001" id="${pid}_a446_${i}" placeholder="0.000" oninput="calcDobi('${pid}')"></td>
+          <td><input type="number" step="0.001" id="${pid}_a508_${i}" placeholder="0.000" oninput="calcDobi('${pid}')"></td>
+          <td id="${pid}_calc${i}" style="color:#7c3aed;font-weight:600">—</td>
+        </tr>`;
+      }
+      html += `<tr class="avg-row">
+        <td colspan="4" style="text-align:right;padding:8px 12px">📊 Promedio DOBI</td>
+        <td id="${pid}_avg">—</td>
+      </tr></tbody></table>`;
+    }
+
+    html += '</div>'; // fin param-block
+  });
+
+  document.getElementById('ingreso-form-container').innerHTML = html;
+}
+
+// =========================================================
+// FUNCIONES DE CÁLCULO EN TIEMPO REAL
+// =========================================================
+function v(id){ return parseFloat(document.getElementById(id)?.value)||0; }
+function setCell(id, val){ const el=document.getElementById(id); if(el){ el.textContent=isFinite(val)&&val>0?val.toFixed(4):'—'; } }
+
+function calcDirecto(pid){
+  const vals = [v(`${pid}_r1`), v(`${pid}_r2`), v(`${pid}_r3`)];
+  vals.forEach((x,i)=>{ document.getElementById(`${pid}_calc${i+1}`).textContent = x>0?x.toFixed(4):'—'; });
+  const valid = vals.filter(x=>x>0);
+  const avg = valid.length ? valid.reduce((a,b)=>a+b,0)/valid.length : null;
+  document.getElementById(`${pid}_avg`).textContent = avg?avg.toFixed(4):'—';
+  document.getElementById(`res_${pid}`).textContent = avg?avg.toFixed(4):'—';
+}
+
+function calcTitulacion(pid, tipo){
+  const n = v(`${pid}_n`);
+  let validos=[], reps=[];
+  for(let i=1;i<=3;i++){
+    const pm=v(`${pid}_pm${i}`), vol=v(`${pid}_v${i}`);
+    let res = null;
+    if(tipo==='acidez'  && pm>0 && n>0) res = (vol * n * 25.6) / pm;
+    if(tipo==='peroxido'&& pm>0)        res = (vol * 10) / pm;
+    reps.push(res);
+    setCell(`${pid}_calc${i}`, res);
+    if(res!==null && isFinite(res) && res>0) validos.push(res);
+  }
+  const avg = validos.length ? validos.reduce((a,b)=>a+b,0)/validos.length : null;
+  document.getElementById(`${pid}_avg`).textContent = avg?avg.toFixed(4):'—';
+  document.getElementById(`res_${pid}`).textContent = avg?avg.toFixed(4):'—';
+}
+
+function calcYodo(pid){
+  const n = v(`${pid}_n`), vb = v(`${pid}_vb`);
+  let validos=[];
+  for(let i=1;i<=3;i++){
+    const pm=v(`${pid}_pm${i}`), vi=v(`${pid}_v${i}`);
+    const res = (pm>0&&n>0) ? ((vb-vi)*n*12.69)/pm : null;
+    setCell(`${pid}_calc${i}`, res);
+    if(res!==null && isFinite(res) && res>0) validos.push(res);
+  }
+  const avg = validos.length ? validos.reduce((a,b)=>a+b,0)/validos.length : null;
+  document.getElementById(`${pid}_avg`).textContent = avg?avg.toFixed(4):'—';
+  document.getElementById(`res_${pid}`).textContent = avg?avg.toFixed(4):'—';
+}
+
+function calcDobi(pid){
+  let validos=[];
+  for(let i=1;i<=3;i++){
+    const a269=v(`${pid}_a269_${i}`), a446=v(`${pid}_a446_${i}`), a508=v(`${pid}_a508_${i}`);
+    const den=a446+a508;
+    const res = (den>0) ? a269/den : null;
+    setCell(`${pid}_calc${i}`, res);
+    if(res!==null && isFinite(res) && res>0) validos.push(res);
+  }
+  const avg = validos.length ? validos.reduce((a,b)=>a+b,0)/validos.length : null;
+  document.getElementById(`${pid}_avg`).textContent = avg?avg.toFixed(4):'—';
+  document.getElementById(`res_${pid}`).textContent = avg?avg.toFixed(4):'—';
+}
+
+// =========================================================
+// GUARDAR
+// =========================================================
+function saveIngreso(){
+  if(!SESSION||SESSION.rol==='admin') return;
+  const muestra=document.getElementById('ing-muestra').value;
+  const codigoMuestra=document.getElementById('ing-codigo-muestra').value.trim()||'M-001';
+  const showDobi=SESSION.rol==='fisicoquimico';
+  const params=(muestra==='rbd'?PARAMS_RBD:PARAMS_CPO).filter(p=>!p.dobi||showDobi);
+  let cnt=0;
+  params.forEach(p=>{
+    const avgEl=document.getElementById(`${p.id}_avg`);
+    if(!avgEl||avgEl.textContent==='—') return;
+    const avg=parseFloat(avgEl.textContent);
+    if(!isFinite(avg)) return;
+    const reps=[];
+    for(let i=1;i<=3;i++){
+      const cel=document.getElementById(`${p.id}_calc${i}`);
+      if(cel&&cel.textContent!=='—') reps.push(parseFloat(cel.textContent));
+      else reps.push(null);
+    }
+    const idx=RESULTADOS.findIndex(r=>r.user===SESSION.user&&r.muestra===muestra&&r.paramId===p.id);
+    if(idx>=0) RESULTADOS.splice(idx,1);
+    RESULTADOS.push({ user:SESSION.user, codigo:SESSION.codigo, nombre:SESSION.nombre, muestra, codigoMuestra, paramId:p.id, paramNombre:p.nombre, unit:p.unit, reps, promedio:avg });
+    cnt++;
+  });
+  if(cnt){ const m=document.getElementById('save-msg'); m.style.display='flex'; setTimeout(()=>m.style.display='none',2500); }
+  else alert('No hay resultados calculados. Completa los datos primarios.');
+}
+
+// =========================================================
+// REFERENCIA
+// =========================================================
+function buildRefForms(){
+  document.getElementById('ref-rbd-form').innerHTML = PARAMS_RBD.map(p=>`
+    <div class="fg"><label class="fl">${p.nombre}${p.unit?' ('+p.unit+')':''}</label>
+    <input type="number" step="0.0001" id="ref_rbd_${p.id}" value="${REF.rbd[p.id]!==undefined?REF.rbd[p.id]:''}"></div>`).join('');
+  document.getElementById('ref-cpo-form').innerHTML = PARAMS_CPO.map(p=>`
+    <div class="fg"><label class="fl">${p.nombre}${p.unit?' ('+p.unit+')':''}</label>
+    <input type="number" step="0.0001" id="ref_cpo_${p.id}" value="${REF.cpo[p.id]!==undefined?REF.cpo[p.id]:''}"></div>`).join('');
+}
+function saveRef(){
+  PARAMS_RBD.forEach(p=>{ const el=document.getElementById(`ref_rbd_${p.id}`); if(el&&el.value!=='') REF.rbd[p.id]=parseFloat(el.value); });
+  PARAMS_CPO.forEach(p=>{ const el=document.getElementById(`ref_cpo_${p.id}`); if(el&&el.value!=='') REF.cpo[p.id]=parseFloat(el.value); });
+  const m=document.getElementById('ref-saved'); m.style.display='flex'; setTimeout(()=>m.style.display='none',2500);
+}
+
+// =========================================================
+// Z-SCORE
+// =========================================================
+function calcZ(val,ref){ return (val-ref)/(Math.abs(ref)*0.03||0.1); }
+function zClass(z){ const a=Math.abs(z); if(a<=2) return{cls:'z-ok',label:'Satisfactorio',badge:'b-ok'}; if(a<=3) return{cls:'z-warn',label:'Cuestionable',badge:'b-warn'}; return{cls:'z-fail',label:'No satisfactorio',badge:'b-fail'}; }
+
+// =========================================================
+// DASHBOARD
+// =========================================================
+function refreshDashboard(){
+  const analistas=USERS.filter(u=>u.rol!=='admin');
+  const conDatos=new Set(RESULTADOS.map(r=>r.user)).size;
+  const withRef=RESULTADOS.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+  const sat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv))<=2; }).length;
+  const nosat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv))>3; }).length;
+  document.getElementById('dashboard-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-icon" style="background:#E6F1FB">👥</div><div><div class="metric-label">Participantes</div><div class="metric-val" style="color:#185FA5">${analistas.length}</div><div class="metric-sub">Laboratorios</div></div></div>
+    <div class="metric-card"><div class="metric-icon" style="background:#EAF3DE">✅</div><div><div class="metric-label">Con datos</div><div class="metric-val" style="color:#3B6D11">${conDatos}</div><div class="metric-sub">Han ingresado</div></div></div>
+    <div class="metric-card"><div class="metric-icon" style="background:#EAF3DE">🎯</div><div><div class="metric-label">Satisfactorios</div><div class="metric-val" style="color:#16a34a">${sat}</div><div class="metric-sub">|Z| ≤ 2</div></div></div>
+    <div class="metric-card"><div class="metric-icon" style="background:#FCEBEB">⚠️</div><div><div class="metric-label">No satisfact.</div><div class="metric-val" style="color:#dc2626">${nosat}</div><div class="metric-sub">|Z| &gt; 3</div></div></div>`;
+  document.getElementById('dashboard-parts').innerHTML=analistas.map(u=>{
+    const cnt=RESULTADOS.filter(r=>r.user===u.user).length;
+    return`<div class="part-item">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="part-avatar" style="background:${u.color||'#7c3aed'}">${ini(u.nombre)}</div>
+        <div><div style="font-size:12px;font-weight:600">${u.nombre}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-top:2px">
+          <span class="code-badge" style="font-size:10px">${u.codigo}</span>
+          <span style="font-size:10px;color:var(--light)">${u.rol==='fisicoquimico'?'Con DOBI':'Sin DOBI'}</span>
+        </div></div>
+      </div>
+      <span class="badge ${cnt>0?'b-ok':'b-gray'}">${cnt>0?cnt+' mediciones':'Pendiente'}</span>
+    </div>`;
+  }).join('');
+  renderDashChart();
+}
+function renderDashChart(){
+  const ctx=document.getElementById('dash-chart').getContext('2d');
+  if(dashChart) dashChart.destroy();
+  const analistas=USERS.filter(u=>u.rol!=='admin');
+  const labels=analistas.map(u=>u.codigo);
+  const data=analistas.map(u=>{
+    const myR=RESULTADOS.filter(r=>r.user===u.user);
+    const withRef=myR.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+    if(!withRef.length) return 0;
+    const sat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv))<=2; }).length;
+    return Math.round(sat/withRef.length*100);
+  });
+  dashChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'% Satisfactorios',data,backgroundColor:analistas.map((u,i)=>data[i]>=80?'#16a34a':data[i]>=60?'#d97706':'#dc2626'),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{max:100,ticks:{callback:v=>v+'%'},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+}
+
+// =========================================================
+// MIS RESULTADOS
+// =========================================================
+function renderMisResultados(){
+  if(!SESSION) return;
+  const myR=RESULTADOS.filter(r=>r.user===SESSION.user);
+  const el=document.getElementById('mis-resultados-content');
+  if(!myR.length){ el.innerHTML='<div class="alert alert-warn">⚠️ Aún no has guardado datos. Ve a "Ingresar datos".</div>'; return; }
+  const por={};
+  myR.forEach(r=>{ if(!por[r.muestra]) por[r.muestra]=[]; por[r.muestra].push(r); });
+  let html='';
+  Object.entries(por).forEach(([m,rows])=>{
+    html+=`<div class="card"><div class="card-title"><span class="badge ${m==='rbd'?'b-rbd':'b-cpo'}">${m.toUpperCase()}</span> Código muestra: <span class="code-badge">${rows[0].codigoMuestra}</span></div>
+    <div class="table-wrap"><table>
+    <thead><tr><th>Parámetro</th><th>Rep.1</th><th>Rep.2</th><th>Rep.3</th><th>Promedio</th><th>Unidad</th><th>Referencia</th><th>Z</th><th>Calificación</th></tr></thead><tbody>`;
+    rows.forEach(r=>{
+      const rv=m==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
+      const rr=r.reps.map(x=>x!==null&&isFinite(x)?x.toFixed(4):'—');
+      if(rv===undefined){
+        html+=`<tr><td>${r.paramNombre}</td><td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td><td><strong>${r.promedio.toFixed(4)}</strong></td><td>${r.unit}</td><td colspan="3" style="color:var(--light)">Sin referencia</td></tr>`;
+      } else {
+        const z=calcZ(r.promedio,rv); const zc=zClass(z);
+        html+=`<tr><td>${r.paramNombre}</td><td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td><td><strong>${r.promedio.toFixed(4)}</strong></td><td>${r.unit}</td><td>${rv}</td><td class="${zc.cls}">${z.toFixed(2)}</td><td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`;
+      }
+    });
+    html+='</tbody></table></div></div>';
+  });
+  el.innerHTML=html;
+}
+
+// =========================================================
+// TODOS LOS RESULTADOS (admin)
+// =========================================================
+function renderAllResults(){
+  const tbody=document.getElementById('results-body');
+  if(!RESULTADOS.length){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--light)">Sin resultados aún</td></tr>'; return; }
+  tbody.innerHTML=RESULTADOS.map(r=>{
+    const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
+    const rr=r.reps.map(x=>x!==null&&isFinite(x)?x.toFixed(4):'—');
+    if(rv===undefined) return`<tr><td><span class="code-badge">${r.codigo}</span></td><td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td><td>${r.paramNombre}</td><td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td><td><strong>${r.promedio.toFixed(4)}</strong></td><td>—</td><td>—</td><td><span class="badge b-gray">Sin ref.</span></td></tr>`;
+    const z=calcZ(r.promedio,rv); const zc=zClass(z);
+    return`<tr><td><span class="code-badge">${r.codigo}</span></td><td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td><td>${r.paramNombre}</td><td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td><td><strong>${r.promedio.toFixed(4)}</strong></td><td>${rv}</td><td class="${zc.cls}">${z.toFixed(2)}</td><td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`;
+  }).join('');
+}
+
+// =========================================================
+// ESTADÍSTICAS
+// =========================================================
+function populateStatParams(){
+  const m=document.getElementById('stat-muestra').value;
+  document.getElementById('stat-param').innerHTML=(m==='rbd'?PARAMS_RBD:PARAMS_CPO).map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+}
+function refreshStatChart(){
+  const m=document.getElementById('stat-muestra').value;
+  const pid=document.getElementById('stat-param').value;
+  const param=(m==='rbd'?PARAMS_RBD:PARAMS_CPO).find(p=>p.id===pid);
+  const refV=(m==='rbd'?REF.rbd:REF.cpo)[pid];
+  const filtered=RESULTADOS.filter(r=>r.muestra===m&&r.paramId===pid);
+  const ctx=document.getElementById('stat-chart').getContext('2d');
+  if(statChart) statChart.destroy();
+  if(!filtered.length){ ctx.clearRect(0,0,800,260); return; }
+  const datasets=[{label:'Promedio',data:filtered.map(r=>r.promedio),backgroundColor:filtered.map(r=>{ if(!refV) return'#378ADD'; const z=Math.abs(calcZ(r.promedio,refV)); return z<=2?'#639922':z<=3?'#BA7517':'#E24B4A'; }),borderRadius:5,borderSkipped:false}];
+  if(refV!==undefined) datasets.push({type:'line',label:'Referencia',data:Array(filtered.length).fill(refV),borderColor:'#185FA5',borderDash:[5,3],borderWidth:2,pointRadius:0,fill:false});
+  statChart=new Chart(ctx,{type:'bar',data:{labels:filtered.map(r=>r.codigo),datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}},scales:{y:{title:{display:true,text:param?param.unit:''},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+}
+function renderZScores(){
+  const tbody=document.getElementById('zscore-body');
+  const withRef=RESULTADOS.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+  if(!withRef.length){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--light)">Sin datos</td></tr>'; return; }
+  tbody.innerHTML=withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; const s=Math.abs(rv)*0.03||0.1; const z=calcZ(r.promedio,rv); const zc=zClass(z); return`<tr><td><span class="code-badge">${r.codigo}</span></td><td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td><td>${r.paramNombre}</td><td>${r.promedio.toFixed(4)} ${r.unit}</td><td>${rv}</td><td>${s.toFixed(4)}</td><td class="${zc.cls}">${z.toFixed(2)}</td><td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`; }).join('');
+}
+
+// =========================================================
+// PARTICIPANTES
+// =========================================================
+function renderParticipants(){
+  const analistas = USERS.filter(u=>u.rol!=='admin');
+  document.getElementById('part-list').innerHTML = analistas.map(u=>{
+    const foto = FOTOS[u.user];
+    const avatarEl = foto
+      ? `<img src="${foto}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #a78bfa;flex-shrink:0">`
+      : `<div style="width:44px;height:44px;border-radius:50%;background:${u.color||'#7c3aed'};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0">${ini(u.nombre)}</div>`;
+    return `<div class="part-item" style="flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px;flex:1">
+        ${avatarEl}
+        <div>
+          <div style="font-size:12px;font-weight:600">${u.nombre}</div>
+          <div style="display:flex;align-items:center;gap:5px;margin-top:2px">
+            <span class="code-badge" style="font-size:10px">${u.codigo}</span>
+            <span style="font-size:10px;color:var(--light)">@${u.user}</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="cursor:pointer;position:relative" title="Subir foto">
+          <div style="background:#f5f3ff;border:1px solid #a78bfa;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:#7c3aed;white-space:nowrap">
+            ${foto ? '🔄 Cambiar foto' : '📷 Subir foto'}
+          </div>
+          <input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%"
+            onchange="uploadFotoAdmin(this,'${u.user}')">
+        </label>
+        ${foto ? `<button class="btn btn-ghost btn-sm" onclick="deleteFoto('${u.user}')" title="Eliminar foto" style="padding:5px 8px;font-size:12px">🗑️</button>` : ''}
+        <button class="btn btn-danger btn-sm" onclick="removeParticipant('${u.user}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function uploadFotoAdmin(input, userKey){
+  if(!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    FOTOS[userKey] = e.target.result;
+    renderParticipants();
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function deleteFoto(userKey){
+  delete FOTOS[userKey];
+  renderParticipants();
+}
+function removeParticipant(uname){ if(!confirm('¿Eliminar?')) return; USERS=USERS.filter(u=>u.user!==uname); RESULTADOS=RESULTADOS.filter(r=>r.user!==uname); renderParticipants(); refreshDashboard(); }
+function addParticipant(){
+  const nombre=document.getElementById('new-name').value.trim();
+  const codigo=document.getElementById('new-codigo').value.trim().toUpperCase();
+  const uname=document.getElementById('new-user').value.trim();
+  const pass=document.getElementById('new-pass').value;
+  const rol=document.getElementById('new-tipo').value;
+  const color=document.getElementById('new-color').value;
+  if(!nombre||!codigo||!uname||!pass){ alert('Completa todos los campos.'); return; }
+  if(USERS.find(u=>u.user===uname)){ alert('Usuario ya existe.'); return; }
+  if(USERS.find(u=>u.codigo===codigo)){ alert('Código ya existe.'); return; }
+  USERS.push({user:uname,pass,rol,nombre,codigo,color});
+  ['new-name','new-codigo','new-user','new-pass'].forEach(id=>document.getElementById(id).value='');
+  const m=document.getElementById('part-msg'); m.style.display='flex'; setTimeout(()=>m.style.display='none',2200);
+  renderParticipants(); refreshDashboard();
+}
+
+populateStatParams();
+
+// =========================================================
+// FOTOS DE ANALISTAS
+// =========================================================
+const FOTOS = {}; // user -> dataURL
+
+function previewPhoto(input){
+  if(!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  const fname = input.files[0].name;
+  reader.onload = e => {
+    const prev = document.getElementById('photo-preview');
+    const wrap = document.getElementById('photo-preview-wrap');
+    const btn  = document.getElementById('photo-btn-label');
+    const nm   = document.getElementById('photo-name');
+    if(prev) prev.src = e.target.result;
+    if(wrap) wrap.style.display = 'flex';
+    if(btn)  btn.textContent = '✅ Foto seleccionada';
+    if(nm)   nm.textContent = fname;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function getPhotoEl(user, size=48, cls=''){
+  const u = USERS.find(x=>x.user===user);
+  const foto = FOTOS[user];
+  if(foto) return `<img src="${foto}" class="${cls}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:2px solid #a78bfa;flex-shrink:0">`;
+  const bg = u ? u.color||'#7c3aed' : '#7c3aed';
+  const name = u ? u.nombre : user;
+  return `<div class="${cls}" style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.33)}px;font-weight:800;color:#fff;flex-shrink:0">${ini(name)}</div>`;
+}
+
+// Patch addParticipant to save photo
+const _origAdd = addParticipant;
+function addParticipant(){
+  const nombre=document.getElementById('new-name').value.trim();
+  const codigo=document.getElementById('new-codigo').value.trim().toUpperCase();
+  const uname=document.getElementById('new-user').value.trim();
+  const pass=document.getElementById('new-pass').value;
+  const rol=document.getElementById('new-tipo').value;
+  const color=document.getElementById('new-color').value;
+  if(!nombre||!codigo||!uname||!pass){ alert('Completa todos los campos.'); return; }
+  if(USERS.find(u=>u.user===uname)){ alert('Usuario ya existe.'); return; }
+  if(USERS.find(u=>u.codigo===codigo)){ alert('Código ya existe.'); return; }
+  USERS.push({user:uname,pass,rol,nombre,codigo,color});
+  // save photo if uploaded
+  const photoEl = document.getElementById('new-photo');
+  if(photoEl && photoEl.files && photoEl.files[0]){
+    const reader = new FileReader();
+    reader.onload = e => { FOTOS[uname] = e.target.result; };
+    reader.readAsDataURL(photoEl.files[0]);
+  }
+  ['new-name','new-codigo','new-user','new-pass'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('photo-preview-wrap').style.display='none';
+  document.getElementById('photo-btn-label').textContent='📷 Seleccionar foto';
+  const m=document.getElementById('part-msg'); m.style.display='flex'; setTimeout(()=>m.style.display='none',2200);
+  renderParticipants(); refreshDashboard();
+}
+
+// =========================================================
+// ESTADÍSTICAS: calcular por analista
+// =========================================================
+function calcCV(reps){
+  const vals = reps.filter(r=>r!==null&&isFinite(r));
+  if(vals.length<2) return null;
+  const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
+  if(mean===0) return null;
+  const std = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1));
+  return (std/mean)*100;
+}
+function calcBias(val,ref){ return ((val-ref)/ref)*100; }
+function calcSigma(ref){ return Math.abs(ref)*0.03||0.1; }
+
+function getAnalistaStats(user){
+  const myRes = RESULTADOS.filter(r=>r.user===user);
+  const withRef = myRes.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+  if(!withRef.length) return null;
+  const zScores = withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv); });
+  const sat = zScores.filter(z=>Math.abs(z)<=2).length;
+  const cues = zScores.filter(z=>Math.abs(z)>2&&Math.abs(z)<=3).length;
+  const nosat = zScores.filter(z=>Math.abs(z)>3).length;
+  const pctSat = (sat/zScores.length)*100;
+  const cvVals = withRef.map(r=>calcCV(r.reps)).filter(v=>v!==null);
+  const avgCV = cvVals.length ? cvVals.reduce((a,b)=>a+b,0)/cvVals.length : null;
+  const biasVals = withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcBias(r.promedio,rv)); });
+  const avgBias = biasVals.reduce((a,b)=>a+b,0)/biasVals.length;
+  // Puntuación: 60% z-score + 25% CV + 15% sesgo (invertido, menor=mejor)
+  const scoreZ = pctSat;
+  const scoreCV = avgCV!==null ? Math.max(0,100-avgCV*10) : 50;
+  const scoreBias = Math.max(0,100-avgBias*5);
+  const score = scoreZ*0.6 + scoreCV*0.25 + scoreBias*0.15;
+  return { withRef, zScores, sat, cues, nosat, pctSat, avgCV, avgBias, score };
+}
+
+// =========================================================
+// RENDER EVALUACIÓN COMPLETA
+// =========================================================
+let controlChart = null;
+
+function renderEvaluacion(){
+  const isAdmin = SESSION && SESSION.rol==='admin';
+  const analistas = USERS.filter(u=>u.rol!=='admin');
+  const ranked = analistas.map(u=>({ u, stats: getAnalistaStats(u.user) }))
+    .filter(x=>x.stats)
+    .sort((a,b)=>b.stats.score-a.stats.score);
+
+  // Podio y ranking: solo admin
+  const podioWrap   = document.getElementById('podio-wrap');
+  const rankingCard = document.getElementById('ranking-body')?.closest('.card');
+  if(podioWrap)   podioWrap.style.display   = isAdmin ? 'block' : 'none';
+  if(rankingCard) rankingCard.style.display = isAdmin ? 'block' : 'none';
+
+  if(isAdmin){
+    renderPodio(ranked);
+    renderRankingTable(ranked);
+  }
+
+  populateEvalParams();
+  renderControlChart();
+
+  // Tarjetas: admin ve todos, analista solo la suya
+  const myRanked = isAdmin ? ranked : ranked.filter(x=>x.u.user===SESSION.user);
+  renderAnalistaCards(myRanked, isAdmin);
+}
+
+function renderPodio(ranked){
+  const wrap = document.getElementById('podio-wrap');
+  if(!ranked.length){ wrap.innerHTML=''; return; }
+  const medals = ['🥇','🥈','🥉'];
+  const order = [1,0,2]; // visual order: 2nd, 1st, 3rd
+  const podioItems = order.map(i=>{
+    if(i>=ranked.length) return '<div class="podio-item"></div>';
+    const {u,stats} = ranked[i];
+    const photo = getPhotoEl(u.user, 68, i===0?'podio-photo':'podio-photo');
+    return `<div class="podio-item podio-${i+1}">
+      <div class="podio-medal">${medals[i]}</div>
+      ${photo}
+      <div class="podio-name">${u.nombre.split(' ').slice(0,2).join(' ')}</div>
+      <span class="code-badge" style="font-size:10px">${u.codigo}</span>
+      <div class="podio-score">${stats.score.toFixed(1)} pts</div>
+      <div class="podio-bar">${i+1}°</div>
+    </div>`;
+  });
+  wrap.innerHTML=`<div class="card"><div class="card-title">🏆 Podio de mejores analistas</div>
+    <div class="podio">${podioItems.join('')}</div></div>`;
+}
+
+function renderRankingTable(ranked){
+  const tbody = document.getElementById('ranking-body');
+  if(!ranked.length){ tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:14px;color:var(--light)">Sin datos suficientes</td></tr>'; return; }
+  const medals=['🥇','🥈','🥉'];
+  tbody.innerHTML = ranked.map(({u,stats},i)=>{
+    const medal = i<3?medals[i]:`${i+1}°`;
+    const zc = stats.pctSat>=80?'b-ok':stats.pctSat>=60?'b-warn':'b-fail';
+    const cvc = stats.avgCV===null?'b-gray':stats.avgCV<=2?'b-ok':stats.avgCV<=5?'b-warn':'b-fail';
+    const photo = getPhotoEl(u.user, 32, '');
+    return `<tr>
+      <td style="font-size:18px;text-align:center">${medal}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">${photo}<span style="font-size:12px;font-weight:600">${u.nombre}</span></div></td>
+      <td><span class="code-badge">${u.codigo}</span></td>
+      <td style="text-align:center">${stats.withRef.length}</td>
+      <td><span class="badge ${zc}">${stats.pctSat.toFixed(1)}%</span></td>
+      <td><span class="badge ${cvc}">${stats.avgCV!==null?stats.avgCV.toFixed(2)+'%':'—'}</span></td>
+      <td>${stats.avgBias.toFixed(2)}%</td>
+      <td><strong>${stats.score.toFixed(1)}</strong></td>
+      <td><span class="badge ${stats.pctSat>=80?'b-ok':stats.pctSat>=60?'b-warn':'b-fail'}">${stats.pctSat>=80?'Satisfactorio':stats.pctSat>=60?'Cuestionable':'No satisfactorio'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function populateEvalParams(){
+  const sel=document.getElementById('eval-param');
+  if(!sel) return;
+  const m=document.getElementById('eval-muestra').value;
+  const params=m==='rbd'?PARAMS_RBD:PARAMS_CPO;
+  sel.innerHTML=params.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+}
+
+function renderControlChart(){
+  const m = document.getElementById('eval-muestra')?.value;
+  const pid = document.getElementById('eval-param')?.value;
+  if(!m||!pid) return;
+  const param = (m==='rbd'?PARAMS_RBD:PARAMS_CPO).find(p=>p.id===pid);
+  const refV = (m==='rbd'?REF.rbd:REF.cpo)[pid];
+  const filtered = RESULTADOS.filter(r=>r.muestra===m&&r.paramId===pid);
+  const ctx = document.getElementById('control-chart')?.getContext('2d');
+  if(!ctx) return;
+  if(controlChart) controlChart.destroy();
+  if(!filtered.length||refV===undefined){ ctx.clearRect(0,0,800,280); return; }
+  const sigma = calcSigma(refV);
+  const labels = filtered.map(r=>r.codigo);
+  const zData = filtered.map(r=>calcZ(r.promedio,refV));
+  const isAdminCtrl = SESSION && SESSION.rol==='admin';
+  const colors = filtered.map((r,i)=>{
+    const z = zData[i];
+    const base = Math.abs(z)<=2?'#16a34a':Math.abs(z)<=3?'#d97706':'#dc2626';
+    if(!isAdminCtrl && r.user!==SESSION.user) return base+'55'; // fade others
+    return base;
+  });
+  controlChart = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        { label:'Z-score', data:zData, backgroundColor:colors, borderRadius:5, borderSkipped:false },
+        { type:'line', label:'+2σ (límite satisfactorio)', data:Array(labels.length).fill(2), borderColor:'#16a34a', borderDash:[5,3], borderWidth:1.5, pointRadius:0, fill:false },
+        { type:'line', label:'-2σ', data:Array(labels.length).fill(-2), borderColor:'#16a34a', borderDash:[5,3], borderWidth:1.5, pointRadius:0, fill:false },
+        { type:'line', label:'+3σ (límite acción)', data:Array(labels.length).fill(3), borderColor:'#dc2626', borderDash:[4,2], borderWidth:1.5, pointRadius:0, fill:false },
+        { type:'line', label:'-3σ', data:Array(labels.length).fill(-3), borderColor:'#dc2626', borderDash:[4,2], borderWidth:1.5, pointRadius:0, fill:false },
+        { type:'line', label:'Centro (0)', data:Array(labels.length).fill(0), borderColor:'#185FA5', borderWidth:1.5, pointRadius:0, fill:false },
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`Z=${ctx.parsed.y.toFixed(3)}`}}},
+      scales:{
+        y:{title:{display:true,text:'Z-score'},grid:{color:'#f1f5f9'},
+           ticks:{callback:v=>`Z=${v}`}},
+        x:{grid:{display:false}}
+      }}
+  });
+}
+
+function renderAnalistaCards(ranked, showRank=true){
+  const wrap = document.getElementById('analista-cards');
+  if(!ranked.length){ wrap.innerHTML='<p style="color:var(--light);font-size:13px">Sin datos suficientes. Espera a que los analistas ingresen resultados y el admin configure los valores de referencia.</p>'; return; }
+  wrap.innerHTML = ranked.map(({u,stats},rank)=>{
+    const photo = getPhotoEl(u.user, 64, 'analista-photo');
+    const medals = ['🥇','🥈','🥉'];
+    const medal = showRank ? (rank<3?medals[rank]:`#${rank+1}`) : '';
+    const zc = stats.pctSat>=80?{cls:'z-ok',label:'Satisfactorio',bg:'#dcfce7',color:'#15803d'}:
+               stats.pctSat>=60?{cls:'z-warn',label:'Cuestionable',bg:'#fef9c3',color:'#a16207'}:
+               {cls:'z-fail',label:'No satisfactorio',bg:'#fee2e2',color:'#b91c1c'};
+    // detail rows
+    const rows = stats.withRef.map(r=>{
+      const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
+      const z=calcZ(r.promedio,rv); const zc2=zClass(z);
+      const cv=calcCV(r.reps); const bias=calcBias(r.promedio,rv);
+      const cvcls=cv===null?'b-gray':cv<=2?'b-ok':cv<=5?'b-warn':'b-fail';
+      return `<tr>
+        <td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td>
+        <td style="text-align:left;font-weight:500">${r.paramNombre}</td>
+        <td>${r.promedio.toFixed(4)}</td><td>${rv}</td>
+        <td class="${zc2.cls}">${z.toFixed(3)}</td>
+        <td><span class="badge ${zc2.badge}">${zc2.label}</span></td>
+        <td><span class="badge ${cvcls}">${cv!==null?cv.toFixed(2)+'%':'—'}</span></td>
+        <td style="${Math.abs(bias)>10?'color:#dc2626;font-weight:700':'color:#64748b'}">${bias.toFixed(2)}%</td>
+      </tr>`;
+    }).join('');
+    return `<div class="analista-card">
+      <div class="analista-card-header">
+        ${photo}
+        <div class="analista-card-info">
+          <div class="analista-card-name">${medal} ${u.nombre}</div>
+          <div class="analista-card-meta">
+            <span class="code-badge">${u.codigo}</span>
+            <span style="background:${zc.bg};color:${zc.color};padding:2px 10px;border-radius:100px;font-size:11px;font-weight:600">${zc.label}</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:28px;font-weight:800;color:#3730a3">${stats.score.toFixed(1)}</div>
+          <div style="font-size:10px;color:var(--muted)">puntos</div>
+        </div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.pctSat>=80?'#16a34a':stats.pctSat>=60?'#d97706':'#dc2626'}">${stats.pctSat.toFixed(0)}%</div><div class="mini-stat-lbl">Satisfactorios</div></div>
+        <div class="mini-stat"><div class="mini-stat-val">${stats.sat}</div><div class="mini-stat-lbl">✅ OK</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.avgCV!==null&&stats.avgCV<=2?'#16a34a':stats.avgCV<=5?'#d97706':'#dc2626'}">${stats.avgCV!==null?stats.avgCV.toFixed(2)+'%':'—'}</div><div class="mini-stat-lbl">CV% prom.</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.avgBias<=5?'#16a34a':stats.avgBias<=10?'#d97706':'#dc2626'}">${stats.avgBias.toFixed(2)}%</div><div class="mini-stat-lbl">Sesgo prom.</div></div>
+      </div>
+      <div class="table-wrap"><table class="params-detail">
+        <thead><tr><th>Muestra</th><th style="text-align:left">Parámetro</th><th>Resultado</th><th>Referencia</th><th>Z-score</th><th>Calificación</th><th>CV%</th><th>Sesgo%</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>`;
+  }).join('');
+}
+
+// Patch gotoSection for evaluacion
+const _origGoto = gotoSection;
+function gotoSection(name,el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(name==='dashboard') refreshDashboard();
+  if(name==='resultados') renderAllResults();
+  if(name==='estadisticas'){ refreshStatChart(); renderZScores(); }
+  if(name==='participantes') renderParticipants();
+  if(name==='misresultados') renderMisResultados();
+  if(name==='evaluacion'){
+    const t=document.getElementById('eval-page-title');
+    const s=document.getElementById('eval-page-sub');
+    const isA = SESSION && SESSION.rol!=='admin';
+    if(t) t.textContent = isA ? '🔬 Mi evaluación' : '🏆 Evaluación & Ranking';
+    if(s) s.textContent = isA ? 'Tus resultados vs laboratorio certificado' : 'Desempeño por analista — Z-score · CV% · Sesgo · Ranking final';
+    renderEvaluacion();
+  }
+}
+</script>
+</body>
+</html>
