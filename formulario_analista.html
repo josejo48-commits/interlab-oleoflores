@@ -415,14 +415,41 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;color:#1e293b;backg
 
 <!-- P4: CONFIRMACIÓN -->
 <div class="pantalla" id="p-enviado">
-  <div class="enviado-icon">✅</div>
-  <div class="enviado-title">¡Resultados enviados!</div>
-  <div class="enviado-sub">Tus datos han sido registrados correctamente. El coordinador del interlaboratorio los revisará.</div>
+  <div class="enviado-icon" style="font-size:80px;margin-bottom:16px;animation:bounceIn .6s ease">🎉</div>
+  <div class="enviado-title" style="font-size:26px;font-weight:900;color:#fff;margin-bottom:10px">¡Muchas gracias!</div>
+  <div class="enviado-sub" style="font-size:15px;color:rgba(255,255,255,.75);max-width:400px;line-height:1.7;margin-bottom:4px">
+    Tus resultados fueron enviados exitosamente al sistema de interlaboratorio.<br>
+    <span style="color:#a78bfa">OLEOFLORES S.A.S</span> agradece tu participación.
+  </div>
   <div class="enviado-detail" id="enviado-detail"></div>
-  <p style="margin-top:24px;font-size:11px;color:rgba(255,255,255,.3)">Puedes cerrar esta ventana</p>
+  <div style="margin-top:28px;display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:360px">
+    <button onclick="window.close()" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.3px">
+      ✔ Cerrar ventana
+    </button>
+
+  </div>
 </div>
 
 <script>
+// ── REINICIAR FORMULARIO ─────────────────────────────────────
+function reiniciarFormulario(){
+  SESSION = null;
+  document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => el.value = '');
+  document.querySelectorAll('.avg-cell, [id$="_avg"]').forEach(el => el.textContent = '—');
+}
+
+// ── ENTER KEY NAVIGATION ─────────────────────────────────────
+function moverEnter(e, el){
+  if(e.key !== 'Enter') return;
+  e.preventDefault();
+  // Find all inputs in the form
+  const inputs = Array.from(document.querySelectorAll('input[type="number"], input[type="text"]'));
+  const idx = inputs.indexOf(el);
+  if(idx >= 0 && idx < inputs.length - 1){
+    inputs[idx + 1].focus();
+  }
+}
+
 // ── LABORATORIOS ─────────────────────────────────────────────
 // tipo: 'ambas' = RBD + CPO | 'cpo' = solo CPO
 // dobi: true = ve DOBI en CPO
@@ -443,7 +470,7 @@ const LABS = [
 // RBD: solo Oleoflores
 const PARAMS_RBD = [
   { id:'acidez',       nombre:'Acidez (palmítico)',       unit:'%',          tipo:'acidez'   },
-  { id:'humedad',      nombre:'Humedad',                 unit:'%',          tipo:'directo'  },
+  { id:'humedad',      nombre:'Humedad por horno',        unit:'%',          tipo:'horno'    },
   { id:'color_y',      nombre:'Color Lovibond Y',        unit:'Y',          tipo:'directo'  },
   { id:'color_r',      nombre:'Color Lovibond R',        unit:'R',          tipo:'directo'  },
   { id:'color_a',      nombre:'Color Lovibond A (Azul)', unit:'A',          tipo:'directo'  },
@@ -459,7 +486,7 @@ const PARAMS_RBD = [
 // CPO: todos los posibles — se filtran por lab.params_cpo
 const PARAMS_CPO_ALL = [
   { id:'acidez',      nombre:'Acidez (palmítico)',       unit:'%',          tipo:'acidez'  },
-  { id:'humedad',     nombre:'Humedad',                 unit:'%',          tipo:'directo' },
+  { id:'humedad',     nombre:'Humedad por horno',        unit:'%',          tipo:'horno'   },
   { id:'impurezas',   nombre:'Impurezas',               unit:'%',          tipo:'directo' },
   { id:'indice_yodo', nombre:'Índice de Yodo (Wijs)',   unit:'g I₂/100g',  tipo:'yodo'    },
   { id:'dobi',        nombre:'DOBI',                    unit:'',           tipo:'dobi'    },
@@ -646,7 +673,44 @@ function buildForm(){
       </div>
       <div class="param-body">`;
 
-    if(p.tipo==='directo'){
+    if(p.tipo==='horno'){
+      // Humedad por horno - solo LAB-01
+      const isLab01 = SESSION && SESSION.codigo === 'LAB-01';
+      if(isLab01){
+        html+=`
+        <div style="background:#eff6ff;border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #3b82f6;font-size:12px;color:#1d4ed8">
+          <strong>📐 Fórmula:</strong> Humedad% = ((Beaker + Muestra húmeda) − Muestra seca) ÷ Peso muestra × 100
+        </div>
+        <table class="reps-table">
+          <thead><tr>
+            <th>Rep.</th>
+            <th>Beaker vacío (g)</th>
+            <th>Peso muestra (g)</th>
+            <th>Beaker + M. húmeda (g)<br><small style="font-weight:400;color:#94a3b8">auto: beaker + muestra</small></th>
+            <th>Muestra seca (g)<br><small style="font-weight:400;color:#94a3b8">beaker + muestra tras horno</small></th>
+            <th>Humedad%</th>
+          </tr></thead><tbody>`;
+        for(let i=1;i<=3;i++) html+=`<tr>
+          <td class="rlabel">Rep. ${i}</td>
+          <td><input type="number" step="0.0001" id="${p.id}_bv${i}" placeholder="0.0000" oninput="calcHornoHumedad('${p.id}')" onkeydown="moverEnter(event,this)"></td>
+          <td><input type="number" step="0.0001" id="${p.id}_pm${i}" placeholder="0.0000" oninput="calcHornoHumedad('${p.id}')" onkeydown="moverEnter(event,this)"></td>
+          <td><input type="number" step="0.0001" id="${p.id}_bph${i}" placeholder="auto" style="background:#f0fdf4;color:#15803d;font-weight:600" readonly></td>
+          <td><input type="number" step="0.0001" id="${p.id}_ms${i}"  placeholder="0.0000" oninput="calcHornoHumedad('${p.id}')" onkeydown="moverEnter(event,this)"></td>
+          <td id="${p.id}_calc${i}" style="font-weight:700">—</td>
+        </tr>`;
+        html+=`<tr class="avg-row"><td colspan="5" style="text-align:right;padding:8px 12px">📊 Promedio Humedad%</td><td id="${p.id}_avg">—</td></tr></tbody></table>`;
+      } else {
+        // Otros labs: entrada directa
+        html+=`<table class="reps-table">
+          <thead><tr><th>Repetición</th><th>Humedad (%)</th><th>Valor</th></tr></thead><tbody>`;
+        for(let i=1;i<=3;i++) html+=`<tr>
+          <td class="rlabel">Rep. ${i}</td>
+          <td><input type="number" step="0.001" id="${p.id}_r${i}" placeholder="0.000" oninput="calcDirecto('${p.id}')" onkeydown="moverEnter(event,this)"></td>
+          <td id="${p.id}_calc${i}">—</td></tr>`;
+        html+=`<tr class="avg-row"><td colspan="2" style="text-align:right;padding:8px 12px">📊 Promedio final</td><td id="${p.id}_avg">—</td></tr></tbody></table>`;
+      }
+
+    } else if(p.tipo==='directo'){
       html+=`<table class="reps-table">
         <thead><tr><th>Repetición</th><th>Lectura (${p.unit})</th><th>Valor</th></tr></thead><tbody>`;
       for(let i=1;i<=3;i++) html+=`<tr>
@@ -690,14 +754,13 @@ function buildForm(){
       html+=`<tr class="avg-row"><td colspan="3" style="text-align:right;padding:8px 12px">📊 Promedio final</td><td id="${p.id}_avg">—</td></tr></tbody></table>`;
 
     } else if(p.tipo==='dobi'){
-      html+=`<table class="reps-table"><thead><tr><th>Rep.</th><th>A₂₆₉</th><th>A₄₄₆</th><th>A₅₀₈</th><th>DOBI</th></tr></thead><tbody>`;
+      html+=`<table class="reps-table"><thead><tr><th>Rep.</th><th>A₄₄₆</th><th>A₂₆₉</th><th>DOBI</th></tr></thead><tbody>`;
       for(let i=1;i<=3;i++) html+=`<tr>
         <td class="rlabel">Rep. ${i}</td>
-        <td><input type="number" step="0.001" id="${p.id}_a269_${i}" placeholder="0.000" oninput="calcDobi('${p.id}')"></td>
-        <td><input type="number" step="0.001" id="${p.id}_a446_${i}" placeholder="0.000" oninput="calcDobi('${p.id}')"></td>
-        <td><input type="number" step="0.001" id="${p.id}_a508_${i}" placeholder="0.000" oninput="calcDobi('${p.id}')"></td>
+        <td><input type="number" step="0.001" id="${p.id}_a446_${i}" placeholder="0.000" oninput="calcDobi('${p.id}')" onkeydown="moverEnter(event,this)"></td>
+        <td><input type="number" step="0.001" id="${p.id}_a269_${i}" placeholder="0.000" oninput="calcDobi('${p.id}')" onkeydown="moverEnter(event,this)"></td>
         <td id="${p.id}_calc${i}">—</td></tr>`;
-      html+=`<tr class="avg-row"><td colspan="4" style="text-align:right;padding:8px 12px">📊 Promedio DOBI</td><td id="${p.id}_avg">—</td></tr></tbody></table>`;
+      html+=`<tr class="avg-row"><td colspan="3" style="text-align:right;padding:8px 12px">📊 Promedio DOBI</td><td id="${p.id}_avg">—</td></tr></tbody></table>`;
     }
 
     html += '</div></div>';
@@ -725,7 +788,7 @@ function calcYodo(pid){clearMark(pid);
   setAvg(pid,vals);
 }
 function calcDobi(pid){clearMark(pid);
-  const vals=[1,2,3].map(i=>{const a269=gv(`${pid}_a269_${i}`),a446=gv(`${pid}_a446_${i}`),a508=gv(`${pid}_a508_${i}`);const r=(a446+a508)>0?a269/(a446+a508):null;setCell(`${pid}_calc${i}`,r);return r||0;});
+  const vals=[1,2,3].map(i=>{const a446=gv(`${pid}_a446_${i}`),a269=gv(`${pid}_a269_${i}`);const r=a269>0?a446/a269:null;setCell(`${pid}_calc${i}`,r);return r||0;});
   setAvg(pid,vals);
 }
 
@@ -754,7 +817,7 @@ function enviarResultados(){
       for(let i=1;i<=3;i++){ if(!gv(`${p.id}_pm${i}`)||!gv(`${p.id}_v${i}`)) camposOk=false; }
     } else if(p.tipo==='dobi'){
       for(let i=1;i<=3;i++){
-        if(!gv(`${p.id}_a269_${i}`)||!gv(`${p.id}_a446_${i}`)||!gv(`${p.id}_a508_${i}`)) camposOk=false;
+        if(!gv(`${p.id}_a269_${i}`)||!gv(`${p.id}_a446_${i}`)) camposOk=false;
       }
     }
 
@@ -893,6 +956,35 @@ function toggleSlideBg(id){
   if(over) over.style.display = showBg ? 'block' : 'none';
   if(cap)  cap.style.display  = showBg ? 'flex'  : 'none';
   if(mBtn) mBtn.style.display = showBg ? 'flex'  : 'none';
+}
+
+// ── HUMEDAD POR HORNO ────────────────────────────────────────
+function calcHornoHumedad(pid){
+  clearMark(pid);
+  const vals=[1,2,3].map(i=>{
+    const bv  = gv(`${pid}_bv${i}`);   // beaker vacío
+    const pm  = gv(`${pid}_pm${i}`);   // peso muestra
+    const ms  = gv(`${pid}_ms${i}`);   // muestra seca (beaker + muestra tras horno)
+
+    // Auto-fill beaker + muestra húmeda
+    if(bv!==null && pm!==null){
+      const bph = bv + pm;
+      const el = document.getElementById(`${pid}_bph${i}`);
+      if(el) el.value = bph.toFixed(4);
+    }
+
+    if(bv===null || pm===null || ms===null || pm===0) return null;
+    const bph = bv + pm;
+    // Humedad% = (bph - ms) / pm * 100
+    const hum = ((bph - ms) / pm) * 100;
+    setCell(`${pid}_calc${i}`, hum>=0 ? hum : null);
+    return hum>=0 ? hum : null;
+  });
+  const valid = vals.filter(v=>v!==null);
+  const avg = valid.length ? valid.reduce((a,b)=>a+b,0)/valid.length : null;
+  setCell(`${pid}_avg`, avg);
+  const rp = document.getElementById(`rp_${pid}`);
+  if(rp) rp.textContent = avg!==null ? avg.toFixed(4) : '—';
 }
 
 // ── MÚSICA ───────────────────────────────────────────────────

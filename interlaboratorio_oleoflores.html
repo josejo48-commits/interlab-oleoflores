@@ -166,6 +166,14 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
 .reps-table input[type=number]{background:transparent;border:none;border-radius:0;padding:2px 4px;font-size:12px;text-align:center;width:100%;min-width:70px;font-family:'Inter',sans-serif}
 .reps-table input[type=number]:focus{background:rgba(124,58,237,.08);box-shadow:none;border-bottom:2px solid #7c3aed;outline:none}
 .common-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;padding:10px 12px;background:#fff;border-radius:8px;border:1px solid #ede9fe}
+.info-block{background:#f8fafc;border-radius:8px;padding:10px 14px;border:1px solid #e2e8f0}
+.info-label{display:block;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.info-val{display:block;font-size:13px;font-weight:600;color:#1e293b}
+@media print{.sidebar,.topbar,#nav-auditor{display:none!important}.main{padding:0!important}.screen.active{display:block!important}}
+.info-block{background:#f8fafc;border-radius:8px;padding:10px 14px;border:1px solid #e2e8f0}
+.info-label{display:block;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.info-val{display:block;font-size:13px;font-weight:600;color:#1e293b}
+@media print{.sidebar,.topbar{display:none!important}.main{padding:0!important}}
 </style>
 
   <!-- ── FIREBASE ADMIN ──────────────────────────────────────── -->
@@ -288,6 +296,7 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
       <div class="nav-section">Config.</div>
       <div class="nav-item" id="nav-referencia" onclick="gotoSection('referencia',this)">🏛️ Lab. referencia</div>
       <div class="nav-item" id="nav-participantes" onclick="gotoSection('participantes',this)">👥 Participantes</div>
+      <div class="nav-item" id="nav-auditor" onclick="gotoSection('auditor',this)">📄 Informe auditor</div>
     </div>
 
     <div class="main">
@@ -355,23 +364,41 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
 
       <!-- ESTADÍSTICAS -->
       <div id="sec-estadisticas" class="screen">
-        <div class="page-header"><div><div class="page-title">Estadísticas</div><div class="page-sub">Z-score por parámetro</div></div></div>
-        <div class="card" style="margin-bottom:14px">
-          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
-            <div class="fg" style="flex:1;min-width:130px;margin:0"><label class="fl">Muestra</label>
-              <select id="stat-muestra" onchange="populateStatParams();refreshStatChart()">
+        <div class="page-header"><div><div class="page-title">Estadísticas</div><div class="page-sub">Paso a paso · Z-score · CV% · Sesgo · por analista</div></div></div>
+
+        <!-- FILTROS -->
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div class="fg" style="flex:1;min-width:150px;margin:0"><label class="fl">Analista</label>
+              <select id="stat-analista" onchange="refreshEstadisticas();renderPasoAPaso()">
+                <option value="todos">Todos</option>
+              </select></div>
+            <div class="fg" style="flex:1;min-width:120px;margin:0"><label class="fl">Muestra</label>
+              <select id="stat-muestra" onchange="populateStatParams();refreshEstadisticas()">
                 <option value="rbd">RBD</option><option value="cpo">CPO</option>
               </select></div>
             <div class="fg" style="flex:2;min-width:180px;margin:0"><label class="fl">Parámetro</label>
-              <select id="stat-param" onchange="refreshStatChart()"></select></div>
+              <select id="stat-param" onchange="refreshEstadisticas()"></select></div>
           </div>
+        </div>
+
+        <!-- GRÁFICA -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📊 Comparación de resultados por laboratorio</div>
           <div style="position:relative;height:260px"><canvas id="stat-chart" role="img" aria-label="Comparación"></canvas></div>
         </div>
-        <div class="card"><div class="card-title">📋 Tabla Z-scores</div>
+
+        <!-- PASO A PASO -->
+        <div id="stat-paso-wrap"></div>
+
+        <!-- TABLA Z-SCORES -->
+        <div class="card">
+          <div class="card-title">📋 Tabla resumen Z-scores</div>
           <div class="table-wrap"><table>
-            <thead><tr><th>Código</th><th>Muestra</th><th>Parámetro</th><th>Promedio</th><th>Ref.</th><th>σ</th><th>Z</th><th>Calificación</th></tr></thead>
+            <thead><tr><th>Lab.</th><th>Analista</th><th>Muestra</th><th>Parámetro</th><th>Promedio</th><th>Ref.</th><th>σ</th><th>Z</th><th>Calificación</th></tr></thead>
             <tbody id="zscore-body"></tbody>
-          </table></div></div>
+          </table></div>
+        </div>
       </div>
 
       <!-- REFERENCIA -->
@@ -436,10 +463,26 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
         </div>
 
         <!-- PODIO -->
-        <div id="podio-wrap" style="margin-bottom:20px"></div>
+        <div id="podio-wrap"></div>
+
+        <!-- FICHAS POR ANALISTA — primero para visibilidad inmediata -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">👤 Ficha por analista · RBD y CPO separados</div>
+          <div id="analista-cards"></div>
+        </div>
+
+        <!-- R&R justo después de fichas -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📊 Ejercicio R&R — Repetibilidad y Reproducibilidad</div>
+          <div style="margin-bottom:10px;font-size:12px;color:#64748b;line-height:1.6">
+            <strong>Repetibilidad</strong>: variación dentro del mismo laboratorio (CV% promedio del triplicado) ·
+            <strong>Reproducibilidad</strong>: variación entre laboratorios (CV% de promedios entre labs)
+          </div>
+          <div id="rr-section"><p style="color:#94a3b8;font-size:13px">Sin datos suficientes para R&R.</p></div>
+        </div>
 
         <!-- RANKING TABLE -->
-        <div class="card" style="margin-bottom:16px">
+        <div class="card" style="margin-bottom:12px">
           <div class="card-title">📋 Ranking completo de analistas</div>
           <div class="table-wrap">
             <table>
@@ -450,7 +493,7 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
         </div>
 
         <!-- GRÁFICAS DE CONTROL -->
-        <div class="card" style="margin-bottom:16px">
+        <div class="card" style="margin-bottom:12px">
           <div class="card-title">📈 Gráfica de control — Z-scores por parámetro</div>
           <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
             <div class="fg" style="flex:1;min-width:140px;margin:0"><label class="fl">Muestra</label>
@@ -468,13 +511,89 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
           </div>
         </div>
 
-        <!-- TARJETAS DE ANALISTA -->
-        <div class="card">
-          <div class="card-title">👤 Detalle por analista</div>
-          <div id="analista-cards"></div>
+
+
+        <div style="display:none">
         </div>
       </div>
 
+
+      <!-- INFORME AUDITOR -->
+      <div id="sec-auditor" class="screen">
+        <div class="page-header"><div>
+          <div class="page-title">📄 Informe para Auditor</div>
+          <div class="page-sub">Trazabilidad completa · Metodología · Criterios de evaluación · Resultados</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Imprimir / PDF</button>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">🏛️ Laboratorio de referencia acreditado</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:8px">
+            <div class="info-block"><span class="info-label">Certificado</span><span class="info-val">LABGIBQ-575-26</span></div>
+            <div class="info-block"><span class="info-label">Laboratorio</span><span class="info-val">General Inspections SAS</span></div>
+            <div class="info-block"><span class="info-label">Fecha análisis</span><span class="info-val">06/06/2026</span></div>
+            <div class="info-block"><span class="info-label">Lote RBD</span><span class="info-val">010626 · RBD PALMA TK 13</span></div>
+            <div class="info-block"><span class="info-label">Lote CPO</span><span class="info-val">L010626 · CPO DE PALMA</span></div>
+            <div class="info-block"><span class="info-label">Cliente</span><span class="info-val">OLEOFLORES S.A.S</span></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">⚗️ Metodología analítica y normas aplicadas</div>
+          <div class="table-wrap" style="margin-top:8px">
+            <table>
+              <thead><tr><th>Parámetro</th><th>Norma</th><th>Fórmula de cálculo</th><th>Unidad</th></tr></thead>
+              <tbody>
+                <tr><td>Acidez (F.F.A. palmítico)</td><td>ISO 660:2020</td><td>% = (V × N × 25.6) / Pm</td><td>%</td></tr>
+                <tr><td>Humedad y Materia Volátil</td><td>ISO 662:2016</td><td>Promedio de triplicado gravimétrico</td><td>%</td></tr>
+                <tr><td>Impurezas insolubles</td><td>ISO 663:2017</td><td>Promedio de triplicado gravimétrico</td><td>%</td></tr>
+                <tr><td>Color Lovibond</td><td>ISO 15305:1998</td><td>Lectura directa celda 5¼"</td><td>R / Y / A</td></tr>
+                <tr><td>Índice de Yodo (Wijs)</td><td>ISO 3961:2024</td><td>IV = ((Vblanco − V) × N × 12.69) / Pm</td><td>g I₂/100g</td></tr>
+                <tr><td>Índice de Peróxido</td><td>ISO 3960:2017</td><td>IP = (V × 10) / Pm</td><td>meq O₂/kg</td></tr>
+                <tr><td>DOBI</td><td>ISO 17932:2011</td><td>DOBI = A₄₄₆ / A₂₆₉</td><td>adimensional</td></tr>
+                <tr><td>SFC (Contenido grasa sólida)</td><td>AOCS Cd 16b-93</td><td>RMN pulsada a 20/30/35/40°C</td><td>%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📐 Criterios estadísticos de evaluación (ISO 13528)</div>
+          <div style="margin-top:10px;font-size:13px;line-height:1.8">
+            <p style="margin:0 0 8px"><strong>Z-score</strong> — Desviación del resultado del participante respecto al valor certificado:</p>
+            <div style="background:#f8fafc;border-left:3px solid #7c3aed;padding:10px 16px;border-radius:0 8px 8px 0;margin-bottom:12px;font-size:13px">
+              Z = (X<sub>analista</sub> − X<sub>referencia</sub>) / σ &nbsp;&nbsp;·&nbsp;&nbsp; σ = |X<sub>ref</sub>| × 0.03 &nbsp;(3% del valor certificado)
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
+              <div style="background:#dcfce7;border-radius:8px;padding:10px 14px;border-left:3px solid #16a34a">
+                <div style="font-weight:600;color:#15803d;font-size:13px">✅ Satisfactorio</div>
+                <div style="font-size:12px;color:#166534">|Z| ≤ 2 · Resultado aceptable</div>
+              </div>
+              <div style="background:#fef9c3;border-radius:8px;padding:10px 14px;border-left:3px solid #ca8a04">
+                <div style="font-weight:600;color:#854d0e;font-size:13px">⚠️ Cuestionable</div>
+                <div style="font-size:12px;color:#854d0e">2 &lt; |Z| ≤ 3 · Requiere revisión</div>
+              </div>
+              <div style="background:#fee2e2;border-radius:8px;padding:10px 14px;border-left:3px solid #dc2626">
+                <div style="font-weight:600;color:#991b1b;font-size:13px">❌ No satisfactorio</div>
+                <div style="font-size:12px;color:#991b1b">|Z| &gt; 3 · Acción correctiva requerida</div>
+              </div>
+            </div>
+            <p style="margin:0 0 6px"><strong>CV%</strong> — Repetibilidad interna: CV% = (DE / Promedio) × 100 &nbsp;→&nbsp; Aceptable: CV% ≤ 5%</p>
+            <p style="margin:0"><strong>Sesgo%</strong> — Exactitud sistemática: Sesgo% = ((Promedio − Referencia) / Referencia) × 100</p>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📋 Resultados por laboratorio con evaluación estadística</div>
+          <div class="table-wrap" style="margin-top:8px">
+            <table>
+              <thead><tr><th>Lab.</th><th>Analista</th><th>Muestra</th><th>Parámetro</th><th>Rep.1</th><th>Rep.2</th><th>Rep.3</th><th>Promedio</th><th>Referencia</th><th>σ</th><th>Z-score</th><th>CV%</th><th>Sesgo%</th><th>Calificación</th></tr></thead>
+              <tbody id="auditor-tbody"><tr><td colspan="14" style="text-align:center;color:#94a3b8;padding:20px">Sin datos</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🏆 Resumen de desempeño por laboratorio</div>
+          <div id="auditor-resumen" style="margin-top:8px"><p style="color:#94a3b8;font-size:13px">Sin datos suficientes.</p></div>
+        </div>
+      </div>
     </div><!-- /main -->
   </div><!-- /layout -->
 </div><!-- /app -->
@@ -533,7 +652,47 @@ let USERS = [
   { user:'analista3', pass:'1234', rol:'participante',   nombre:'Ext AGC',                  codigo:'LAB-03', color:'#2563eb' },
   { user:'analista4', pass:'1234', rol:'participante',   nombre:'Ext Sinú',                 codigo:'LAB-04', color:'#d97706' },
 ];
-let REF = { rbd:{}, cpo:{} };
+let REF = {
+  rbd:{
+    acidez:       0.05,
+    humedad:      0.02,
+    impurezas:    0.00,
+    color_y:      34,
+    color_r:      2.0,
+    color_a:      0.0,
+    indice_yodo:  50.24,
+    punto_fusion: 38.5,
+    peroxido:     0.20,
+    sfc_20:       25.84,
+    sfc_30:       9.00,
+    sfc_35:       5.12,
+    sfc_40:       2.25,
+  },
+  cpo:{
+    acidez:       2.41,
+    humedad:      0.14,
+    impurezas:    0.02,
+    dobi:         2.76,
+    indice_yodo:  53.93,
+  }
+};
+const REF_META = {
+  certificado: 'LABGIBQ-575-26',
+  laboratorio: 'General Inspections SAS',
+  fecha:       '06/06/2026',
+  lote_rbd:    '010626 - RBD PALMA TK 13',
+  lote_cpo:    'L010626 - CPO DE PALMA',
+  normas: {
+    acidez:      'ISO 660:2020',
+    humedad:     'ISO 662:2016',
+    impurezas:   'ISO 663:2017',
+    color:       'ISO 15305:1998',
+    indice_yodo: 'ISO 3961:2024',
+    peroxido:    'ISO 3960:2017',
+    dobi:        'ISO 17932:2011',
+    sfc:         '*Cd 16b-93 (AOCS)',
+  }
+};
 let RESULTADOS = [];
 let SESSION = null;
 let statChart = null, dashChart = null;
@@ -641,7 +800,7 @@ function doLogout(){ if(!confirm('¿Cerrar sesión?')) return; if(window._unsubs
 // =========================================================
 function setupNav(){
   const isAdmin=SESSION.rol==='admin';
-  ['resultados','estadisticas','referencia','participantes'].forEach(id=>{ document.getElementById('nav-'+id).style.display=isAdmin?'flex':'none'; });
+  ['resultados','estadisticas','referencia','participantes','auditor'].forEach(id=>{ document.getElementById('nav-'+id).style.display=isAdmin?'flex':'none'; });
   const evalNav=document.getElementById('nav-evaluacion'); if(evalNav) evalNav.style.display='flex';
   document.getElementById('nav-misresultados').style.display=isAdmin?'none':'flex';
   document.getElementById('nav-ingreso').style.display=isAdmin?'none':'flex';
@@ -653,7 +812,7 @@ function gotoSection(name,el){
   if(el) el.classList.add('active');
   if(name==='dashboard') refreshDashboard();
   if(name==='resultados') renderAllResults();
-  if(name==='estadisticas'){ refreshStatChart(); renderZScores(); }
+  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); }
   if(name==='participantes') renderParticipants();
   if(name==='misresultados') renderMisResultados();
 }
@@ -1005,6 +1164,7 @@ function refreshStatChart(){
   statChart=new Chart(ctx,{type:'bar',data:{labels:filtered.map(r=>r.codigo),datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}},scales:{y:{title:{display:true,text:param?param.unit:''},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
 }
 function renderZScores(){
+  populateAnalistaFilter();
   const tbody=document.getElementById('zscore-body');
   const withRef=RESULTADOS.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
   if(!withRef.length){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--light)">Sin datos</td></tr>'; return; }
@@ -1303,31 +1463,88 @@ function renderControlChart(){
 
 function renderAnalistaCards(ranked, showRank=true){
   const wrap = document.getElementById('analista-cards');
-  if(!ranked.length){ wrap.innerHTML='<p style="color:var(--light);font-size:13px">Sin datos suficientes. Espera a que los analistas ingresen resultados y el admin configure los valores de referencia.</p>'; return; }
+  if(!ranked.length){ wrap.innerHTML='<p style="color:var(--light);font-size:13px">Sin datos suficientes.</p>'; return; }
+
   wrap.innerHTML = ranked.map(({u,stats},rank)=>{
     const photo = getPhotoEl(u.user, 64, 'analista-photo');
     const medals = ['🥇','🥈','🥉'];
     const medal = showRank ? (rank<3?medals[rank]:`#${rank+1}`) : '';
-    const zc = stats.pctSat>=80?{cls:'z-ok',label:'Satisfactorio',bg:'#dcfce7',color:'#15803d'}:
-               stats.pctSat>=60?{cls:'z-warn',label:'Cuestionable',bg:'#fef9c3',color:'#a16207'}:
-               {cls:'z-fail',label:'No satisfactorio',bg:'#fee2e2',color:'#b91c1c'};
-    // detail rows
-    const rows = stats.withRef.map(r=>{
-      const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
-      const z=calcZ(r.promedio,rv); const zc2=zClass(z);
-      const cv=calcCV(r.reps); const bias=calcBias(r.promedio,rv);
-      const cvcls=cv===null?'b-gray':cv<=2?'b-ok':cv<=5?'b-warn':'b-fail';
-      return `<tr>
-        <td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td>
-        <td style="text-align:left;font-weight:500">${r.paramNombre}</td>
-        <td>${r.promedio.toFixed(4)}</td><td>${rv}</td>
-        <td class="${zc2.cls}">${z.toFixed(3)}</td>
-        <td><span class="badge ${zc2.badge}">${zc2.label}</span></td>
-        <td><span class="badge ${cvcls}">${cv!==null?cv.toFixed(2)+'%':'—'}</span></td>
-        <td style="${Math.abs(bias)>10?'color:#dc2626;font-weight:700':'color:#64748b'}">${bias.toFixed(2)}%</td>
-      </tr>`;
-    }).join('');
-    return `<div class="analista-card">
+    const zc = stats.pctSat>=80?{label:'Satisfactorio',bg:'#dcfce7',color:'#15803d'}:
+               stats.pctSat>=60?{label:'Cuestionable',bg:'#fef9c3',color:'#a16207'}:
+               {label:'No satisfactorio',bg:'#fee2e2',color:'#b91c1c'};
+
+    // Separate RBD and CPO results
+    const rbdRes = stats.withRef.filter(r=>r.muestra==='rbd');
+    const cpoRes = stats.withRef.filter(r=>r.muestra==='cpo');
+
+    function buildMuestraTable(resList, muestra) {
+      if(!resList.length) return `<div style="color:#94a3b8;font-size:12px;padding:8px">Sin datos de ${muestra.toUpperCase()}</div>`;
+      
+      // Per-muestra stats
+      const zs = resList.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv); });
+      const satM = zs.filter(z=>Math.abs(z)<=2).length;
+      const pctM = (satM/zs.length*100).toFixed(0);
+      const cvM = resList.map(r=>calcCV(r.reps)).filter(v=>v!==null);
+      const avgCVM = cvM.length ? (cvM.reduce((a,b)=>a+b,0)/cvM.length).toFixed(2) : '—';
+      const biasM = resList.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcBias(r.promedio,rv)); });
+      const avgBiasM = (biasM.reduce((a,b)=>a+b,0)/biasM.length).toFixed(2);
+      const bgM = muestra==='rbd'?'#eff6ff':'#fff7ed';
+      const borderM = muestra==='rbd'?'#3b82f6':'#f97316';
+      const titleM = muestra==='rbd'?'RBD PALMA':'CPO DE PALMA';
+
+      const rows = resList.map(r=>{
+        const rv = r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
+        const z = calcZ(r.promedio,rv);
+        const zc2 = zClass(z);
+        const cv = calcCV(r.reps);
+        const bias = calcBias(r.promedio,rv);
+        const reps = r.reps||[];
+        // DE
+        const vals = reps.filter(x=>x!=null);
+        let de = '—';
+        if(vals.length>=2){
+          const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
+          de = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1)).toFixed(5);
+        }
+        const sigma = Math.abs(rv)*0.03||0.1;
+        return `<tr>
+          <td style="font-weight:600;font-size:12px">${r.paramNombre}</td>
+          <td style="font-size:12px">${reps[0]!=null?Number(reps[0]).toFixed(4):'—'}</td>
+          <td style="font-size:12px">${reps[1]!=null?Number(reps[1]).toFixed(4):'—'}</td>
+          <td style="font-size:12px">${reps[2]!=null?Number(reps[2]).toFixed(4):'—'}</td>
+          <td style="font-weight:700">${r.promedio.toFixed(4)}</td>
+          <td style="font-size:12px;color:#64748b">${de}</td>
+          <td><span style="font-size:11px;font-weight:600;color:${cv!==null&&cv<=2?'#16a34a':cv!==null&&cv<=5?'#ca8a04':'#dc2626'}">${cv!==null?cv.toFixed(2)+'%':'—'}</span></td>
+          <td style="font-size:12px">${rv}</td>
+          <td style="font-size:12px;color:#64748b">${sigma.toFixed(4)}</td>
+          <td style="font-weight:700;color:${Math.abs(z)<=2?'#16a34a':Math.abs(z)<=3?'#ca8a04':'#dc2626'}">${z.toFixed(3)}</td>
+          <td><span class="badge ${zc2.badge}" style="font-size:10px">${zc2.label}</span></td>
+          <td style="font-size:12px;color:${Math.abs(bias)>10?'#dc2626':'#64748b'}">${bias.toFixed(2)}%</td>
+        </tr>`;
+      }).join('');
+
+      return `<div style="background:${bgM};border-radius:10px;padding:10px 14px;margin-bottom:10px;border-left:4px solid ${borderM}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+          <span style="font-weight:700;font-size:13px;color:#1e293b">🧪 ${titleM}</span>
+          <div style="display:flex;gap:12px;font-size:12px">
+            <span>✅ ${pctM}% satisfactorio</span>
+            <span>CV% prom: <strong>${avgCVM}%</strong></span>
+            <span>Sesgo prom: <strong>${avgBiasM}%</strong></span>
+          </div>
+        </div>
+        <div class="table-wrap"><table class="params-detail">
+          <thead><tr>
+            <th style="text-align:left">Parámetro</th>
+            <th>Rep.1</th><th>Rep.2</th><th>Rep.3</th>
+            <th>Promedio</th><th>DE</th><th>CV%</th>
+            <th>Referencia</th><th>σ (3%)</th><th>Z-score</th><th>Calificación</th><th>Sesgo%</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>`;
+    }
+
+    return `<div class="analista-card" style="margin-bottom:16px">
       <div class="analista-card-header">
         ${photo}
         <div class="analista-card-info">
@@ -1335,25 +1552,119 @@ function renderAnalistaCards(ranked, showRank=true){
           <div class="analista-card-meta">
             <span class="code-badge">${u.codigo}</span>
             <span style="background:${zc.bg};color:${zc.color};padding:2px 10px;border-radius:100px;font-size:11px;font-weight:600">${zc.label}</span>
+            <span style="font-size:11px;color:#64748b">Analista: ${RESULTADOS.find(r=>r.user===u.user)?.analista||'—'}</span>
           </div>
         </div>
         <div style="text-align:right">
           <div style="font-size:28px;font-weight:800;color:#3730a3">${stats.score.toFixed(1)}</div>
-          <div style="font-size:10px;color:var(--muted)">puntos</div>
+          <div style="font-size:10px;color:var(--muted)">puntos / 100</div>
         </div>
       </div>
       <div class="mini-stats">
-        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.pctSat>=80?'#16a34a':stats.pctSat>=60?'#d97706':'#dc2626'}">${stats.pctSat.toFixed(0)}%</div><div class="mini-stat-lbl">Satisfactorios</div></div>
-        <div class="mini-stat"><div class="mini-stat-val">${stats.sat}</div><div class="mini-stat-lbl">✅ OK</div></div>
-        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.avgCV!==null&&stats.avgCV<=2?'#16a34a':stats.avgCV<=5?'#d97706':'#dc2626'}">${stats.avgCV!==null?stats.avgCV.toFixed(2)+'%':'—'}</div><div class="mini-stat-lbl">CV% prom.</div></div>
-        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.avgBias<=5?'#16a34a':stats.avgBias<=10?'#d97706':'#dc2626'}">${stats.avgBias.toFixed(2)}%</div><div class="mini-stat-lbl">Sesgo prom.</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.pctSat>=80?'#16a34a':stats.pctSat>=60?'#d97706':'#dc2626'}">${stats.pctSat.toFixed(0)}%</div><div class="mini-stat-lbl">% Satisfactorio</div></div>
+        <div class="mini-stat"><div class="mini-stat-val">${stats.sat}/${stats.withRef.length}</div><div class="mini-stat-lbl">Params OK</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.avgCV!==null&&stats.avgCV<=2?'#16a34a':stats.avgCV<=5?'#d97706':'#dc2626'}">${stats.avgCV!==null?stats.avgCV.toFixed(2)+'%':'—'}</div><div class="mini-stat-lbl">CV% promedio</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.avgBias<=5?'#16a34a':stats.avgBias<=10?'#d97706':'#dc2626'}">${stats.avgBias.toFixed(2)}%</div><div class="mini-stat-lbl">Sesgo promedio</div></div>
+        <div class="mini-stat"><div class="mini-stat-val">${rbdRes.length}</div><div class="mini-stat-lbl">Params RBD</div></div>
+        <div class="mini-stat"><div class="mini-stat-val">${cpoRes.length}</div><div class="mini-stat-lbl">Params CPO</div></div>
       </div>
-      <div class="table-wrap"><table class="params-detail">
-        <thead><tr><th>Muestra</th><th style="text-align:left">Parámetro</th><th>Resultado</th><th>Referencia</th><th>Z-score</th><th>Calificación</th><th>CV%</th><th>Sesgo%</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>
+      ${buildMuestraTable(rbdRes,'rbd')}
+      ${buildMuestraTable(cpoRes,'cpo')}
     </div>`;
   }).join('');
+
+  // R&R section
+  renderRR();
+}
+
+// =========================================================
+// R&R — REPETIBILIDAD Y REPRODUCIBILIDAD
+// =========================================================
+function renderRR(){
+  const wrap = document.getElementById('rr-section');
+  if(!wrap) return;
+  if(!RESULTADOS.length){ wrap.innerHTML='<p style="color:#94a3b8;font-size:13px">Sin datos suficientes para R&R.</p>'; return; }
+
+  const muestras = ['rbd','cpo'];
+  let html = '';
+
+  muestras.forEach(muestra => {
+    const params = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+    const label = muestra==='rbd' ? 'RBD PALMA' : 'CPO DE PALMA';
+    const color = muestra==='rbd' ? '#3b82f6' : '#f97316';
+    
+    let paramRows = '';
+    params.forEach(p => {
+      const res = RESULTADOS.filter(r=>r.muestra===muestra && r.paramId===p.id);
+      if(res.length < 2) return; // need at least 2 labs
+
+      // Repetibilidad: average CV% within each operator
+      const repVals = res.map(r=>calcCV(r.reps)).filter(v=>v!==null);
+      const repetibilidad = repVals.length ? repVals.reduce((a,b)=>a+b,0)/repVals.length : null;
+
+      // Reproducibilidad: DE of averages between operators
+      const promedios = res.map(r=>r.promedio);
+      let reproducibilidad = null;
+      if(promedios.length >= 2){
+        const mean = promedios.reduce((a,b)=>a+b,0)/promedios.length;
+        const de = Math.sqrt(promedios.reduce((a,b)=>a+(b-mean)**2,0)/(promedios.length-1));
+        reproducibilidad = mean>0 ? (de/mean*100) : null;
+      }
+
+      // % contribution
+      let pctRep='—', pctRepro='—';
+      if(repetibilidad!==null && reproducibilidad!==null){
+        const total = repetibilidad + reproducibilidad;
+        pctRep = total>0 ? (repetibilidad/total*100).toFixed(0)+'%' : '—';
+        pctRepro = total>0 ? (reproducibilidad/total*100).toFixed(0)+'%' : '—';
+      }
+
+      const repCls = repetibilidad===null?'#94a3b8':repetibilidad<=2?'#16a34a':repetibilidad<=5?'#ca8a04':'#dc2626';
+      const reproCls = reproducibilidad===null?'#94a3b8':reproducibilidad<=5?'#16a34a':reproducibilidad<=10?'#ca8a04':'#dc2626';
+
+      // Lab results row
+      const labCols = res.map(r=>`<td style="font-size:11px;text-align:center">
+        <div>${r.promedio.toFixed(4)}</div>
+        <div style="color:#94a3b8;font-size:10px">${r.codigo||r.user}</div>
+      </td>`).join('');
+
+      paramRows += `<tr>
+        <td style="font-weight:600;font-size:12px">${p.nombre}</td>
+        ${labCols}
+        <td style="font-weight:700;color:${repCls};text-align:center">${repetibilidad!==null?repetibilidad.toFixed(2)+'%':'—'}</td>
+        <td style="font-weight:700;color:${reproCls};text-align:center">${reproducibilidad!==null?reproducibilidad.toFixed(2)+'%':'—'}</td>
+        <td style="font-size:11px;text-align:center;color:#64748b">${pctRep} / ${pctRepro}</td>
+      </tr>`;
+    });
+
+    if(!paramRows) return;
+
+    const labs = [...new Set(RESULTADOS.filter(r=>r.muestra===muestra).map(r=>r.codigo||r.user))];
+    const labHeaders = labs.map(l=>`<th style="text-align:center">${l}</th>`).join('');
+
+    html += `<div style="background:${muestra==='rbd'?'#eff6ff':'#fff7ed'};border-radius:10px;padding:12px 16px;margin-bottom:14px;border-left:4px solid ${color}">
+      <div style="font-weight:700;font-size:13px;color:#1e293b;margin-bottom:10px">🔬 R&R — ${label}</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:left">Parámetro</th>
+            ${labHeaders}
+            <th style="text-align:center">Repetibilidad<br><span style="font-weight:400;font-size:10px">CV% intra-lab</span></th>
+            <th style="text-align:center">Reproducibilidad<br><span style="font-weight:400;font-size:10px">CV% inter-lab</span></th>
+            <th style="text-align:center">% Contrib.<br><span style="font-weight:400;font-size:10px">Rep / Repro</span></th>
+          </tr></thead>
+          <tbody>${paramRows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#64748b">
+        <strong>Repetibilidad</strong>: variación dentro del mismo laboratorio (promedio CV% triplicado) · 
+        <strong>Reproducibilidad</strong>: variación entre laboratorios (CV% de promedios) · 
+        Criterio aceptable: Repetibilidad ≤ 5% · Reproducibilidad ≤ 10%
+      </div>
+    </div>`;
+  });
+
+  wrap.innerHTML = html || '<p style="color:#94a3b8;font-size:13px">Se necesitan al menos 2 laboratorios con datos para calcular R&R.</p>';
 }
 
 // Patch gotoSection for evaluacion
@@ -1365,9 +1676,10 @@ function gotoSection(name,el){
   if(el) el.classList.add('active');
   if(name==='dashboard') refreshDashboard();
   if(name==='resultados') renderAllResults();
-  if(name==='estadisticas'){ refreshStatChart(); renderZScores(); }
+  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); }
   if(name==='participantes') renderParticipants();
   if(name==='misresultados') renderMisResultados();
+  if(name==='auditor') renderAuditor();
   if(name==='evaluacion'){
     const t=document.getElementById('eval-page-title');
     const s=document.getElementById('eval-page-sub');
@@ -1376,6 +1688,333 @@ function gotoSection(name,el){
     if(s) s.textContent = isA ? 'Tus resultados vs laboratorio certificado' : 'Desempeño por analista — Z-score · CV% · Sesgo · Ranking final';
     renderEvaluacion();
   }
+}
+// =========================================================
+// INFORME AUDITOR
+// =========================================================
+function renderAuditor(){
+  const tbody = document.getElementById('auditor-tbody');
+  const resumen = document.getElementById('auditor-resumen');
+  if(!tbody) return;
+  if(!RESULTADOS.length){
+    tbody.innerHTML='<tr><td colspan="14" style="text-align:center;color:#94a3b8;padding:20px">Sin datos — esperando resultados de participantes</td></tr>';
+    resumen.innerHTML='<p style="color:#94a3b8;font-size:13px">Sin datos suficientes.</p>';
+    return;
+  }
+  const rows=RESULTADOS.map(r=>{
+    const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
+    if(rv===undefined) return null;
+    const sigma=Math.abs(rv)*0.03||0.1;
+    const z=(r.promedio-rv)/sigma;
+    const reps=r.reps||[];
+    const vals=reps.filter(x=>x!=null);
+    let cv='—';
+    if(vals.length>=2){
+      const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+      const de=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1));
+      cv=mean>0?(de/mean*100).toFixed(2)+'%':'—';
+    }
+    const sesgo=rv?((r.promedio-rv)/rv*100).toFixed(2)+'%':'—';
+    const absZ=Math.abs(z);
+    const cal=absZ<=2?{txt:'✅ Satisfactorio',col:'#16a34a'}:absZ<=3?{txt:'⚠️ Cuestionable',col:'#ca8a04'}:{txt:'❌ No satisfactorio',col:'#dc2626'};
+    return {r,rv,sigma,z,cv,sesgo,cal,reps};
+  }).filter(Boolean);
+  tbody.innerHTML=rows.map(({r,rv,sigma,z,cv,sesgo,cal,reps})=>`
+    <tr>
+      <td><span class="code-badge">${r.codigo||r.user}</span></td>
+      <td style="font-size:12px">${r.analista||r.nombre||'—'}</td>
+      <td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td>
+      <td style="font-size:12px">${r.paramNombre}</td>
+      <td style="font-size:12px">${reps[0]!=null?Number(reps[0]).toFixed(4):'—'}</td>
+      <td style="font-size:12px">${reps[1]!=null?Number(reps[1]).toFixed(4):'—'}</td>
+      <td style="font-size:12px">${reps[2]!=null?Number(reps[2]).toFixed(4):'—'}</td>
+      <td style="font-weight:700">${r.promedio.toFixed(4)}</td>
+      <td>${rv}</td>
+      <td style="font-size:12px;color:#64748b">${sigma.toFixed(4)}</td>
+      <td style="font-weight:700;color:${cal.col}">${z.toFixed(2)}</td>
+      <td style="font-size:12px">${cv}</td>
+      <td style="font-size:12px">${sesgo}</td>
+      <td style="font-size:11px;color:${cal.col};font-weight:600">${cal.txt}</td>
+    </tr>`).join('');
+  const labs=[...new Set(RESULTADOS.map(r=>r.codigo||r.user))];
+  resumen.innerHTML=labs.map(lab=>{
+    const labRows=rows.filter(({r})=>(r.codigo||r.user)===lab);
+    if(!labRows.length) return '';
+    const total=labRows.length;
+    const sat=labRows.filter(({z})=>Math.abs(z)<=2).length;
+    const cues=labRows.filter(({z})=>Math.abs(z)>2&&Math.abs(z)<=3).length;
+    const nosat=labRows.filter(({z})=>Math.abs(z)>3).length;
+    const pct=(sat/total*100).toFixed(0);
+    const nombre=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.nombre||lab;
+    const analista=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.analista||'—';
+    const bg=nosat>0?'#fee2e2':cues>0?'#fef9c3':'#dcfce7';
+    const bdr=nosat>0?'#dc2626':cues>0?'#ca8a04':'#16a34a';
+    return `<div style="background:${bg};border-left:4px solid ${bdr};border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div><span style="font-weight:700;font-size:14px">${lab} · ${nombre}</span><span style="font-size:12px;color:#64748b;margin-left:8px">Analista: ${analista}</span></div>
+        <div style="font-size:13px;font-weight:700">${pct}% satisfactorio</div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:12px">
+        <span>✅ Satisfactorios: <strong>${sat}</strong></span>
+        <span>⚠️ Cuestionables: <strong>${cues}</strong></span>
+        <span>❌ No satisfactorios: <strong>${nosat}</strong></span>
+        <span>Total: <strong>${total}</strong> parámetros</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// =========================================================
+// INFORME AUDITOR
+// =========================================================
+function renderAuditor(){
+  const tbody = document.getElementById('auditor-tbody');
+  const resumen = document.getElementById('auditor-resumen');
+  if(!tbody) return;
+  if(!RESULTADOS.length){
+    tbody.innerHTML='<tr><td colspan="14" style="text-align:center;color:#94a3b8;padding:20px">Sin datos — esperando resultados de participantes</td></tr>';
+    resumen.innerHTML='<p style="color:#94a3b8;font-size:13px">Sin datos suficientes.</p>';
+    return;
+  }
+  const rows=RESULTADOS.map(r=>{
+    const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
+    if(rv===undefined) return null;
+    const sigma=Math.abs(rv)*0.03||0.1;
+    const z=(r.promedio-rv)/sigma;
+    const reps=r.reps||[];
+    const vals=reps.filter(x=>x!=null);
+    let cv='—';
+    if(vals.length>=2){
+      const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+      const de=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1));
+      cv=mean>0?(de/mean*100).toFixed(2)+'%':'—';
+    }
+    const sesgo=rv?((r.promedio-rv)/rv*100).toFixed(2)+'%':'—';
+    const absZ=Math.abs(z);
+    const cal=absZ<=2?{txt:'✅ Satisfactorio',col:'#16a34a'}:absZ<=3?{txt:'⚠️ Cuestionable',col:'#ca8a04'}:{txt:'❌ No satisfactorio',col:'#dc2626'};
+    return {r,rv,sigma,z,cv,sesgo,cal,reps};
+  }).filter(Boolean);
+  tbody.innerHTML=rows.map(({r,rv,sigma,z,cv,sesgo,cal,reps})=>`
+    <tr>
+      <td><span class="code-badge">${r.codigo||r.user}</span></td>
+      <td style="font-size:12px">${r.analista||r.nombre||'—'}</td>
+      <td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td>
+      <td style="font-size:12px">${r.paramNombre}</td>
+      <td style="font-size:12px">${reps[0]!=null?Number(reps[0]).toFixed(4):'—'}</td>
+      <td style="font-size:12px">${reps[1]!=null?Number(reps[1]).toFixed(4):'—'}</td>
+      <td style="font-size:12px">${reps[2]!=null?Number(reps[2]).toFixed(4):'—'}</td>
+      <td style="font-weight:700">${r.promedio.toFixed(4)}</td>
+      <td>${rv}</td>
+      <td style="font-size:12px;color:#64748b">${sigma.toFixed(4)}</td>
+      <td style="font-weight:700;color:${cal.col}">${z.toFixed(2)}</td>
+      <td style="font-size:12px">${cv}</td>
+      <td style="font-size:12px">${sesgo}</td>
+      <td style="font-size:11px;color:${cal.col};font-weight:600">${cal.txt}</td>
+    </tr>`).join('');
+  const labs=[...new Set(RESULTADOS.map(r=>r.codigo||r.user))];
+  resumen.innerHTML=labs.map(lab=>{
+    const labRows=rows.filter(({r})=>(r.codigo||r.user)===lab);
+    if(!labRows.length) return '';
+    const total=labRows.length;
+    const sat=labRows.filter(({z})=>Math.abs(z)<=2).length;
+    const cues=labRows.filter(({z})=>Math.abs(z)>2&&Math.abs(z)<=3).length;
+    const nosat=labRows.filter(({z})=>Math.abs(z)>3).length;
+    const pct=(sat/total*100).toFixed(0);
+    const nombre=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.nombre||lab;
+    const analista=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.analista||'—';
+    const bg=nosat>0?'#fee2e2':cues>0?'#fef9c3':'#dcfce7';
+    const bdr=nosat>0?'#dc2626':cues>0?'#ca8a04':'#16a34a';
+    return `<div style="background:${bg};border-left:4px solid ${bdr};border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div><span style="font-weight:700;font-size:14px">${lab} · ${nombre}</span><span style="font-size:12px;color:#64748b;margin-left:8px">Analista: ${analista}</span></div>
+        <div style="font-size:13px;font-weight:700">${pct}% satisfactorio</div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:12px">
+        <span>✅ Satisfactorios: <strong>${sat}</strong></span>
+        <span>⚠️ Cuestionables: <strong>${cues}</strong></span>
+        <span>❌ No satisfactorios: <strong>${nosat}</strong></span>
+        <span>Total: <strong>${total}</strong> parámetros</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+// =========================================================
+// ESTADÍSTICAS — PASO A PASO
+// =========================================================
+function populateAnalistaFilter(){
+  const sel = document.getElementById('stat-analista');
+  if(!sel) return;
+  const labs = [...new Set(RESULTADOS.map(r=>r.codigo||r.user))];
+  const nombres = {};
+  RESULTADOS.forEach(r=>{ nombres[r.codigo||r.user] = r.analista||r.nombre||r.user; });
+  sel.innerHTML = '<option value="todos">— Todos los analistas —</option>' +
+    labs.map(l=>`<option value="${l}">${l} · ${nombres[l]}</option>`).join('');
+}
+
+function refreshEstadisticas(){
+  populateAnalistaFilter();
+  populateStatParams();
+  refreshStatChart();
+  renderZScores();
+  renderPasoAPaso();
+}
+
+function renderPasoAPaso(){
+  const wrap = document.getElementById('stat-paso-wrap');
+  if(!wrap) return;
+
+  const muestra  = document.getElementById('stat-muestra')?.value || 'cpo';
+  const paramId  = document.getElementById('stat-param')?.value;
+  const analista = document.getElementById('stat-analista')?.value || 'todos';
+  if(!paramId){ wrap.innerHTML=''; return; }
+
+  let res = RESULTADOS.filter(r=>r.muestra===muestra && r.paramId===paramId);
+  if(analista!=='todos') res = res.filter(r=>(r.codigo||r.user)===analista);
+  // If specific analista selected and no match, show all
+  if(!res.length && analista!=='todos'){
+    res = RESULTADOS.filter(r=>r.muestra===muestra && r.paramId===paramId);
+  }
+  if(!res.length){ wrap.innerHTML='<div class="card" style="padding:20px;text-align:center;color:#94a3b8">Selecciona un parámetro con datos para ver el análisis paso a paso.</div>'; return; }
+
+  const rv = muestra==='rbd' ? REF.rbd[paramId] : REF.cpo[paramId];
+
+  wrap.innerHTML = res.map(r=>{
+    const reps = (r.reps||[]).filter(x=>x!=null);
+    const n = reps.length;
+    if(!n) return '';
+
+    // Step 1: Promedio
+    const sum = reps.reduce((a,b)=>a+b,0);
+    const prom = sum/n;
+
+    // Step 2: Desviacion estandar
+    const diffs = reps.map(x=>(x-prom)**2);
+    const sumdiff = diffs.reduce((a,b)=>a+b,0);
+    const de = Math.sqrt(sumdiff/(n-1));
+
+    // Step 3: CV%
+    const cv = prom>0 ? (de/prom)*100 : null;
+
+    // Step 4: Z-score
+    const sigma = rv!=null ? Math.abs(rv)*0.03||0.1 : null;
+    const z = rv!=null && sigma ? (prom-rv)/sigma : null;
+    const sesgo = rv!=null ? ((prom-rv)/rv)*100 : null;
+
+    // Calificacion
+    const absZ = z!=null ? Math.abs(z) : null;
+    const cal = absZ==null ? {txt:'Sin referencia',bg:'#f1f5f9',color:'#64748b'} :
+                absZ<=2  ? {txt:'✅ SATISFACTORIO',  bg:'#dcfce7',color:'#15803d'} :
+                absZ<=3  ? {txt:'⚠️ CUESTIONABLE',  bg:'#fef9c3',color:'#854d0e'} :
+                           {txt:'❌ NO SATISFACTORIO',bg:'#fee2e2',color:'#991b1b'};
+
+    const cvCal = cv==null?'—':cv<=2?'✅ Excelente (≤2%)':cv<=5?'⚠️ Aceptable (≤5%)':'❌ Deficiente (>5%)';
+    const cvColor = cv==null?'#64748b':cv<=2?'#15803d':cv<=5?'#854d0e':'#991b1b';
+    const sesgoCal = sesgo==null?'—':Math.abs(sesgo)<=5?'✅ Bajo (≤5%)':Math.abs(sesgo)<=10?'⚠️ Moderado (≤10%)':'❌ Alto (>10%)';
+
+    const labName = r.analista||r.nombre||r.user;
+    const labCode = r.codigo||r.user;
+    const muestraLabel = muestra==='rbd'?'RBD PALMA':'CPO DE PALMA';
+    const borderColor = muestra==='rbd'?'#3b82f6':'#f97316';
+
+    return `<div class="card" style="margin-bottom:14px;border-left:4px solid ${borderColor}">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <span class="code-badge">${labCode}</span>
+          <span style="font-weight:700;font-size:15px;margin-left:8px">${labName}</span>
+          <span style="font-size:12px;color:#64748b;margin-left:6px">· ${muestraLabel} · ${r.paramNombre}</span>
+        </div>
+        <div style="background:${cal.bg};color:${cal.color};padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">${cal.txt}</div>
+      </div>
+
+      <!-- Datos originales -->
+      <div style="background:#f8fafc;border-radius:10px;padding:12px 16px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📥 Datos primarios ingresados</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+          ${reps.map((v,i)=>`<div style="text-align:center">
+            <div style="font-size:11px;color:#94a3b8">Réplica ${i+1}</div>
+            <div style="font-size:18px;font-weight:700;color:#1e293b">${v.toFixed(4)}</div>
+          </div>`).join('<div style="color:#cbd5e1;font-size:20px">·</div>')}
+        </div>
+      </div>
+
+      <!-- Paso 1: Promedio -->
+      <div style="background:#f0f9ff;border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid #3b82f6">
+        <div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:6px">📐 PASO 1 — Promedio (x̄)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          x̄ = (${reps.map(v=>v.toFixed(4)).join(' + ')}) ÷ ${n}
+        </div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          x̄ = ${sum.toFixed(4)} ÷ ${n}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:#1d4ed8">x̄ = ${prom.toFixed(4)} ${r.unit||''}</div>
+      </div>
+
+      <!-- Paso 2: DE -->
+      <div style="background:#f0fdf4;border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid #16a34a">
+        <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px">📐 PASO 2 — Desviación estándar (DE)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          DE = √[Σ(xᵢ − x̄)² ÷ (n−1)]
+        </div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          Diferencias al cuadrado: ${reps.map(v=>`(${v.toFixed(4)}−${prom.toFixed(4)})² = ${((v-prom)**2).toFixed(6)}`).join(' | ')}
+        </div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          Suma = ${sumdiff.toFixed(6)} ÷ ${n-1} = ${(sumdiff/(n-1)).toFixed(6)}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:#15803d">DE = √${(sumdiff/(n-1)).toFixed(6)} = ${de.toFixed(5)} ${r.unit||''}</div>
+      </div>
+
+      <!-- Paso 3: CV% -->
+      <div style="background:#fffbeb;border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid #d97706">
+        <div style="font-size:12px;font-weight:700;color:#b45309;margin-bottom:6px">📐 PASO 3 — Coeficiente de variación (CV%)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">CV% = (DE ÷ x̄) × 100</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          CV% = (${de.toFixed(5)} ÷ ${prom.toFixed(4)}) × 100
+        </div>
+        <div style="font-size:15px;font-weight:700;color:#b45309">CV% = ${cv!=null?cv.toFixed(2):'—'}%
+          <span style="font-size:12px;font-weight:600;margin-left:8px;color:${cvColor}">${cvCal}</span>
+        </div>
+        <div style="font-size:11px;color:#78716c;margin-top:4px">💡 El CV% mide la <strong>repetibilidad</strong>: qué tan consistentes son las 3 réplicas. Un CV% bajo indica buena precisión.</div>
+      </div>
+
+      ${rv!=null ? `
+      <!-- Paso 4: Sigma -->
+      <div style="background:#faf5ff;border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid #9333ea">
+        <div style="font-size:12px;font-weight:700;color:#7e22ce;margin-bottom:6px">📐 PASO 4 — Desviación estándar de referencia (σ)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = |X<sub>ref</sub>| × 0.03 &nbsp;(3% del valor certificado)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = |${rv}| × 0.03</div>
+        <div style="font-size:15px;font-weight:700;color:#7e22ce">σ = ${sigma.toFixed(4)} ${r.unit||''}</div>
+        <div style="font-size:11px;color:#78716c;margin-top:4px">💡 El 3% representa la incertidumbre aceptable del método analítico según ISO 13528.</div>
+      </div>
+
+      <!-- Paso 5: Z-score -->
+      <div style="background:${absZ<=2?'#dcfce7':absZ<=3?'#fef9c3':'#fee2e2'};border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid ${absZ<=2?'#16a34a':absZ<=3?'#ca8a04':'#dc2626'}">
+        <div style="font-size:12px;font-weight:700;color:${absZ<=2?'#15803d':absZ<=3?'#854d0e':'#991b1b'};margin-bottom:6px">📐 PASO 5 — Z-score</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Z = (x̄ − X<sub>ref</sub>) ÷ σ</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Z = (${prom.toFixed(4)} − ${rv}) ÷ ${sigma.toFixed(4)}</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Z = ${(prom-rv).toFixed(4)} ÷ ${sigma.toFixed(4)}</div>
+        <div style="font-size:18px;font-weight:800;color:${absZ<=2?'#15803d':absZ<=3?'#854d0e':'#991b1b'}">Z = ${z.toFixed(3)}</div>
+        <div style="margin-top:8px;font-size:12px;color:${absZ<=2?'#15803d':absZ<=3?'#854d0e':'#991b1b'};font-weight:600">
+          ${absZ<=2?`|Z| = ${absZ.toFixed(3)} ≤ 2 → ✅ SATISFACTORIO: el resultado está dentro del rango aceptable.`:
+            absZ<=3?`|Z| = ${absZ.toFixed(3)} entre 2 y 3 → ⚠️ CUESTIONABLE: el resultado se aleja del valor de referencia. Revisar técnica.`:
+                    `|Z| = ${absZ.toFixed(3)} > 3 → ❌ NO SATISFACTORIO: desviación inaceptable. Requiere acción correctiva inmediata.`}
+        </div>
+      </div>
+
+      <!-- Paso 6: Sesgo -->
+      <div style="background:#f0f9ff;border-radius:10px;padding:12px 16px;border-left:3px solid #0284c7">
+        <div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:6px">📐 PASO 6 — Sesgo%</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Sesgo% = ((x̄ − X<sub>ref</sub>) ÷ X<sub>ref</sub>) × 100</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Sesgo% = ((${prom.toFixed(4)} − ${rv}) ÷ ${rv}) × 100</div>
+        <div style="font-size:15px;font-weight:700;color:#0369a1">Sesgo% = ${sesgo.toFixed(2)}%
+          <span style="font-size:12px;font-weight:600;margin-left:8px;color:${Math.abs(sesgo)<=5?'#15803d':Math.abs(sesgo)<=10?'#854d0e':'#991b1b'}">${sesgoCal}</span>
+        </div>
+        <div style="font-size:11px;color:#78716c;margin-top:4px">💡 El sesgo indica si el laboratorio tiende a reportar valores <strong>sistemáticamente</strong> por encima o por debajo del valor certificado.</div>
+      </div>` : ''}
+
+    </div>`;
+  }).join('');
 }
 </script>
 </body>
