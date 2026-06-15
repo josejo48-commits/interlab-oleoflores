@@ -357,7 +357,7 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
       <div id="sec-resultados" class="screen">
         <div class="page-header"><div><div class="page-title">Todos los resultados</div><div class="page-sub">Vista por código de analista (ciego)</div></div></div>
         <div class="card"><div class="table-wrap"><table>
-          <thead><tr><th>Código</th><th>Muestra</th><th>Parámetro</th><th>Rep.1</th><th>Rep.2</th><th>Rep.3</th><th>Promedio</th><th>Referencia</th><th>Z-score</th><th>Calificación</th></tr></thead>
+          <thead><tr><th>Código</th><th>Laboratorio</th><th>Analista</th><th>Muestra</th><th>Parámetro</th><th>Rep.1</th><th>Rep.2</th><th>Rep.3</th><th>Promedio</th><th>Referencia</th><th>Z-score</th><th>Calificación</th></tr></thead>
           <tbody id="results-body"></tbody>
         </table></div></div>
       </div>
@@ -772,12 +772,19 @@ function doLogin(){
       datos.forEach(d => {
         (d.datos||[]).forEach(p => {
           RESULTADOS.push({
-            user: d.laboratorio, codigo: d.codigo,
-            nombre: d.laboratorio, analista: d.analista,
-            cargo: d.cargo, muestra: p.muestra||d.muestra,
-            codigoMuestra: d.codigoMuestra, fecha: d.fecha,
-            paramId: p.paramId, paramNombre: p.paramNombre,
-            unit: p.unit, reps: p.reps, promedio: p.promedio
+            user:          d.codigo || d.laboratorio,
+            codigo:        d.codigo,
+            nombre:        d.laboratorio,
+            analista:      d.analista,
+            cargo:         d.cargo,
+            muestra:       p.muestra || d.muestra,
+            codigoMuestra: d.codigoMuestra,
+            fecha:         d.fecha,
+            paramId:       p.paramId,
+            paramNombre:   p.paramNombre,
+            unit:          p.unit,
+            reps:          p.reps,
+            promedio:      p.promedio
           });
         });
       });
@@ -1133,13 +1140,34 @@ function renderMisResultados(){
 // =========================================================
 function renderAllResults(){
   const tbody=document.getElementById('results-body');
-  if(!RESULTADOS.length){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--light)">Sin resultados aún</td></tr>'; return; }
+  if(!RESULTADOS.length){ tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:28px;color:var(--light)">Sin resultados aún</td></tr>'; return; }
   tbody.innerHTML=RESULTADOS.map(r=>{
     const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
-    const rr=r.reps.map(x=>x!==null&&isFinite(x)?x.toFixed(4):'—');
-    if(rv===undefined) return`<tr><td><span class="code-badge">${r.codigo}</span></td><td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td><td>${r.paramNombre}</td><td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td><td><strong>${r.promedio.toFixed(4)}</strong></td><td>—</td><td>—</td><td><span class="badge b-gray">Sin ref.</span></td></tr>`;
+    const rr=(r.reps||[]).map(x=>x!==null&&isFinite(x)?Number(x).toFixed(4):'—');
+    const labNombre = r.nombre || r.user || '—';
+    const analista  = r.analista || '—';
+    const badgeMuestra = `<span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span>`;
+    if(rv===undefined) return`<tr>
+      <td><span class="code-badge">${r.codigo}</span></td>
+      <td style="font-size:12px">${labNombre}</td>
+      <td style="font-size:12px">${analista}</td>
+      <td>${badgeMuestra}</td>
+      <td style="font-size:12px">${r.paramNombre}</td>
+      <td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td>
+      <td><strong>${Number(r.promedio).toFixed(4)}</strong></td>
+      <td>—</td><td>—</td><td><span class="badge b-gray">Sin ref.</span></td></tr>`;
     const z=calcZ(r.promedio,rv); const zc=zClass(z);
-    return`<tr><td><span class="code-badge">${r.codigo}</span></td><td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td><td>${r.paramNombre}</td><td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td><td><strong>${r.promedio.toFixed(4)}</strong></td><td>${rv}</td><td class="${zc.cls}">${z.toFixed(2)}</td><td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`;
+    return`<tr>
+      <td><span class="code-badge">${r.codigo}</span></td>
+      <td style="font-size:12px">${labNombre}</td>
+      <td style="font-size:12px">${analista}</td>
+      <td>${badgeMuestra}</td>
+      <td style="font-size:12px">${r.paramNombre}</td>
+      <td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td>
+      <td><strong>${Number(r.promedio).toFixed(4)}</strong></td>
+      <td>${rv}</td>
+      <td class="${zc.cls}" style="font-weight:700">${z.toFixed(2)}</td>
+      <td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`;
   }).join('');
 }
 
