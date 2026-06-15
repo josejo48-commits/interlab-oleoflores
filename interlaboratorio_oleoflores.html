@@ -378,7 +378,7 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
                 <option value="rbd">RBD</option><option value="cpo">CPO</option>
               </select></div>
             <div class="fg" style="flex:2;min-width:180px;margin:0"><label class="fl">Parámetro</label>
-              <select id="stat-param" onchange="refreshEstadisticas()"></select></div>
+              <select id="stat-param" onchange="refreshEstadisticas();renderTablaRPI()"></select></div>
           </div>
         </div>
 
@@ -1217,12 +1217,13 @@ function renderAllResults(){
 // ESTADÍSTICAS
 // =========================================================
 function populateStatParams(){
-  const m=document.getElementById('stat-muestra').value;
-  const params = m==='rbd'?PARAMS_RBD:PARAMS_CPO;
-  // Only show params that have data
-  const withData = params.filter(p=>RESULTADOS.some(r=>r.muestra===m&&r.paramId===p.id));
-  const list = withData.length ? withData : params;
-  document.getElementById('stat-param').innerHTML=list.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  const m = document.getElementById('stat-muestra').value;
+  const params = m==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  const sel = document.getElementById('stat-param');
+  const current = sel.value; // keep current selection if possible
+  sel.innerHTML = params.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  // Restore previous selection if still valid
+  if(params.find(p=>p.id===current)) sel.value = current;
 }
 function refreshStatChart(){
   const m=document.getElementById('stat-muestra').value;
@@ -1923,11 +1924,18 @@ function renderAuditor(){
 function populateAnalistaFilter(){
   const sel = document.getElementById('stat-analista');
   if(!sel) return;
-  const labs = [...new Set(RESULTADOS.map(r=>r.codigo||r.user))];
-  const nombres = {};
-  RESULTADOS.forEach(r=>{ nombres[r.codigo||r.user] = r.analista||r.nombre||r.user; });
+  // Group by analista name (not lab code — multiple analistas can share same lab)
+  const analistasMap = {};
+  RESULTADOS.forEach(r=>{
+    const key = (r.analista||r.nombre||r.user||'').trim();
+    if(key && !analistasMap[key]) analistasMap[key] = { analista: key, codigo: r.codigo||r.user };
+  });
+  const analistas = Object.values(analistasMap);
+  const current = sel.value;
   sel.innerHTML = '<option value="todos">— Todos los analistas —</option>' +
-    labs.map(l=>`<option value="${l}">${l} · ${nombres[l]}</option>`).join('');
+    analistas.map(a=>`<option value="${a.analista}">${a.codigo} · ${a.analista}</option>`).join('');
+  // Restore selection if still valid
+  if(analistas.find(a=>a.analista===current)) sel.value = current;
 }
 
 function refreshEstadisticas(){
@@ -1948,8 +1956,7 @@ function renderPasoAPaso(){
   if(!paramId){ wrap.innerHTML=''; return; }
 
   let res = RESULTADOS.filter(r=>r.muestra===muestra && r.paramId===paramId);
-  if(analista!=='todos') res = res.filter(r=>(r.codigo||r.user)===analista);
-  // If specific analista selected and no match, show all
+  if(analista!=='todos') res = res.filter(r=>(r.analista||r.nombre||r.user||'').trim()===analista);
   if(!res.length && analista!=='todos'){
     res = RESULTADOS.filter(r=>r.muestra===muestra && r.paramId===paramId);
   }
