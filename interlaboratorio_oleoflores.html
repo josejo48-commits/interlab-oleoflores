@@ -374,7 +374,7 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
                 <option value="todos">Todos</option>
               </select></div>
             <div class="fg" style="flex:1;min-width:120px;margin:0"><label class="fl">Muestra</label>
-              <select id="stat-muestra" onchange="populateStatParams();refreshEstadisticas()">
+              <select id="stat-muestra" onchange="populateStatParams();refreshEstadisticas();renderTablaRPI()">
                 <option value="rbd">RBD</option><option value="cpo">CPO</option>
               </select></div>
             <div class="fg" style="flex:2;min-width:180px;margin:0"><label class="fl">Parámetro</label>
@@ -1218,20 +1218,29 @@ function renderAllResults(){
 // =========================================================
 function populateStatParams(){
   const m=document.getElementById('stat-muestra').value;
-  document.getElementById('stat-param').innerHTML=(m==='rbd'?PARAMS_RBD:PARAMS_CPO).map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  const params = m==='rbd'?PARAMS_RBD:PARAMS_CPO;
+  // Only show params that have data
+  const withData = params.filter(p=>RESULTADOS.some(r=>r.muestra===m&&r.paramId===p.id));
+  const list = withData.length ? withData : params;
+  document.getElementById('stat-param').innerHTML=list.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
 }
 function refreshStatChart(){
   const m=document.getElementById('stat-muestra').value;
   const pid=document.getElementById('stat-param').value;
   const param=(m==='rbd'?PARAMS_RBD:PARAMS_CPO).find(p=>p.id===pid);
   const refV=(m==='rbd'?REF.rbd:REF.cpo)[pid];
-  const filtered=RESULTADOS.filter(r=>r.muestra===m&&r.paramId===pid);
+  // Group by lab — one bar per lab
+  const allFiltered=RESULTADOS.filter(r=>r.muestra===m&&r.paramId===pid);
+  // Get unique labs and average their promedio (in case of duplicates)
+  const labMap={};
+  allFiltered.forEach(r=>{ const k=r.codigo||r.user; if(!labMap[k]) labMap[k]={codigo:k,nombre:r.nombre||k,promedios:[]}; labMap[k].promedios.push(r.promedio); });
+  const filtered=Object.values(labMap).map(l=>({ codigo:l.codigo, nombre:l.nombre, promedio:l.promedios.reduce((a,b)=>a+b,0)/l.promedios.length }));
   const ctx=document.getElementById('stat-chart').getContext('2d');
   if(statChart) statChart.destroy();
   if(!filtered.length){ ctx.clearRect(0,0,800,260); return; }
-  const datasets=[{label:'Promedio',data:filtered.map(r=>r.promedio),backgroundColor:filtered.map(r=>{ if(!refV) return'#378ADD'; const z=Math.abs(calcZ(r.promedio,refV)); return z<=2?'#639922':z<=3?'#BA7517':'#E24B4A'; }),borderRadius:5,borderSkipped:false}];
+  const datasets=[{label:'Promedio',data:filtered.map(r=>r.promedio),backgroundColor:filtered.map(r=>{ if(!refV) return'#378ADD'; const z=Math.abs(calcZ(r.promedio,refV)); return z<=2?'#16a34a':z<=3?'#d97706':'#dc2626'; }),borderRadius:5,borderSkipped:false}];
   if(refV!==undefined) datasets.push({type:'line',label:'Referencia',data:Array(filtered.length).fill(refV),borderColor:'#185FA5',borderDash:[5,3],borderWidth:2,pointRadius:0,fill:false});
-  statChart=new Chart(ctx,{type:'bar',data:{labels:filtered.map(r=>r.codigo),datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}},scales:{y:{title:{display:true,text:param?param.unit:''},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+  statChart=new Chart(ctx,{type:'bar',data:{labels:filtered.map(r=>r.codigo+' · '+(r.nombre||'')),datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(4)}`}}},scales:{y:{title:{display:true,text:param?param.unit:''},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
 }
 function renderZScores(){
   populateAnalistaFilter();
