@@ -392,6 +392,48 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
         <div id="stat-paso-wrap"></div>
 
         <!-- TABLA Z-SCORES -->
+
+        <!-- TABLA GENERAL RPI -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📊 Tabla General RPI — Estadísticas Descriptivas Completas</div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:10px">
+            Resumen estadístico por parámetro · Todos los laboratorios participantes
+          </div>
+          <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+            <div class="fg" style="flex:1;min-width:120px;margin:0"><label class="fl">Muestra</label>
+              <select id="rpi-muestra" onchange="renderTablaRPI()">
+                <option value="cpo">CPO</option><option value="rbd">RBD</option>
+              </select></div>
+          </div>
+          <div class="table-wrap">
+            <table id="rpi-table">
+              <thead><tr>
+                <th style="text-align:left">Parámetro</th>
+                <th>N° Datos</th>
+                <th>Mediana</th>
+                <th>Promedio Global</th>
+                <th>DE</th>
+                <th>CV%</th>
+                <th>CV% Global</th>
+                <th>U Relativa</th>
+                <th>Varianza</th>
+                <th>Referencia</th>
+                <th>Sesgo%</th>
+              </tr></thead>
+              <tbody id="rpi-tbody"><tr><td colspan="11" style="text-align:center;color:#94a3b8;padding:20px">Sin datos</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ANOVA -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📐 ANOVA — Análisis de Varianza entre Laboratorios</div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:10px;line-height:1.6">
+            Separa la variación <strong>entre laboratorios</strong> (reproducibilidad) de la variación <strong>dentro de cada laboratorio</strong> (repetibilidad).
+            Si F calculado > F crítico → hay diferencia significativa entre laboratorios.
+          </div>
+          <div id="anova-wrap"><p style="color:#94a3b8;font-size:13px">Sin datos suficientes para ANOVA (se necesitan al menos 2 laboratorios).</p></div>
+        </div>
         <div class="card">
           <div class="card-title">📋 Tabla resumen Z-scores</div>
           <div class="table-wrap"><table>
@@ -670,8 +712,8 @@ let REF = {
   },
   cpo:{
     acidez:       2.41,
-    humedad:      0.14,
-    impurezas:    0.02,
+    humedad:      0.20,
+    impurezas:    0.040,
     dobi:         2.76,
     indice_yodo:  53.93,
   }
@@ -819,7 +861,7 @@ function gotoSection(name,el){
   if(el) el.classList.add('active');
   if(name==='dashboard') refreshDashboard();
   if(name==='resultados') renderAllResults();
-  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); }
+  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); }
   if(name==='participantes') renderParticipants();
   if(name==='misresultados') renderMisResultados();
 }
@@ -1704,7 +1746,7 @@ function gotoSection(name,el){
   if(el) el.classList.add('active');
   if(name==='dashboard') refreshDashboard();
   if(name==='resultados') renderAllResults();
-  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); }
+  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); }
   if(name==='participantes') renderParticipants();
   if(name==='misresultados') renderMisResultados();
   if(name==='auditor') renderAuditor();
@@ -2043,6 +2085,207 @@ function renderPasoAPaso(){
 
     </div>`;
   }).join('');
+}
+// =========================================================
+// TABLA GENERAL RPI — ESTADÍSTICAS DESCRIPTIVAS COMPLETAS
+// =========================================================
+function renderTablaRPI(){
+  const muestra = document.getElementById('rpi-muestra')?.value || 'cpo';
+  const tbody   = document.getElementById('rpi-tbody');
+  if(!tbody) return;
+
+  const params = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  const REFm   = muestra==='rbd' ? REF.rbd : REF.cpo;
+
+  const rows = params.map(p => {
+    const res = RESULTADOS.filter(r => r.muestra===muestra && r.paramId===p.id);
+    if(!res.length) return null;
+
+    // All individual rep values (flatten)
+    const allReps = res.flatMap(r => (r.reps||[]).filter(x=>x!=null&&isFinite(x)));
+    // All lab averages
+    const promedios = res.map(r => r.promedio).filter(x=>x!=null&&isFinite(x));
+
+    const n = allReps.length;
+    if(!n) return null;
+
+    // Promedio global
+    const mean = allReps.reduce((a,b)=>a+b,0) / n;
+
+    // Mediana
+    const sorted = [...allReps].sort((a,b)=>a-b);
+    const median = n%2===0 ? (sorted[n/2-1]+sorted[n/2])/2 : sorted[Math.floor(n/2)];
+
+    // Desviación estándar
+    const variance = allReps.reduce((a,b)=>a+(b-mean)**2,0) / (n-1);
+    const de = Math.sqrt(variance);
+
+    // CV%
+    const cv = mean>0 ? (de/mean*100) : null;
+
+    // CV% Global (entre promedios de labs)
+    let cvGlobal = null;
+    if(promedios.length >= 2){
+      const mG = promedios.reduce((a,b)=>a+b,0)/promedios.length;
+      const deG = Math.sqrt(promedios.reduce((a,b)=>a+(b-mG)**2,0)/(promedios.length-1));
+      cvGlobal = mG>0 ? (deG/mG*100) : null;
+    }
+
+    // U Relativa = DE / √n
+    const uRel = de / Math.sqrt(n);
+
+    // Referencia y sesgo
+    const rv = REFm[p.id];
+    const sesgo = rv!=null ? ((mean-rv)/rv*100) : null;
+
+    // Color CV
+    const cvColor = cv===null?'#64748b':cv<=2?'#16a34a':cv<=5?'#ca8a04':'#dc2626';
+    const cvGColor = cvGlobal===null?'#64748b':cvGlobal<=5?'#16a34a':cvGlobal<=10?'#ca8a04':'#dc2626';
+
+    return `<tr>
+      <td style="font-weight:600;font-size:12px">${p.nombre}</td>
+      <td style="text-align:center">${n}</td>
+      <td style="text-align:center">${median.toFixed(4)}</td>
+      <td style="text-align:center;font-weight:700">${mean.toFixed(4)}</td>
+      <td style="text-align:center">${de.toFixed(5)}</td>
+      <td style="text-align:center;color:${cvColor};font-weight:600">${cv!==null?cv.toFixed(2)+'%':'—'}</td>
+      <td style="text-align:center;color:${cvGColor};font-weight:600">${cvGlobal!==null?cvGlobal.toFixed(2)+'%':'—'}</td>
+      <td style="text-align:center">${uRel.toFixed(5)}</td>
+      <td style="text-align:center">${variance.toFixed(6)}</td>
+      <td style="text-align:center">${rv!=null?rv:'—'}</td>
+      <td style="text-align:center;color:${sesgo===null?'#64748b':Math.abs(sesgo)<=5?'#16a34a':Math.abs(sesgo)<=10?'#ca8a04':'#dc2626'};font-weight:600">${sesgo!==null?sesgo.toFixed(2)+'%':'—'}</td>
+    </tr>`;
+  }).filter(Boolean);
+
+  tbody.innerHTML = rows.length ? rows.join('') :
+    '<tr><td colspan="11" style="text-align:center;color:#94a3b8;padding:20px">Sin datos suficientes</td></tr>';
+
+  // Also render ANOVA
+  renderANOVA(muestra);
+}
+
+// =========================================================
+// ANOVA — ANÁLISIS DE VARIANZA
+// =========================================================
+function renderANOVA(muestra){
+  const wrap = document.getElementById('anova-wrap');
+  if(!wrap) return;
+
+  const params  = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  const mLabel  = muestra==='rbd' ? 'RBD' : 'CPO';
+  let html = '';
+
+  params.forEach(p => {
+    const res = RESULTADOS.filter(r => r.muestra===muestra && r.paramId===p.id);
+    if(res.length < 2) return;
+
+    const groups = res.map(r => (r.reps||[]).filter(x=>x!=null&&isFinite(x)));
+    const k = groups.length;           // número de grupos (labs)
+    const ni = groups.map(g=>g.length); // tamaño de cada grupo
+    const N = ni.reduce((a,b)=>a+b,0); // total de observaciones
+
+    if(N < k+1) return;
+
+    // Grand mean
+    const allVals = groups.flat();
+    const grandMean = allVals.reduce((a,b)=>a+b,0) / N;
+
+    // SST (total)
+    const SST = allVals.reduce((a,b)=>a+(b-grandMean)**2, 0);
+
+    // SSB (entre grupos — between)
+    const groupMeans = groups.map(g => g.reduce((a,b)=>a+b,0)/g.length);
+    const SSB = groups.reduce((acc,g,i) => acc + g.length*(groupMeans[i]-grandMean)**2, 0);
+
+    // SSW (dentro de grupos — within)
+    const SSW = groups.reduce((acc,g,i) => acc + g.reduce((a,b)=>a+(b-groupMeans[i])**2,0), 0);
+
+    // Degrees of freedom
+    const dfB = k - 1;
+    const dfW = N - k;
+
+    // Mean squares
+    const MSB = SSB / dfB;
+    const MSW = SSW / dfW;
+
+    // F statistic
+    const F = MSW > 0 ? MSB / MSW : null;
+
+    // F crítico aproximado (95%, simplificado)
+    // Para uso práctico usamos tabla: F(dfB, dfW) ≈ 4.0 para grupos pequeños
+    const Fcrit = 4.0; // simplificado para k=2-6, n=3
+
+    const sig = F!==null && F > Fcrit;
+    const sigColor = sig ? '#dc2626' : '#16a34a';
+    const sigTxt   = sig ? '⚠️ Diferencia significativa entre laboratorios' : '✅ Sin diferencia significativa entre laboratorios';
+
+    html += `<div style="margin-bottom:14px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+      <div style="background:#f8fafc;padding:10px 16px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:700;font-size:13px">${p.nombre} · ${mLabel}</span>
+        <span style="font-size:12px;font-weight:600;color:${sigColor}">${sigTxt}</span>
+      </div>
+      <div style="padding:12px 16px">
+        <!-- Tabla ANOVA -->
+        <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
+          <thead><tr style="background:#f1f5f9">
+            <th style="padding:6px 10px;text-align:left;border:1px solid #e2e8f0">Fuente de variación</th>
+            <th style="padding:6px 10px;text-align:center;border:1px solid #e2e8f0">SS</th>
+            <th style="padding:6px 10px;text-align:center;border:1px solid #e2e8f0">gl</th>
+            <th style="padding:6px 10px;text-align:center;border:1px solid #e2e8f0">MS</th>
+            <th style="padding:6px 10px;text-align:center;border:1px solid #e2e8f0">F calculado</th>
+            <th style="padding:6px 10px;text-align:center;border:1px solid #e2e8f0">F crítico (95%)</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;font-weight:600">Entre laboratorios (Reproducibilidad)</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${SSB.toFixed(6)}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${dfB}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${MSB.toFixed(6)}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center;font-weight:700;color:${sigColor}">${F!==null?F.toFixed(3):'—'}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${Fcrit}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;font-weight:600">Dentro de laboratorios (Repetibilidad)</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${SSW.toFixed(6)}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${dfW}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${MSW.toFixed(6)}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">—</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">—</td>
+            </tr>
+            <tr style="background:#f8fafc">
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;font-weight:600">Total</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${SST.toFixed(6)}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${N-1}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">—</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">—</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">—</td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- Explicación -->
+        <div style="background:${sig?'#fee2e2':'#dcfce7'};border-radius:8px;padding:8px 14px;font-size:12px;color:${sigColor}">
+          <strong>Interpretación:</strong> F calculado = ${F!==null?F.toFixed(3):'—'} 
+          ${sig ? '> ' : '≤ '} F crítico = ${Fcrit} → 
+          ${sig ? 'Existe diferencia estadísticamente significativa entre laboratorios. Se recomienda investigar la causa de la variabilidad.' 
+                : 'No existe diferencia estadísticamente significativa entre laboratorios. Los resultados son consistentes.'}
+        </div>
+        <!-- Resultados por lab -->
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          ${groups.map((g,i)=>{
+            const m=g.reduce((a,b)=>a+b,0)/g.length;
+            const lab=res[i]?.codigo||'—';
+            return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:12px;text-align:center">
+              <div style="font-weight:600">${lab}</div>
+              <div>x̄ = ${m.toFixed(4)}</div>
+              <div style="color:#94a3b8">n = ${g.length}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  wrap.innerHTML = html || '<p style="color:#94a3b8;font-size:13px">Se necesitan al menos 2 laboratorios con datos para calcular ANOVA.</p>';
 }
 </script>
 </body>
