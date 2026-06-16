@@ -168,6 +168,33 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
 .common-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;padding:10px 12px;background:#fff;border-radius:8px;border:1px solid #ede9fe}
 .info-block{background:#f8fafc;border-radius:8px;padding:10px 14px;border:1px solid #e2e8f0}.info-label{display:block;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}.info-val{display:block;font-size:13px;font-weight:600;color:#1e293b}@media print{.sidebar,.topbar{display:none!important}.main{padding:0!important}}
 </style>
+
+  <!-- FIREBASE -->
+  <script type="module">
+    import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, query, orderBy }
+                                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AlzaSyBYkuaWE4e_-jWEHb6bJxtCHekDUHrgOuU",
+      authDomain:        "interlab-oleoflores.firebaseapp.com",
+      projectId:         "interlab-oleoflores",
+      storageBucket:     "interlab-oleoflores.firebasestorage.app",
+      messagingSenderId: "737093298066",
+      appId:             "1:737093298066:web:316b26872fc7b553e4c34b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    window._escucharResultados = function(callback) {
+      const q = query(collection(db, 'resultados'), orderBy('timestamp', 'desc'));
+      return onSnapshot(q, function(snap) {
+        const datos = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+        callback(datos);
+      });
+    };
+  </script>
 </head>
 <body>
 
@@ -683,8 +710,45 @@ function doLogin(){
   if(found.rol!=='admin'){ ce.textContent=found.codigo; ce.style.display='inline'; } else ce.style.display='none';
   setupNav(); buildIngresoForm(); buildRefForms();
   gotoSection('dashboard',document.getElementById('nav-dashboard'));
+  // Escuchar Firestore en tiempo real si es admin
+  if(found.rol==='admin' && typeof window._escucharResultados === 'function'){
+    if(window._unsubscribe) window._unsubscribe();
+    window._unsubscribe = window._escucharResultados(function(datos){
+      RESULTADOS = [];
+      datos.forEach(function(d){
+        (d.datos||[]).forEach(function(p){
+          RESULTADOS.push({
+            user:          d.codigo || d.laboratorio,
+            codigo:        d.codigo,
+            nombre:        d.laboratorio,
+            analista:      d.analista,
+            cargo:         d.cargo,
+            muestra:       p.muestra || d.muestra,
+            codigoMuestra: d.codigoMuestra,
+            fecha:         d.fecha,
+            paramId:       p.paramId,
+            paramNombre:   p.paramNombre,
+            unit:          p.unit,
+            reps:          p.reps,
+            promedio:      p.promedio
+          });
+        });
+      });
+      // Refrescar pantalla activa
+      var sec = document.querySelector('.screen.active');
+      if(sec){
+        var name = sec.id.replace('sec-','');
+        if(name==='dashboard')    refreshDashboard && refreshDashboard();
+        if(name==='resultados')   renderAllResults && renderAllResults();
+        if(name==='estadisticas'){ refreshStatChart && refreshStatChart(); renderZScores && renderZScores(); }
+        if(name==='evaluacion')   renderEvaluacion && renderEvaluacion();
+        if(name==='competencia')  renderCompetencia && renderCompetencia();
+        if(name==='auditor')      renderAuditor && renderAuditor();
+      }
+    });
+  }
 }
-function doLogout(){ if(!confirm('¿Cerrar sesión?')) return; SESSION=null; document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; document.getElementById('login-user').value=''; document.getElementById('login-pass').value=''; document.getElementById('login-error').style.display='none'; }
+function doLogout(){ if(!confirm('¿Cerrar sesión?')) return; if(window._unsubscribe){window._unsubscribe();window._unsubscribe=null;} SESSION=null; document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; document.getElementById('login-user').value=''; document.getElementById('login-pass').value=''; document.getElementById('login-error').style.display='none'; }
 
 // =========================================================
 // NAV
