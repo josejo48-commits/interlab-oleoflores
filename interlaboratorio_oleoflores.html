@@ -296,7 +296,7 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
       <div class="nav-section">Config.</div>
       <div class="nav-item" id="nav-referencia" onclick="gotoSection('referencia',this)">🏛️ Lab. referencia</div>
       <div class="nav-item" id="nav-participantes" onclick="gotoSection('participantes',this)">👥 Participantes</div>
-      <div class="nav-item" id="nav-competencia" onclick="gotoSection('competencia',this)">🎯 Competencia analista</div>
+      <div class="nav-item" id="nav-competencia" onclick="gotoSection('competencia',this)">&#127919; Competencia analista</div>
       <div class="nav-item" id="nav-auditor" onclick="gotoSection('auditor',this)">📄 Informe auditor</div>
     </div>
 
@@ -561,31 +561,25 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
       </div>
 
 
-
       <!-- COMPETENCIA DEL ANALISTA -->
       <div id="sec-competencia" class="screen">
         <div class="page-header"><div>
-          <div class="page-title">🎯 Competencia del Analista</div>
-          <div class="page-sub">Evaluación interna · Repetibilidad · Reproducibilidad entre pares · ISO/IEC 17025:2017</div>
+          <div class="page-title">&#127919; Competencia del Analista</div>
+          <div class="page-sub">Repetibilidad &middot; Reproducibilidad entre pares &middot; ISO/IEC 17025:2017</div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn btn-primary btn-sm" onclick="window.print()">&#128424; Imprimir</button>
         </div>
-
-        <!-- FILTROS -->
         <div class="card" style="margin-bottom:12px">
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
             <div class="fg" style="flex:1;min-width:120px;margin:0"><label class="fl">Muestra</label>
               <select id="comp-muestra" onchange="renderCompetencia()">
-                <option value="cpo">CPO</option>
-                <option value="rbd">RBD</option>
-              </select>
-            </div>
+                <option value="cpo">CPO</option><option value="rbd">RBD</option>
+              </select></div>
           </div>
         </div>
-
-        <!-- TABLA DE COMPETENCIA -->
-        <div id="comp-wrap"></div>
+        <div id="comp-wrap"><p style="color:#94a3b8;font-size:13px">Sin datos.</p></div>
       </div>
+
       <!-- INFORME AUDITOR -->
       <div id="sec-auditor" class="screen">
         <div class="page-header"><div>
@@ -877,7 +871,7 @@ function doLogout(){ if(!confirm('¿Cerrar sesión?')) return; if(window._unsubs
 // =========================================================
 function setupNav(){
   const isAdmin=SESSION.rol==='admin';
-  ['resultados','estadisticas','referencia','participantes','auditor','competencia'].forEach(id=>{ document.getElementById('nav-'+id).style.display=isAdmin?'flex':'none'; });
+  ['resultados','estadisticas','referencia','participantes','auditor','competencia'].forEach(id=>{ var el=document.getElementById('nav-'+id); if(el) el.style.display=isAdmin?'flex':'none'; });
   const evalNav=document.getElementById('nav-evaluacion'); if(evalNav) evalNav.style.display='flex';
   document.getElementById('nav-misresultados').style.display=isAdmin?'none':'flex';
   document.getElementById('nav-ingreso').style.display=isAdmin?'none':'flex';
@@ -1127,32 +1121,49 @@ function saveRef(){
 // =========================================================
 // Z-SCORE
 // =========================================================
-// Precisión por parámetro según norma oficial
 const SIGMA_OVERRIDE = {
   sfc_20: { sigma:1.179, r:1.3, R:3.3, norma:'AOCS Cd 16b-93' },
   sfc_30: { sigma:1.179, r:1.3, R:3.3, norma:'AOCS Cd 16b-93' },
   sfc_35: { sigma:1.179, r:1.3, R:3.3, norma:'AOCS Cd 16b-93' },
   sfc_40: { sigma:1.179, r:1.3, R:3.3, norma:'AOCS Cd 16b-93' },
 };
-
 function getSigma(paramId, ref){
   if(SIGMA_OVERRIDE[paramId]) return SIGMA_OVERRIDE[paramId].sigma;
   return Math.abs(ref)*0.03||0.1;
 }
-
 function checkRepetibilidad(paramId, reps){
-  const override = SIGMA_OVERRIDE[paramId];
-  if(!override) return null;
-  const vals = (reps||[]).filter(x=>x!=null&&isFinite(x));
-  if(vals.length < 2) return null;
-  const maxDiff = Math.max(...vals) - Math.min(...vals);
-  return { maxDiff, r: override.r, pasa: maxDiff <= override.r };
+  var ov = SIGMA_OVERRIDE[paramId];
+  if(!ov) return null;
+  var vals = (reps||[]).filter(function(x){return x!=null&&isFinite(x);});
+  if(vals.length<2) return null;
+  var maxDiff = Math.max.apply(null,vals)-Math.min.apply(null,vals);
+  return { maxDiff:maxDiff, r:ov.r, pasa:maxDiff<=ov.r };
 }
-
+function buildRepSFCBlock(paramId, reps){
+  var rep = checkRepetibilidad(paramId, reps);
+  if(!rep) return '';
+  var vals = (reps||[]).filter(function(x){return x!=null&&isFinite(x);});
+  var maxV = Math.max.apply(null,vals).toFixed(4);
+  var minV = Math.min.apply(null,vals).toFixed(4);
+  var diff = rep.maxDiff.toFixed(4);
+  var pasa = rep.pasa;
+  var bg   = pasa?'#dcfce7':'#fee2e2';
+  var bdr  = pasa?'#16a34a':'#dc2626';
+  var col  = pasa?'#15803d':'#991b1b';
+  var sim  = pasa?'&le;':'&gt;';
+  var ico  = pasa?'&#x2705;':'&#x274c;';
+  var txt  = pasa?'PASA repetibilidad':'NO PASA repetibilidad';
+  return '<div style="background:'+bg+';border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid '+bdr+'">'
+    +'<div style="font-size:13px;font-weight:700;color:'+col+';margin-bottom:6px">&#128208; Paso 3b &mdash; Repetibilidad SFC (AOCS Cd 16b-93)</div>'
+    +'<div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Criterio: Rango (max &minus; min) &le; r = 1.3 unidades absolutas</div>'
+    +'<div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Rango = max('+maxV+') &minus; min('+minV+') = <strong>'+diff+'</strong></div>'
+    +'<div style="font-size:16px;font-weight:800;color:'+col+'">'+ico+' '+txt+' &nbsp;&middot;&nbsp; '+diff+' '+sim+' 1.3</div>'
+    +'<div style="font-size:11px;color:#78716c;margin-top:4px">La diferencia entre la replica mayor y menor no debe superar r = 1.3 %SFC (AOCS Cd 16b-93)</div>'
+    +'</div>';
+}
 function calcZ(val,ref,paramId){
   if(ref===undefined||ref===null) return null;
-  const sigma = getSigma(paramId, ref);
-  return (val-ref)/sigma;
+  return (val-ref)/getSigma(paramId||'',ref);
 }
 function zClass(z){ const a=Math.abs(z); if(a<=2) return{cls:'z-ok',label:'Satisfactorio',badge:'b-ok'}; if(a<=3) return{cls:'z-warn',label:'Cuestionable',badge:'b-warn'}; return{cls:'z-fail',label:'No satisfactorio',badge:'b-fail'}; }
 
@@ -1839,7 +1850,7 @@ function renderAuditor(){
     const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
     if(rv===undefined) return null;
     const sigma=Math.abs(rv)*0.03||0.1;
-    const z=calcZ(r.promedio,rv,r.paramId);
+    const z=(r.promedio-rv)/sigma;
     const reps=r.reps||[];
     const vals=reps.filter(x=>x!=null);
     let cv='—';
@@ -1914,7 +1925,7 @@ function renderAuditor(){
     const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
     if(rv===undefined) return null;
     const sigma=Math.abs(rv)*0.03||0.1;
-    const z=calcZ(r.promedio,rv,r.paramId);
+    const z=(r.promedio-rv)/sigma;
     const reps=r.reps||[];
     const vals=reps.filter(x=>x!=null);
     let cv='—';
@@ -2118,35 +2129,14 @@ function renderPasoAPaso(){
         <div style="font-size:11px;color:#78716c;margin-top:4px">💡 El CV% mide la <strong>repetibilidad</strong>: qué tan consistentes son las 3 réplicas. Un CV% bajo indica buena precisión.</div>
       </div>
 
-      \${(()=>{ const rep=checkRepetibilidad(r.paramId, r.reps||[]); if(!rep) return '';
-        const maxDiff=(Math.max(...(r.reps||[]).filter(x=>x!=null))-Math.min(...(r.reps||[]).filter(x=>x!=null))).toFixed(4);
-        return \`<div style="background:\${rep.pasa?'#dcfce7':'#fee2e2'};border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid \${rep.pasa?'#16a34a':'#dc2626'}">
-          <div style="font-size:12px;font-weight:700;color:\${rep.pasa?'#15803d':'#991b1b'};margin-bottom:6px">📐 PASO 3b — Repetibilidad SFC (AOCS Cd 16b-93)</div>
-          <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Criterio: Rango (máx − mín) ≤ r = 1.3 unidades absolutas</div>
-          <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Rango = \${maxDiff}</div>
-          <div style="font-size:15px;font-weight:700;color:\${rep.pasa?'#15803d':'#991b1b'}">\${rep.pasa?'✅ PASA repetibilidad':'❌ NO PASA repetibilidad'} · Rango \${maxDiff} \${rep.pasa?'≤':'>'} 1.3</div>
-        </div>\`;
-      })()}
-
       ${rv!=null ? `
       <!-- Paso 4: Sigma -->
       <div style="background:#faf5ff;border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid #9333ea">
         <div style="font-size:12px;font-weight:700;color:#7e22ce;margin-bottom:6px">📐 PASO 4 — Desviación estándar de referencia (σ)</div>
-        \${SIGMA_OVERRIDE[r.paramId] ? \`
-        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
-          Parámetro SFC · Norma AOCS Cd 16b-93:<br>
-          r (repetibilidad) = 1.3 unidades absolutas<br>
-          R (reproducibilidad interlaboratorio) = 3.3 unidades absolutas<br>
-          σ = R / 2.8 = 3.3 / 2.8 = <strong>1.179</strong>
-        </div>
-        <div style="font-size:15px;font-weight:700;color:#7e22ce">σ = 1.179 %SFC (fijo por norma)</div>
-        <div style="font-size:11px;color:#78716c;margin-top:4px">💡 Para SFC no se usa el 3% del valor — se usa la reproducibilidad oficial de la norma AOCS Cd 16b-93 dividida entre 2.8 (ISO 13528).</div>
-        \` : \`
-        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = |X<sub>ref</sub>| × 0.03 &nbsp;(3% del valor certificado · ISO 13528)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = |X<sub>ref</sub>| × 0.03 &nbsp;(3% del valor certificado)</div>
         <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = |${rv}| × 0.03</div>
         <div style="font-size:15px;font-weight:700;color:#7e22ce">σ = ${sigma.toFixed(4)} ${r.unit||''}</div>
         <div style="font-size:11px;color:#78716c;margin-top:4px">💡 El 3% representa la incertidumbre aceptable del método analítico según ISO 13528.</div>
-        \`}
       </div>
 
       <!-- Paso 5: Z-score -->
@@ -2379,176 +2369,123 @@ function renderANOVA(muestra){
   wrap.innerHTML = html || '<p style="color:#94a3b8;font-size:13px">Se necesitan al menos 2 laboratorios con datos para calcular ANOVA.</p>';
 }
 // =========================================================
-// COMPETENCIA DEL ANALISTA — Comparación entre pares
+// COMPETENCIA DEL ANALISTA
 // =========================================================
 function renderCompetencia(){
-  const wrap   = document.getElementById('comp-wrap');
-  const muestra = document.getElementById('comp-muestra')?.value || 'cpo';
+  var wrap    = document.getElementById('comp-wrap');
+  var muestra = document.getElementById('comp-muestra') ? document.getElementById('comp-muestra').value : 'cpo';
   if(!wrap) return;
+  if(!RESULTADOS.length){ wrap.innerHTML='<div class="card"><p style="color:#94a3b8;font-size:13px;padding:10px">Sin datos suficientes.</p></div>'; return; }
 
-  if(!RESULTADOS.length){
-    wrap.innerHTML='<div class="card"><p style="color:#94a3b8;font-size:13px;padding:10px">Sin datos suficientes.</p></div>';
-    return;
-  }
+  var params = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  var REFm   = muestra==='rbd' ? REF.rbd    : REF.cpo;
+  var mLabel = muestra==='rbd' ? 'RBD PALMA' : 'CPO DE PALMA';
+  var bColor = muestra==='rbd' ? '#3b82f6'   : '#f97316';
+  var html   = '';
 
-  const params  = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
-  const REFm    = muestra==='rbd' ? REF.rbd    : REF.cpo;
-  const mLabel  = muestra==='rbd' ? 'RBD PALMA' : 'CPO DE PALMA';
-  const bColor  = muestra==='rbd' ? '#3b82f6'   : '#f97316';
+  params.forEach(function(p){
+    var res = RESULTADOS.filter(function(r){ return r.muestra===muestra && r.paramId===p.id; });
+    if(res.length < 1) return;
+    var rv = REFm[p.id];
+    var ov = SIGMA_OVERRIDE[p.id];
 
-  // Get unique analistas
-  const analistas = [...new Map(
-    RESULTADOS.filter(r=>r.muestra===muestra)
-    .map(r=>[ r.analista||r.user, { analista:r.analista||r.nombre||r.user, codigo:r.codigo||r.user } ])
-  ).values()];
-
-  if(analistas.length < 2){
-    wrap.innerHTML='<div class="card"><p style="color:#94a3b8;font-size:13px;padding:10px">Se necesitan al menos 2 analistas con datos para comparar.</p></div>';
-    return;
-  }
-
-  let html = '';
-
-  params.forEach(p => {
-    // Get results for this param from all analistas
-    const res = RESULTADOS.filter(r=>r.muestra===muestra && r.paramId===p.id);
-    if(res.length < 2) return;
-
-    const rv = REFm[p.id];
-    const override = SIGMA_OVERRIDE[p.id];
-
-    // ── REPETIBILIDAD por analista ──────────────────────────
-    const repRows = res.map(r => {
-      const reps = (r.reps||[]).filter(x=>x!=null&&isFinite(x));
+    var rows = res.map(function(r){
+      var reps = (r.reps||[]).filter(function(x){return x!=null&&isFinite(x);});
       if(reps.length < 2) return null;
+      var mean  = reps.reduce(function(a,b){return a+b;},0)/reps.length;
+      var de    = Math.sqrt(reps.reduce(function(a,b){return a+(b-mean)*(b-mean);},0)/(reps.length-1));
+      var cv    = mean>0 ? (de/mean*100) : null;
+      var rango = Math.max.apply(null,reps)-Math.min.apply(null,reps);
 
-      const mean = reps.reduce((a,b)=>a+b,0)/reps.length;
-      const de   = Math.sqrt(reps.reduce((a,b)=>a+(b-mean)**2,0)/(reps.length-1));
-      const cv   = mean>0 ? (de/mean*100) : null;
-      const rango = Math.max(...reps) - Math.min(...reps);
+      // Repetibilidad
+      var repPasa, repVal, repCrit, repColor;
+      if(ov){ repPasa=rango<=ov.r; repVal=rango.toFixed(4); repCrit='Rango &le; r = '+ov.r+' (AOCS Cd 16b-93)'; }
+      else   { repPasa=cv!==null&&cv<=5; repVal=cv!==null?cv.toFixed(2)+'%':'--'; repCrit='CV% &le; 5%'; }
+      repColor = repPasa?'#16a34a':'#dc2626';
 
-      let repPasa, repCrit, repColor;
-      if(override){
-        // SFC: criterio absoluto r=1.3
-        repPasa  = rango <= override.r;
-        repCrit  = `Rango ≤ r = ${override.r} (AOCS Cd 16b-93)`;
-        repColor = repPasa ? '#16a34a' : '#dc2626';
-      } else {
-        // Otros: CV% ≤ 5%
-        repPasa  = cv!==null && cv <= 5;
-        repCrit  = 'CV% ≤ 5%';
-        repColor = cv===null?'#94a3b8':cv<=2?'#16a34a':cv<=5?'#ca8a04':'#dc2626';
-      }
-
-      // ── REPRODUCIBILIDAD vs referencia ────────────────────
-      let reproPasa=null, reproZ=null, reproCrit='', reproColor='#94a3b8', reproTxt='Sin referencia';
+      // Reproducibilidad vs referencia
+      var reproZ=null, reproPasa=null, reproTxt='Sin referencia', reproColor='#94a3b8';
       if(rv!=null){
-        const sigma = getSigma(p.id, rv);
-        reproZ = calcZ(r.promedio, rv, p.id);
-        const absZ = Math.abs(reproZ);
-        reproPasa = absZ <= 2;
-        if(override){
-          reproCrit = `|X̄ - Xref| ≤ R = ${override.R} (AOCS Cd 16b-93) · σ = R/2.8 = ${sigma.toFixed(3)}`;
-        } else {
-          reproCrit = `|Z| ≤ 2 · σ = 3% de ${rv}`;
-        }
-        reproColor = absZ<=2?'#16a34a':absZ<=3?'#ca8a04':'#dc2626';
-        reproTxt   = absZ<=2?'✅ PASA':absZ<=3?'⚠️ CUESTIONABLE':'❌ NO PASA';
+        reproZ    = calcZ(r.promedio, rv, p.id);
+        var absZ  = Math.abs(reproZ);
+        reproPasa = absZ<=2;
+        reproColor= absZ<=2?'#16a34a':absZ<=3?'#ca8a04':'#dc2626';
+        reproTxt  = absZ<=2?'&#x2705; PASA':absZ<=3?'&#x26A0;&#xFE0F; CUESTIONABLE':'&#x274c; NO PASA';
       }
 
-      // ── VEREDICTO FINAL ───────────────────────────────────
-      let veredicto, verColor, verBg;
+      // Veredicto
+      var ver, verCol, verBg;
       if(reproPasa===null){
-        veredicto = repPasa ? '✅ Pasa repetibilidad' : '❌ Falla repetibilidad';
-        verColor  = repPasa ? '#15803d' : '#991b1b';
-        verBg     = repPasa ? '#dcfce7' : '#fee2e2';
-      } else if(repPasa && reproPasa){
-        veredicto = '✅ COMPETENTE · Pasa repetibilidad y reproducibilidad';
-        verColor  = '#15803d'; verBg = '#dcfce7';
-      } else if(repPasa && !reproPasa){
-        veredicto = '⚠️ Preciso pero NO exacto · Falla reproducibilidad (error sistemático)';
-        verColor  = '#854d0e'; verBg = '#fef9c3';
-      } else if(!repPasa && reproPasa){
-        veredicto = '⚠️ Exacto pero NO preciso · Falla repetibilidad (error aleatorio)';
-        verColor  = '#854d0e'; verBg = '#fef9c3';
+        ver=repPasa?'&#x2705; Pasa repetibilidad':'&#x274c; Falla repetibilidad';
+        verCol=repPasa?'#15803d':'#991b1b'; verBg=repPasa?'#dcfce7':'#fee2e2';
+      } else if(repPasa&&reproPasa){
+        ver='&#x2705; COMPETENTE: Pasa repetibilidad y reproducibilidad';
+        verCol='#15803d'; verBg='#dcfce7';
+      } else if(repPasa&&!reproPasa){
+        ver='&#x26A0;&#xFE0F; Preciso pero NO exacto: error sistematico (sesgo)';
+        verCol='#854d0e'; verBg='#fef9c3';
+      } else if(!repPasa&&reproPasa){
+        ver='&#x26A0;&#xFE0F; Exacto pero NO preciso: error aleatorio';
+        verCol='#854d0e'; verBg='#fef9c3';
       } else {
-        veredicto = '❌ NO COMPETENTE · Falla repetibilidad y reproducibilidad';
-        verColor  = '#991b1b'; verBg = '#fee2e2';
+        ver='&#x274c; NO COMPETENTE: falla repetibilidad y reproducibilidad';
+        verCol='#991b1b'; verBg='#fee2e2';
       }
-
-      return { r, reps, mean, de, cv, rango, repPasa, repCrit, repColor,
-               reproZ, reproPasa, reproCrit, reproColor, reproTxt,
-               veredicto, verColor, verBg };
+      return {r:r,reps:reps,mean:mean,de:de,cv:cv,rango:rango,
+              repPasa:repPasa,repVal:repVal,repCrit:repCrit,repColor:repColor,
+              reproZ:reproZ,reproPasa:reproPasa,reproTxt:reproTxt,reproColor:reproColor,
+              ver:ver,verCol:verCol,verBg:verBg};
     }).filter(Boolean);
 
-    if(!repRows.length) return;
+    if(!rows.length) return;
 
-    // ── REPRODUCIBILIDAD entre pares (sin referencia) ─────
-    const promedios = repRows.map(x=>x.mean);
-    const meanGlobal = promedios.reduce((a,b)=>a+b,0)/promedios.length;
-    const deGlobal   = promedios.length>=2 ? Math.sqrt(promedios.reduce((a,b)=>a+(b-meanGlobal)**2,0)/(promedios.length-1)) : null;
-    const cvGlobal   = deGlobal!==null&&meanGlobal>0 ? (deGlobal/meanGlobal*100) : null;
+    // Reproducibilidad entre pares
+    var promedios = rows.map(function(x){return x.mean;});
+    var mG  = promedios.reduce(function(a,b){return a+b;},0)/promedios.length;
+    var deG = promedios.length>=2 ? Math.sqrt(promedios.reduce(function(a,b){return a+(b-mG)*(b-mG);},0)/(promedios.length-1)) : null;
+    var cvG = deG!==null&&mG>0 ? (deG/mG*100) : null;
+    var cvGColor = cvG===null?'#94a3b8':cvG<=5?'#16a34a':cvG<=10?'#ca8a04':'#dc2626';
+    var cvGTxt   = cvG===null?'--':cvG<=5?'&#x2705; Buena reproducibilidad interna':cvG<=10?'&#x26A0;&#xFE0F; Reproducibilidad moderada':'&#x274c; Baja reproducibilidad interna';
 
-    html += `<div class="card" style="margin-bottom:14px;border-left:4px solid ${bColor}">
-      <div style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:12px">
-        🧪 ${p.nombre} · ${mLabel}
-        ${rv!=null?`<span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px">Referencia: ${rv} ${p.unit}</span>`:''}
-      </div>
-
-      <!-- Tabla comparativa -->
-      <div class="table-wrap" style="margin-bottom:12px">
-        <table>
-          <thead><tr>
-            <th style="text-align:left">Analista</th>
-            <th>Lab</th>
-            <th>Rep.1</th><th>Rep.2</th><th>Rep.3</th>
-            <th>Promedio</th><th>DE</th>
-            <th>${override?'Rango':'CV%'}</th>
-            <th>Repetibilidad<br><small style="font-weight:400">${override?`r ≤ ${override.r}`:'CV% ≤ 5%'}</small></th>
-            ${rv!=null?`<th>Z-score</th><th>Reproducibilidad<br><small style="font-weight:400">vs referencia</small></th>`:''}
-            <th>Veredicto</th>
-          </tr></thead>
-          <tbody>
-            ${repRows.map(x=>`<tr>
-              <td style="font-weight:600;font-size:12px">${x.r.analista||x.r.nombre||x.r.user}</td>
-              <td><span class="code-badge">${x.r.codigo||x.r.user}</span></td>
-              ${x.reps.map(v=>`<td style="font-size:12px">${v.toFixed(4)}</td>`).join('')}
-              ${x.reps.length<3?'<td>—</td>'.repeat(3-x.reps.length):''}
-              <td style="font-weight:700">${x.mean.toFixed(4)}</td>
-              <td style="font-size:12px">${x.de.toFixed(5)}</td>
-              <td style="font-size:12px;color:${x.repColor};font-weight:600">${override?x.rango.toFixed(4):x.cv!==null?x.cv.toFixed(2)+'%':'—'}</td>
-              <td style="font-weight:700;color:${x.repColor}">${x.repPasa?'✅ PASA':'❌ FALLA'}</td>
-              ${rv!=null?`<td style="font-weight:700;color:${x.reproColor}">${x.reproZ!==null?x.reproZ.toFixed(2):'—'}</td>
-              <td style="font-weight:700;color:${x.reproColor}">${x.reproTxt}</td>`:''}
-              <td style="font-size:11px;font-weight:700;color:${x.verColor}">${x.veredicto}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Reproducibilidad entre pares -->
-      <div style="background:#f8fafc;border-radius:10px;padding:12px 16px;margin-bottom:10px">
-        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:8px">📊 Reproducibilidad entre pares (comparación interna)</div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px">
-          <span>Promedio global: <strong>${meanGlobal.toFixed(4)}</strong></span>
-          <span>DE entre analistas: <strong>${deGlobal!==null?deGlobal.toFixed(5):'—'}</strong></span>
-          <span style="color:${cvGlobal===null?'#94a3b8':cvGlobal<=5?'#16a34a':cvGlobal<=10?'#ca8a04':'#dc2626'};font-weight:700">
-            CV% entre pares: ${cvGlobal!==null?cvGlobal.toFixed(2)+'%':'—'}
-            ${cvGlobal!==null?(cvGlobal<=5?'✅ Buena reproducibilidad interna':cvGlobal<=10?'⚠️ Reproducibilidad moderada':'❌ Baja reproducibilidad interna'):''}
-          </span>
-        </div>
-        <div style="font-size:11px;color:#64748b;margin-top:6px">
-          💡 Criterio: CV% entre pares ≤ 5% indica que todos los analistas obtienen resultados equivalentes para esta técnica.
-        </div>
-      </div>
-
-      <!-- Criterios aplicados -->
-      <div style="font-size:11px;color:#64748b;background:#f1f5f9;border-radius:8px;padding:8px 14px">
-        <strong>Criterios aplicados:</strong>
-        Repetibilidad — ${override?`Rango ≤ r = ${override.r} unidades absolutas (${override.norma})`:'CV% ≤ 5% (ISO 13528)'} ·
-        Reproducibilidad — ${rv!=null?(override?`|Z| ≤ 2 con σ = R/2.8 = ${getSigma(p.id,rv).toFixed(3)} (${override.norma})`:`|Z| ≤ 2 · σ = 3% del valor certificado (ISO 13528)`):'Sin valor de referencia'}
-      </div>
-    </div>`;
+    html += '<div class="card" style="margin-bottom:14px;border-left:4px solid '+bColor+'">'
+      +'<div style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:12px">'+p.nombre+' &middot; '+mLabel
+      +(rv!=null?' <span style="font-size:12px;font-weight:400;color:#64748b">&nbsp;Referencia: '+rv+' '+p.unit+'</span>':'')+'</div>'
+      +'<div class="table-wrap" style="margin-bottom:12px"><table>'
+      +'<thead><tr><th style="text-align:left">Analista</th><th>Lab</th>'
+      +'<th>Rep.1</th><th>Rep.2</th><th>Rep.3</th>'
+      +'<th>Promedio</th><th>DE</th>'
+      +'<th>'+(ov?'Rango':'CV%')+'<br><small style="font-weight:400">'+(ov?'r &le; '+ov.r:'CV% &le; 5%')+'</small></th>'
+      +'<th>Repetibilidad</th>'
+      +(rv!=null?'<th>Z-score</th><th>Reproducibilidad</th>':'')
+      +'<th>Veredicto</th></tr></thead><tbody>'
+      +rows.map(function(x){
+        return '<tr>'
+          +'<td style="font-weight:600;font-size:12px">'+(x.r.analista||x.r.nombre||x.r.user)+'</td>'
+          +'<td><span class="code-badge">'+(x.r.codigo||x.r.user)+'</span></td>'
+          +x.reps.map(function(v){return '<td style="font-size:12px">'+v.toFixed(4)+'</td>';}).join('')
+          +(x.reps.length<3?'<td>--</td>'.repeat(3-x.reps.length):'')
+          +'<td style="font-weight:700">'+x.mean.toFixed(4)+'</td>'
+          +'<td style="font-size:12px">'+x.de.toFixed(5)+'</td>'
+          +'<td style="font-size:12px;color:'+x.repColor+';font-weight:600">'+x.repVal+'</td>'
+          +'<td style="font-weight:700;color:'+x.repColor+'">'+(x.repPasa?'&#x2705; PASA':'&#x274c; FALLA')+'</td>'
+          +(rv!=null?'<td style="font-weight:700;color:'+x.reproColor+'">'+(x.reproZ!==null?x.reproZ.toFixed(2):'--')+'</td>'
+            +'<td style="font-weight:600;font-size:12px;color:'+x.reproColor+'">'+x.reproTxt+'</td>':'')
+          +'<td style="font-size:11px;font-weight:700;padding:6px 8px;background:'+x.verBg+';color:'+x.verCol+'">'+x.ver+'</td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>'
+      +'<div style="background:#f8fafc;border-radius:10px;padding:10px 14px;margin-bottom:8px">'
+      +'<div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:6px">&#128202; Reproducibilidad entre pares (comparacion interna)</div>'
+      +'<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px">'
+      +'<span>Promedio global: <strong>'+mG.toFixed(4)+'</strong></span>'
+      +'<span>DE entre analistas: <strong>'+(deG!==null?deG.toFixed(5):'--')+'</strong></span>'
+      +'<span style="color:'+cvGColor+';font-weight:700">CV% entre pares: '+(cvG!==null?cvG.toFixed(2)+'%':'--')+' &mdash; '+cvGTxt+'</span>'
+      +'</div><div style="font-size:11px;color:#64748b;margin-top:4px">CV% &le; 5%: todos los analistas obtienen resultados equivalentes para esta tecnica</div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:#64748b;background:#f1f5f9;border-radius:8px;padding:8px 14px">'
+      +'<strong>Criterios:</strong> Repetibilidad &mdash; '+rows[0].repCrit
+      +(rv!=null?' &nbsp;&middot;&nbsp; Reproducibilidad &mdash; |Z| &le; 2, sigma = '+getSigma(p.id,rv||1).toFixed(3):'')
+      +'</div></div>';
   });
 
   wrap.innerHTML = html || '<div class="card"><p style="color:#94a3b8;font-size:13px;padding:10px">Sin datos suficientes para comparar analistas.</p></div>';
