@@ -624,7 +624,38 @@ function setupFormScreen(){
   buildForm();
 }
 
+// Storage for saved form data per muestra
+const FORM_DATA = { rbd:{}, cpo:{} };
+
+function saveFormData(){
+  if(!MUESTRA) return;
+  const data = {};
+  document.querySelectorAll('#form-params input[type="number"], #form-params input[type="text"]').forEach(function(el){
+    if(el.id) data[el.id] = el.value;
+  });
+  FORM_DATA[MUESTRA] = data;
+}
+
+function restoreFormData(m){
+  const data = FORM_DATA[m] || {};
+  Object.keys(data).forEach(function(id){
+    const el = document.getElementById(id);
+    if(el) {
+      el.value = data[id];
+      // Trigger calculation
+      if(el.oninput) el.oninput();
+    }
+  });
+  // Re-trigger all calculations
+  setTimeout(function(){
+    document.querySelectorAll('#form-params input[type="number"]').forEach(function(el){
+      if(el.oninput) el.oninput();
+    });
+  }, 50);
+}
+
 function selMuestra(m){
+  saveFormData(); // Save current data before switching
   MUESTRA = m;
   document.querySelectorAll('.mtab').forEach(t => {
     t.classList.remove('active-rbd','active-cpo');
@@ -633,6 +664,7 @@ function selMuestra(m){
   else           document.getElementById('mt-cpo')?.classList.add('active-cpo');
   actualizarInfoMuestra();
   buildForm();
+  restoreFormData(m); // Restore saved data for this muestra
 }
 
 function actualizarInfoMuestra(){
