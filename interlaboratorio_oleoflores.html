@@ -375,7 +375,7 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
                 <option value="todos">Todos</option>
               </select></div>
             <div class="fg" style="flex:1;min-width:120px;margin:0"><label class="fl">Muestra</label>
-              <select id="stat-muestra" onchange="populateStatParams();refreshEstadisticas();renderTablaRPI()">
+              <select id="stat-muestra" onchange="populateStatParams();refreshEstadisticas();syncRPIMuestra();renderTablaRPI()">
                 <option value="rbd">RBD</option><option value="cpo">CPO</option>
               </select></div>
             <div class="fg" style="flex:2;min-width:180px;margin:0"><label class="fl">Parámetro</label>
@@ -524,6 +524,28 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
           <div id="rr-section"><p style="color:#94a3b8;font-size:13px">Sin datos suficientes para R&R.</p></div>
         </div>
 
+        <!-- FILTROS RANKING -->
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div class="fg" style="flex:1;min-width:150px;margin:0"><label class="fl">Analista</label>
+              <select id="rank-analista" onchange="renderEvaluacion()">
+                <option value="todos">— Todos —</option>
+              </select></div>
+            <div class="fg" style="flex:1;min-width:120px;margin:0"><label class="fl">Muestra</label>
+              <select id="rank-muestra" onchange="populateRankAnalistaFilter();renderEvaluacion()">
+                <option value="todos">Todas</option>
+                <option value="cpo">CPO</option>
+                <option value="rbd">RBD</option>
+              </select></div>
+          </div>
+        </div>
+
+        <!-- MEJOR POR PARÁMETRO -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">🥇 Mejor analista por parámetro</div>
+          <div id="mejor-param-wrap"><p style="color:#94a3b8;font-size:13px">Sin datos.</p></div>
+        </div>
+
         <!-- RANKING TABLE -->
         <div class="card" style="margin-bottom:12px">
           <div class="card-title">📋 Ranking completo de analistas</div>
@@ -571,8 +593,12 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
         </div>
         <div class="card" style="margin-bottom:12px">
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div class="fg" style="flex:1;min-width:150px;margin:0"><label class="fl">Analista</label>
+              <select id="comp-analista" onchange="renderCompetencia()">
+                <option value="todos">— Todos —</option>
+              </select></div>
             <div class="fg" style="flex:1;min-width:120px;margin:0"><label class="fl">Muestra</label>
-              <select id="comp-muestra" onchange="renderCompetencia()">
+              <select id="comp-muestra" onchange="populateCompAnalistaFilter();renderCompetencia()">
                 <option value="cpo">CPO</option><option value="rbd">RBD</option>
               </select></div>
           </div>
@@ -1484,6 +1510,8 @@ function getAnalistaStats(user){
 let controlChart = null;
 
 function renderEvaluacion(){
+  populateRankAnalistaFilter();
+  renderMejorPorParametro();
   const isAdmin = SESSION && SESSION.rol==='admin';
   const analistas = USERS.filter(u=>u.rol!=='admin');
   const ranked = analistas.map(u=>({ u, stats: getAnalistaStats(u.user) }))
@@ -2171,11 +2199,17 @@ function renderPasoAPaso(){
 // TABLA GENERAL RPI — ESTADÍSTICAS DESCRIPTIVAS COMPLETAS
 // =========================================================
 function renderTablaRPI(){
-  const muestra = document.getElementById('rpi-muestra')?.value || 'cpo';
+  const muestra  = document.getElementById('rpi-muestra')?.value || document.getElementById('stat-muestra')?.value || 'cpo';
+  // Sync rpi-muestra with stat-muestra
+  const rpiSel = document.getElementById('rpi-muestra');
+  if(rpiSel) rpiSel.value = muestra;
   const tbody   = document.getElementById('rpi-tbody');
   if(!tbody) return;
 
-  const params = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  // Filter by selected param if one is selected
+  const selectedParam = document.getElementById('stat-param')?.value || null;
+  const allParams = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  const params = selectedParam ? allParams.filter(function(p){return p.id===selectedParam;}) : allParams;
   const REFm   = muestra==='rbd' ? REF.rbd : REF.cpo;
 
   const rows = params.map(p => {
@@ -2252,7 +2286,9 @@ function renderANOVA(muestra){
   const wrap = document.getElementById('anova-wrap');
   if(!wrap) return;
 
-  const params  = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  const selectedParam = document.getElementById('stat-param')?.value || null;
+  const allParams = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  const params = selectedParam ? allParams.filter(function(p){return p.id===selectedParam;}) : allParams;
   const mLabel  = muestra==='rbd' ? 'RBD' : 'CPO';
   let html = '';
 
@@ -2384,7 +2420,9 @@ function renderCompetencia(){
   var html   = '';
 
   params.forEach(function(p){
+    var compAnalista = document.getElementById('comp-analista') ? document.getElementById('comp-analista').value : 'todos';
     var res = RESULTADOS.filter(function(r){ return r.muestra===muestra && r.paramId===p.id; });
+    if(compAnalista!=='todos') res = res.filter(function(r){ return (r.analista||r.user||'').trim()===compAnalista; });
     if(res.length < 1) return;
     var rv = REFm[p.id];
     var ov = SIGMA_OVERRIDE[p.id];
@@ -2489,6 +2527,117 @@ function renderCompetencia(){
   });
 
   wrap.innerHTML = html || '<div class="card"><p style="color:#94a3b8;font-size:13px;padding:10px">Sin datos suficientes para comparar analistas.</p></div>';
+}
+// =========================================================
+// FILTROS DE ANALISTA — Competencia y Ranking
+// =========================================================
+function populateCompAnalistaFilter(){
+  var sel = document.getElementById('comp-analista');
+  var muestra = document.getElementById('comp-muestra') ? document.getElementById('comp-muestra').value : 'cpo';
+  if(!sel) return;
+  var map = {};
+  RESULTADOS.filter(function(r){return r.muestra===muestra;}).forEach(function(r){
+    var k = (r.analista||r.user||'').trim();
+    if(k) map[k] = r.codigo||r.user;
+  });
+  var cur = sel.value;
+  sel.innerHTML = '<option value="todos">— Todos —</option>'
+    + Object.keys(map).map(function(a){ return '<option value="'+a+'">'+map[a]+' · '+a+'</option>'; }).join('');
+  if(Object.keys(map).indexOf(cur)>=0) sel.value = cur;
+}
+
+function populateRankAnalistaFilter(){
+  var sel = document.getElementById('rank-analista');
+  var muestra = document.getElementById('rank-muestra') ? document.getElementById('rank-muestra').value : 'todos';
+  if(!sel) return;
+  var map = {};
+  var res = muestra==='todos' ? RESULTADOS : RESULTADOS.filter(function(r){return r.muestra===muestra;});
+  res.forEach(function(r){
+    var k = (r.analista||r.user||'').trim();
+    if(k) map[k] = r.codigo||r.user;
+  });
+  var cur = sel.value;
+  sel.innerHTML = '<option value="todos">— Todos —</option>'
+    + Object.keys(map).map(function(a){ return '<option value="'+a+'">'+map[a]+' · '+a+'</option>'; }).join('');
+  if(Object.keys(map).indexOf(cur)>=0) sel.value = cur;
+}
+
+// =========================================================
+// MEJOR ANALISTA POR PARÁMETRO
+// =========================================================
+function renderMejorPorParametro(){
+  var wrap    = document.getElementById('mejor-param-wrap');
+  if(!wrap) return;
+  var muestra = document.getElementById('rank-muestra') ? document.getElementById('rank-muestra').value : 'todos';
+  var muestras = muestra==='todos' ? ['cpo','rbd'] : [muestra];
+  var html = '';
+
+  muestras.forEach(function(m){
+    var params = m==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+    var REFm   = m==='rbd' ? REF.rbd    : REF.cpo;
+    var mLabel = m==='rbd' ? 'RBD' : 'CPO';
+    var bColor = m==='rbd' ? '#3b82f6' : '#f97316';
+    var rows   = '';
+
+    params.forEach(function(p){
+      var res = RESULTADOS.filter(function(r){ return r.muestra===m && r.paramId===p.id; });
+      if(!res.length) return;
+      var rv = REFm[p.id];
+
+      // Find best: lowest |Z| if ref exists, else lowest CV%
+      var scored = res.map(function(r){
+        var reps = (r.reps||[]).filter(function(x){return x!=null&&isFinite(x);});
+        var mean = reps.length ? reps.reduce(function(a,b){return a+b;},0)/reps.length : r.promedio;
+        var de   = reps.length>=2 ? Math.sqrt(reps.reduce(function(a,b){return a+(b-mean)*(b-mean);},0)/(reps.length-1)) : 0;
+        var cv   = mean>0 ? de/mean*100 : 999;
+        var absZ = rv!=null ? Math.abs(calcZ(r.promedio,rv,p.id)) : null;
+        return {r:r, mean:mean, cv:cv, absZ:absZ};
+      });
+
+      // Sort: by absZ first, then CV%
+      scored.sort(function(a,b){
+        if(a.absZ!==null && b.absZ!==null) return a.absZ-b.absZ;
+        return a.cv-b.cv;
+      });
+
+      var best = scored[0];
+      var calColor = best.absZ===null?'#64748b':best.absZ<=2?'#16a34a':best.absZ<=3?'#ca8a04':'#dc2626';
+      var calTxt   = best.absZ===null?'Sin ref.':best.absZ<=2?'Satisfactorio':best.absZ<=3?'Cuestionable':'No satisfactorio';
+
+      rows += '<tr>'
+        +'<td style="font-weight:600;font-size:12px">'+p.nombre+'</td>'
+        +'<td>&#x1F947;</td>'
+        +'<td style="font-weight:700;font-size:12px">'+(best.r.analista||best.r.nombre||best.r.user)+'</td>'
+        +'<td><span class="code-badge">'+(best.r.codigo||best.r.user)+'</span></td>'
+        +'<td style="font-weight:700">'+best.mean.toFixed(4)+'</td>'
+        +(rv!=null?'<td>'+rv+'</td>':'<td>--</td>')
+        +(best.absZ!==null?'<td style="font-weight:700;color:'+calColor+'">'+best.absZ.toFixed(2)+'</td>':'<td>--</td>')
+        +'<td style="font-size:12px;color:'+calColor+';font-weight:600">'+calTxt+'</td>'
+        +'<td style="font-size:12px;color:'+(best.cv<=2?'#16a34a':best.cv<=5?'#ca8a04':'#dc2626')+';font-weight:600">'+best.cv.toFixed(2)+'%</td>'
+        // Other analistas
+        +'<td style="font-size:11px;color:#94a3b8">'
+        +scored.slice(1).map(function(s){
+          return (s.r.analista||s.r.user)+(s.absZ!==null?' (Z='+s.absZ.toFixed(2)+')':'');
+        }).join(' &middot; ')
+        +'</td>'
+        +'</tr>';
+    });
+
+    if(!rows) return;
+
+    html += '<div style="margin-bottom:14px">'
+      +'<div style="font-weight:700;font-size:13px;color:#1e293b;margin-bottom:8px;padding:6px 10px;background:'+(m==='rbd'?'#eff6ff':'#fff7ed')+';border-radius:8px;border-left:3px solid '+bColor+'">'+mLabel+' DE PALMA</div>'
+      +'<div class="table-wrap"><table>'
+      +'<thead><tr><th style="text-align:left">Parametro</th><th></th><th>Mejor analista</th><th>Lab</th><th>Promedio</th><th>Referencia</th><th>|Z|</th><th>Calificacion</th><th>CV%</th><th>Otros analistas</th></tr></thead>'
+      +'<tbody>'+rows+'</tbody></table></div></div>';
+  });
+
+  wrap.innerHTML = html || '<p style="color:#94a3b8;font-size:13px">Sin datos suficientes.</p>';
+}
+function syncRPIMuestra(){
+  var m = document.getElementById('stat-muestra')?.value;
+  var rpiSel = document.getElementById('rpi-muestra');
+  if(rpiSel && m) rpiSel.value = m;
 }
 </script>
 </body>
