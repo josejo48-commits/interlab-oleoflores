@@ -845,64 +845,149 @@ function calcDobi(pid){clearMark(pid);
 }
 
 // ── ENVIAR ────────────────────────────────────────────────────
-function enviarResultados(){
-  const params = MUESTRA==='rbd' ? PARAMS_RBD : PARAMS_CPO_ALL.filter(p=>SESSION.params_cpo.includes(p.id));
+// Recoge datos de una muestra que NO está visible — lee desde FORM_DATA en memoria
+function recolectarDatosMuestraDesdeMemoria(muestraId){
+  var savedData = FORM_DATA[muestraId] || {};
+  if(Object.keys(savedData).length === 0) return {datos:[], incompletos:[]};
+
+  var mParams = muestraId==='rbd' ? PARAMS_RBD : PARAMS_CPO_ALL.filter(function(p){ return SESSION.params_cpo.includes(p.id); });
+  var datos = [];
+  var incompletos = [];
+
+  // Helper: get value from saved FORM_DATA
+  function sv(id){ var v=parseFloat(savedData[id]); return isNaN(v)?null:v; }
+
+  mParams.forEach(function(p){
+    var camposOk = true;
+    var reps = [];
+
+    if(p.tipo==='directo'||p.tipo==='halogeno'){
+      for(var i=1;i<=3;i++){ if(sv(p.id+'_r'+i)===null) camposOk=false; }
+      reps = [1,2,3].map(function(i){ return sv(p.id+'_r'+i); });
+    } else if(p.tipo==='horno'){
+      for(var i=1;i<=3;i++){
+        if(sv(p.id+'_bv'+i)===null||sv(p.id+'_pm'+i)===null||sv(p.id+'_ms'+i)===null) camposOk=false;
+      }
+      reps = [1,2,3].map(function(i){
+        var bv=sv(p.id+'_bv'+i), pm=sv(p.id+'_pm'+i), ms=sv(p.id+'_ms'+i);
+        return (bv!==null&&pm!==null&&ms!==null) ? parseFloat((((bv+pm)-ms)/pm*100).toFixed(4)) : null;
+      });
+    } else if(p.tipo==='acidez'){
+      if(!sv(p.id+'_n')) camposOk=false;
+      for(var i=1;i<=3;i++){ if(!sv(p.id+'_pm'+i)||!sv(p.id+'_v'+i)) camposOk=false; }
+      var N=sv(p.id+'_n');
+      reps = [1,2,3].map(function(i){
+        var pm=sv(p.id+'_pm'+i), v=sv(p.id+'_v'+i);
+        return (pm&&v&&N) ? parseFloat((v*N*25.6/pm).toFixed(4)) : null;
+      });
+    } else if(p.tipo==='peroxido'){
+      for(var i=1;i<=3;i++){ if(!sv(p.id+'_pm'+i)||!sv(p.id+'_v'+i)) camposOk=false; }
+      reps = [1,2,3].map(function(i){
+        var pm=sv(p.id+'_pm'+i), v=sv(p.id+'_v'+i);
+        return (pm&&v) ? parseFloat((v*10/pm).toFixed(4)) : null;
+      });
+    } else if(p.tipo==='yodo'){
+      if(!sv(p.id+'_n')||!sv(p.id+'_vb')) camposOk=false;
+      for(var i=1;i<=3;i++){ if(!sv(p.id+'_pm'+i)||!sv(p.id+'_v'+i)) camposOk=false; }
+      var N=sv(p.id+'_n'), vb=sv(p.id+'_vb');
+      reps = [1,2,3].map(function(i){
+        var pm=sv(p.id+'_pm'+i), v=sv(p.id+'_v'+i);
+        return (pm&&v&&N&&vb) ? parseFloat(((vb-v)*N*12.69/pm).toFixed(4)) : null;
+      });
+    } else if(p.tipo==='dobi'){
+      for(var i=1;i<=3;i++){ if(!sv(p.id+'_a446_'+i)||!sv(p.id+'_a269_'+i)) camposOk=false; }
+      reps = [1,2,3].map(function(i){
+        var a446=sv(p.id+'_a446_'+i), a269=sv(p.id+'_a269_'+i);
+        return (a446&&a269) ? parseFloat((a446/a269).toFixed(4)) : null;
+      });
+    }
+
+    var validReps = reps.filter(function(r){ return r!==null&&isFinite(r); });
+    var promedio = validReps.length ? parseFloat((validReps.reduce(function(a,b){return a+b;},0)/validReps.length).toFixed(4)) : NaN;
+
+    if(!camposOk || !isFinite(promedio)){
+      incompletos.push(p.nombre+' ('+muestraId.toUpperCase()+')');
+    } else {
+      datos.push({paramId:p.id, paramNombre:p.nombre, unit:p.unit, muestra:muestraId, promedio:promedio, reps:reps});
+    }
+  });
+
+  return {datos:datos, incompletos:incompletos};
+}
+
+function recolectarDatosMuestra(muestraId){
+  // Saves current form state and collects data for a specific muestra
+  // Returns {datos: [...], incompletos: [...]}
+  const mParams = muestraId==='rbd' ? PARAMS_RBD : PARAMS_CPO_ALL.filter(p=>SESSION.params_cpo.includes(p.id));
   const datos = [];
   const incompletos = [];
 
-  params.forEach(p=>{
-    const avgEl = document.getElementById(`${p.id}_avg`);
+  mParams.forEach(p=>{
+    const avgEl = document.getElementById(p.id+'_avg');
     const avg = avgEl ? parseFloat(avgEl.textContent) : NaN;
-    const tieneAvg = isFinite(avg) && avg !== null && avg !== undefined && !isNaN(avg);
+    const tieneAvg = isFinite(avg) && !isNaN(avg);
 
-    // Verificar que todos los campos requeridos estén llenos
     let camposOk = true;
     if(p.tipo==='directo'){
-      for(let i=1;i<=3;i++){ if(gv(`${p.id}_r${i}`)===null) camposOk=false; }
+      for(let i=1;i<=3;i++){ if(gv(p.id+'_r'+i)===null) camposOk=false; }
+    } else if(p.tipo==='halogeno'){
+      for(let i=1;i<=3;i++){ if(gv(p.id+'_r'+i)===null) camposOk=false; }
     } else if(p.tipo==='acidez'){
-      if(!gv(`${p.id}_n`)) camposOk=false;
-      for(let i=1;i<=3;i++){ if(!gv(`${p.id}_pm${i}`)||!gv(`${p.id}_v${i}`)) camposOk=false; }
+      if(!gv(p.id+'_n')) camposOk=false;
+      for(let i=1;i<=3;i++){ if(!gv(p.id+'_pm'+i)||!gv(p.id+'_v'+i)) camposOk=false; }
     } else if(p.tipo==='peroxido'){
-      for(let i=1;i<=3;i++){ if(!gv(`${p.id}_pm${i}`)||!gv(`${p.id}_v${i}`)) camposOk=false; }
+      for(let i=1;i<=3;i++){ if(!gv(p.id+'_pm'+i)||!gv(p.id+'_v'+i)) camposOk=false; }
     } else if(p.tipo==='yodo'){
-      if(!gv(`${p.id}_n`)||!gv(`${p.id}_vb`)) camposOk=false;
-      for(let i=1;i<=3;i++){ if(!gv(`${p.id}_pm${i}`)||!gv(`${p.id}_v${i}`)) camposOk=false; }
+      if(!gv(p.id+'_n')||!gv(p.id+'_vb')) camposOk=false;
+      for(let i=1;i<=3;i++){ if(!gv(p.id+'_pm'+i)||!gv(p.id+'_v'+i)) camposOk=false; }
     } else if(p.tipo==='dobi'){
       for(let i=1;i<=3;i++){
-        if(!gv(`${p.id}_a269_${i}`)||!gv(`${p.id}_a446_${i}`)) camposOk=false;
+        if(!gv(p.id+'_a269_'+i)||!gv(p.id+'_a446_'+i)) camposOk=false;
       }
     }
 
     if(!camposOk || !tieneAvg){
-      incompletos.push(p.nombre);
-      // Marcar bloque en rojo
-      const bloque = document.getElementById(`bloque_${p.id}`);
-      if(bloque){ bloque.classList.add('error'); }
+      incompletos.push(p.nombre + ' (' + muestraId.toUpperCase() + ')');
     } else {
-      // Limpiar marcado
-      const bloque = document.getElementById(`bloque_${p.id}`);
-      if(bloque){ bloque.classList.remove('error'); }
-      const reps = [1,2,3].map(i=>{const c=document.getElementById(`${p.id}_calc${i}`);return c&&c.textContent!=='—'?parseFloat(c.textContent):null;});
-      datos.push({paramId:p.id, paramNombre:p.nombre, unit:p.unit, muestra:MUESTRA, promedio:avg, reps});
+      const reps = [1,2,3].map(function(i){
+        var c=document.getElementById(p.id+'_calc'+i);
+        return c&&c.textContent!=='—'?parseFloat(c.textContent):null;
+      });
+      datos.push({paramId:p.id, paramNombre:p.nombre, unit:p.unit, muestra:muestraId, promedio:avg, reps});
     }
   });
+  return {datos:datos, incompletos:incompletos};
+}
 
-  if(incompletos.length>0){
-    const warn = document.getElementById('warn-submit');
-    warn.innerHTML = `⚠️ Faltan datos en: <strong>${incompletos.join(', ')}</strong>. Completa todos los campos antes de enviar.`;
-    warn.style.display='block';
-    // Scroll al primer bloque incompleto
-    const primerBloque = document.getElementById(`bloque_${params.find(p=>incompletos.includes(p.nombre))?.id}`);
-    if(primerBloque) primerBloque.scrollIntoView({behavior:'smooth', block:'center'});
+function enviarResultados(){
+  // 1. Guardar datos de la muestra actual en memoria
+  saveFormData();
+
+  // 2. Recolectar datos de la muestra visible (la que está en pantalla)
+  var datosActual = recolectarDatosMuestra(MUESTRA);
+
+  // 3. Combinar con datos guardados de la otra muestra desde FORM_DATA
+  var otraMuestra = MUESTRA === 'rbd' ? 'cpo' : 'rbd';
+  var datosOtra   = recolectarDatosMuestraDesdeMemoria(otraMuestra);
+
+  var todosLosDatos   = datosActual.datos.concat(datosOtra.datos);
+  var todosIncompletos = datosActual.incompletos.concat(datosOtra.incompletos);
+
+  if(todosIncompletos.length > 0){
+    var warn = document.getElementById('warn-submit');
+    warn.innerHTML = '⚠️ Faltan datos en: <strong>'+todosIncompletos.join(', ')+'</strong>. Completa todos los campos antes de enviar.';
+    warn.style.display = 'block';
     return;
   }
-  document.getElementById('warn-submit').style.display='none';
+  document.getElementById('warn-submit').style.display = 'none';
 
-  const payload = {
+  var datos = todosLosDatos;
+
+  var payload = {
     codigo: SESSION.codigo, laboratorio: SESSION.nombre,
     analista: SESSION.nombreAnalista, cargo: SESSION.cargo,
-    muestra: MUESTRA, codigoMuestra: SESSION.codigoMuestra,
-    fecha: new Date().toLocaleString('es-CO'), datos
+    muestra: 'RBD+CPO', codigoMuestra: SESSION.codigoMuestra,
+    fecha: new Date().toLocaleString('es-CO'), datos: datos
   };
   // Guardar en Firestore
   const btnEnviar = document.querySelector('.btn-submit');
@@ -923,15 +1008,18 @@ function enviarResultados(){
   }
 
   // Pantalla confirmación (siempre se muestra, independiente de Firestore)
+  var rbdCount = datos.filter(function(d){return d.muestra==='rbd';}).length;
+  var cpoCount = datos.filter(function(d){return d.muestra==='cpo';}).length;
   document.getElementById('enviado-detail').innerHTML = [
     ['Laboratorio', SESSION.nombre],
     ['Analista',    SESSION.nombreAnalista],
     ['Cargo',       SESSION.cargo],
     ['Código',      SESSION.codigo],
-    ['Muestra',     MUESTRA.toUpperCase()],
-    ['Parámetros',  datos.length + ' registrados'],
+    ['RBD',         rbdCount + ' parámetros'],
+    ['CPO',         cpoCount + ' parámetros'],
+    ['Total',       datos.length + ' registros enviados'],
     ['Fecha',       payload.fecha],
-  ].map(([l,v])=>`<div class="enviado-row"><span class="enviado-row-label">${l}</span><span class="enviado-row-val">${v}</span></div>`).join('');
+  ].map(function(pair){ return '<div class="enviado-row"><span class="enviado-row-label">'+pair[0]+'</span><span class="enviado-row-val">'+pair[1]+'</span></div>'; }).join('');
 
   mostrar('p-enviado');
 }
