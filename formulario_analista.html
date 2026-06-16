@@ -442,14 +442,19 @@ function reiniciarFormulario(){
 function moverEnter(e, el){
   if(e.key !== 'Enter') return;
   e.preventDefault();
-  // Find all visible, non-readonly inputs in the form container
-  const inputs = Array.from(document.querySelectorAll(
-    '#form-container input[type="number"]:not([readonly]):not([disabled]), #form-container input[type="text"]:not([readonly]):not([disabled])'
-  )).filter(function(i){ return i.offsetParent !== null; });
-  const idx = inputs.indexOf(el);
-  if(idx >= 0 && idx < inputs.length - 1){
-    inputs[idx + 1].focus();
-    inputs[idx + 1].select();
+  // Collect ALL visible editable inputs in the form
+  var allInputs = Array.from(document.querySelectorAll(
+    '#form-container input[type="number"], #form-container input[type="text"]'
+  )).filter(function(inp){
+    if(inp.readOnly || inp.disabled) return false;
+    var rect = inp.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  });
+  var idx = allInputs.indexOf(el);
+  if(idx >= 0 && idx < allInputs.length - 1){
+    var next = allInputs[idx + 1];
+    next.focus();
+    try{ next.select(); } catch(ex){}
   }
 }
 
@@ -848,7 +853,7 @@ function enviarResultados(){
   params.forEach(p=>{
     const avgEl = document.getElementById(`${p.id}_avg`);
     const avg = avgEl ? parseFloat(avgEl.textContent) : NaN;
-    const tieneAvg = isFinite(avg) && avg !== 0;
+    const tieneAvg = isFinite(avg) && avg !== null && avg !== undefined && !isNaN(avg);
 
     // Verificar que todos los campos requeridos estén llenos
     let camposOk = true;
@@ -903,16 +908,21 @@ function enviarResultados(){
   const btnEnviar = document.querySelector('.btn-submit');
   if(btnEnviar){ btnEnviar.disabled=true; btnEnviar.textContent='⏳ Enviando...'; }
 
+  // Backup localStorage (siempre)
+  try{ localStorage.setItem('interlab_'+SESSION.codigo+'_'+Date.now(), JSON.stringify(payload)); }catch(e){}
+
+  // Enviar a Firestore (no bloquea la pantalla de confirmación)
   if(typeof window._guardarEnFirestore === 'function'){
-    window._guardarEnFirestore(payload).then(res => {
+    window._guardarEnFirestore(payload).then(function(res){
       if(btnEnviar){ btnEnviar.disabled=false; btnEnviar.innerHTML='✅ Enviar resultados'; }
       if(!res.ok){ console.warn('Firestore falló:', res.error); }
+    }).catch(function(err){
+      console.warn('Error Firestore:', err);
+      if(btnEnviar){ btnEnviar.disabled=false; btnEnviar.innerHTML='✅ Enviar resultados'; }
     });
   }
-  // Backup localStorage
-  try{ localStorage.setItem(`interlab_${SESSION.codigo}_${Date.now()}`, JSON.stringify(payload)); }catch(e){}
 
-  // Pantalla confirmación
+  // Pantalla confirmación (siempre se muestra, independiente de Firestore)
   document.getElementById('enviado-detail').innerHTML = [
     ['Laboratorio', SESSION.nombre],
     ['Analista',    SESSION.nombreAnalista],
