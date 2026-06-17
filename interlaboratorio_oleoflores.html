@@ -1807,7 +1807,7 @@ function renderRR(){
   let html = '';
 
   muestras.forEach(muestra => {
-    const params = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+    const params = (muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO).filter(function(p){return !p.soloInterno;});
     const label = muestra==='rbd' ? 'RBD PALMA' : 'CPO DE PALMA';
     const color = muestra==='rbd' ? '#3b82f6' : '#f97316';
     
@@ -2618,14 +2618,14 @@ function renderMejorPorParametro(){
   var html = '';
 
   muestras.forEach(function(m){
-    var params = m==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+    var params = (m==='rbd' ? PARAMS_RBD : PARAMS_CPO).filter(function(p){ return !p.soloInterno; });
     var REFm   = m==='rbd' ? REF.rbd    : REF.cpo;
     var mLabel = m==='rbd' ? 'RBD' : 'CPO';
     var bColor = m==='rbd' ? '#3b82f6' : '#f97316';
     var rows   = '';
 
     params.forEach(function(p){
-      var res = RESULTADOS.filter(function(r){ return r.muestra===m && r.paramId===p.id; });
+      var res = RESULTADOS.filter(function(r){ return r.muestra===m && r.paramId===p.id && r.paramId!=='humedad'; });
       if(!res.length) return;
       var rv = REFm[p.id];
 
