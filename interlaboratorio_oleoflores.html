@@ -1192,12 +1192,15 @@ const SIGMA_OVERRIDE = {
   sfc_35:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
   sfc_40:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
   humedad_hal: { sigma:0.0179, r:0.05,  R:0.05, norma:'ISO 662:2016'   },
+  color_a:     { sigma:0.5,    r:0.5,   R:1.0,  norma:'AOCS Cc 13e-92' },
 };
 // Parámetros excluidos del interlaboratorio (solo monitoreo interno)
 const EXCLUIR_INTERLAB = ['humedad'];
 function getSigma(paramId, ref){
   if(SIGMA_OVERRIDE[paramId]) return SIGMA_OVERRIDE[paramId].sigma;
-  return Math.abs(ref)*0.03||0.1;
+  // If ref is 0 or very small, use a minimum sigma to avoid division by zero
+  var s = Math.abs(ref)*0.03;
+  return s > 0.0001 ? s : 0.1;
 }
 function checkRepetibilidad(paramId, reps){
   var ov = SIGMA_OVERRIDE[paramId];
