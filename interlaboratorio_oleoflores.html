@@ -1529,7 +1529,7 @@ function calcBias(val,ref){ return ((val-ref)/ref)*100; }
 function calcSigma(ref){ return Math.abs(ref)*0.03||0.1; }
 
 function getAnalistaStats(user){
-  const myRes = RESULTADOS.filter(r=>r.user===user);
+  const myRes = RESULTADOS.filter(r=>r.user===user && r.paramId!=='humedad');
   const withRef = myRes.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
   if(!withRef.length) return null;
   const zScores = withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv,r.paramId); });
@@ -1631,7 +1631,7 @@ function populateEvalParams(){
   const sel=document.getElementById('eval-param');
   if(!sel) return;
   const m=document.getElementById('eval-muestra').value;
-  const params=m==='rbd'?PARAMS_RBD:PARAMS_CPO;
+  const params=(m==='rbd'?PARAMS_RBD:PARAMS_CPO).filter(function(p){return !p.soloInterno;});
   sel.innerHTML=params.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
 }
 
