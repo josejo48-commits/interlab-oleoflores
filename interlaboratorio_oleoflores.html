@@ -1193,10 +1193,17 @@ const SIGMA_OVERRIDE = {
   sfc_40:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
   humedad_hal: { sigma:0.0179, r:0.05,  R:0.05, norma:'ISO 662:2016'   },
   color_a:     { sigma:0.5,    r:0.5,   R:1.0,  norma:'AOCS Cc 13e-92' },
+  acidez_rbd:  { sigma:0.0025, r:0.005, R:0.01, norma:'AOCS Ca 5a-40 · σ definido por aptitud para uso (ISO 13528)' },
+  acidez_cpo:  { sigma:0.05,   r:0.05,  R:0.10, norma:'AOCS Ca 5a-40 · σ = doble repetibilidad al 1% CV (ISO 13528)' },
 };
 // Parámetros excluidos del interlaboratorio (solo monitoreo interno)
 const EXCLUIR_INTERLAB = ['humedad'];
-function getSigma(paramId, ref){
+function getSigma(paramId, ref, muestra){
+  // Acidez tiene sigma diferente por muestra
+  if(paramId==='acidez'){
+    var key = 'acidez_'+(muestra||'cpo');
+    if(SIGMA_OVERRIDE[key]) return SIGMA_OVERRIDE[key].sigma;
+  }
   if(SIGMA_OVERRIDE[paramId]) return SIGMA_OVERRIDE[paramId].sigma;
   // If ref is 0 or very small, use a minimum sigma to avoid division by zero
   var s = Math.abs(ref)*0.03;
@@ -1232,9 +1239,9 @@ function buildRepSFCBlock(paramId, reps){
     +'<div style="font-size:11px;color:#78716c;margin-top:4px">La diferencia entre la replica mayor y menor no debe superar r = 1.3 %SFC (AOCS Cd 16b-93)</div>'
     +'</div>';
 }
-function calcZ(val,ref,paramId){
+function calcZ(val,ref,paramId,muestra){
   if(ref===undefined||ref===null) return null;
-  return (val-ref)/getSigma(paramId||'',ref);
+  return (val-ref)/getSigma(paramId||'',ref,muestra);
 }
 function zClass(z){ const a=Math.abs(z); if(a<=2) return{cls:'z-ok',label:'Satisfactorio',badge:'b-ok'}; if(a<=3) return{cls:'z-warn',label:'Cuestionable',badge:'b-warn'}; return{cls:'z-fail',label:'No satisfactorio',badge:'b-fail'}; }
 
@@ -1245,8 +1252,8 @@ function refreshDashboard(){
   const analistas=USERS.filter(u=>u.rol!=='admin');
   const conDatos=new Set(RESULTADOS.map(r=>r.user)).size;
   const withRef=RESULTADOS.filter(r=>{ if(r.paramId==='humedad') return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
-  const sat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId))<=2; }).length;
-  const nosat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId))>3; }).length;
+  const sat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId,r.muestra))<=2; }).length;
+  const nosat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId,r.muestra))>3; }).length;
   document.getElementById('dashboard-metrics').innerHTML=`
     <div class="metric-card"><div class="metric-icon" style="background:#E6F1FB">👥</div><div><div class="metric-label">Participantes</div><div class="metric-val" style="color:#185FA5">${analistas.length}</div><div class="metric-sub">Laboratorios</div></div></div>
     <div class="metric-card"><div class="metric-icon" style="background:#EAF3DE">✅</div><div><div class="metric-label">Con datos</div><div class="metric-val" style="color:#3B6D11">${conDatos}</div><div class="metric-sub">Han ingresado</div></div></div>
@@ -1277,7 +1284,7 @@ function renderDashChart(){
     const myR=RESULTADOS.filter(r=>r.user===u.user);
     const withRef=myR.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
     if(!withRef.length) return 0;
-    const sat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId))<=2; }).length;
+    const sat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId,r.muestra))<=2; }).length;
     return Math.round(sat/withRef.length*100);
   });
   dashChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'% Satisfactorios',data,backgroundColor:analistas.map((u,i)=>data[i]>=80?'#16a34a':data[i]>=60?'#d97706':'#dc2626'),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{max:100,ticks:{callback:v=>v+'%'},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
@@ -1304,7 +1311,7 @@ function renderMisResultados(){
       if(rv===undefined){
         html+=`<tr><td>${r.paramNombre}</td><td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td><td><strong>${r.promedio.toFixed(4)}</strong></td><td>${r.unit}</td><td colspan="3" style="color:var(--light)">Sin referencia</td></tr>`;
       } else {
-        const z=calcZ(r.promedio,rv,r.paramId); const zc=zClass(z);
+        const z=calcZ(r.promedio,rv,r.paramId,r.muestra); const zc=zClass(z);
         html+=`<tr><td>${r.paramNombre}</td><td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td><td><strong>${r.promedio.toFixed(4)}</strong></td><td>${r.unit}</td><td>${rv}</td><td class="${zc.cls}">${z.toFixed(2)}</td><td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`;
       }
     });
@@ -1334,7 +1341,7 @@ function renderAllResults(){
       <td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td>
       <td><strong>${Number(r.promedio).toFixed(4)}</strong></td>
       <td>—</td><td>—</td><td><span class="badge b-gray">Sin ref.</span></td></tr>`;
-    const z=calcZ(r.promedio,rv,r.paramId); const zc=zClass(z);
+    const z=calcZ(r.promedio,rv,r.paramId,r.muestra); const zc=zClass(z);
     return`<tr>
       <td><span class="code-badge">${r.codigo}</span></td>
       <td style="font-size:12px">${labNombre}</td>
@@ -1384,7 +1391,7 @@ function renderZScores(){
   const tbody=document.getElementById('zscore-body');
   const withRef=RESULTADOS.filter(r=>{ if(r.paramId==='humedad') return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
   if(!withRef.length){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--light)">Sin datos</td></tr>'; return; }
-  tbody.innerHTML=withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; const s=Math.abs(rv)*0.03||0.1; const z=calcZ(r.promedio,rv,r.paramId); const zc=zClass(z); return`<tr><td><span class="code-badge">${r.codigo}</span></td><td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td><td>${r.paramNombre}</td><td>${r.promedio.toFixed(4)} ${r.unit}</td><td>${rv}</td><td>${s.toFixed(4)}</td><td class="${zc.cls}">${z.toFixed(2)}</td><td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`; }).join('');
+  tbody.innerHTML=withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; const s=Math.abs(rv)*0.03||0.1; const z=calcZ(r.promedio,rv,r.paramId,r.muestra); const zc=zClass(z); return`<tr><td><span class="code-badge">${r.codigo}</span></td><td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td><td>${r.paramNombre}</td><td>${r.promedio.toFixed(4)} ${r.unit}</td><td>${rv}</td><td>${s.toFixed(4)}</td><td class="${zc.cls}">${z.toFixed(2)}</td><td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`; }).join('');
 }
 
 // =========================================================
@@ -1532,7 +1539,7 @@ function getAnalistaStats(user){
   const myRes = RESULTADOS.filter(r=>r.user===user && r.paramId!=='humedad');
   const withRef = myRes.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
   if(!withRef.length) return null;
-  const zScores = withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv,r.paramId); });
+  const zScores = withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv,r.paramId,r.muestra); });
   const sat = zScores.filter(z=>Math.abs(z)<=2).length;
   const cues = zScores.filter(z=>Math.abs(z)>2&&Math.abs(z)<=3).length;
   const nosat = zScores.filter(z=>Math.abs(z)>3).length;
@@ -1699,7 +1706,7 @@ function renderAnalistaCards(ranked, showRank=true){
       if(!resList.length) return `<div style="color:#94a3b8;font-size:12px;padding:8px">Sin datos de ${muestra.toUpperCase()}</div>`;
       
       // Per-muestra stats
-      const zs = resList.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv,r.paramId); });
+      const zs = resList.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv,r.paramId,r.muestra); });
       const satM = zs.filter(z=>Math.abs(z)<=2).length;
       const pctM = (satM/zs.length*100).toFixed(0);
       const cvM = resList.map(r=>calcCV(r.reps)).filter(v=>v!==null);
@@ -1712,7 +1719,7 @@ function renderAnalistaCards(ranked, showRank=true){
 
       const rows = resList.map(r=>{
         const rv = r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
-        const z = calcZ(r.promedio,rv,r.paramId);
+        const z = calcZ(r.promedio,rv,r.paramId,r.muestra);
         const zc2 = zClass(z);
         const cv = calcCV(r.reps);
         const bias = calcBias(r.promedio,rv);
@@ -2489,7 +2496,7 @@ function renderCompetencia(){
       // Reproducibilidad vs referencia
       var reproZ=null, reproPasa=null, reproTxt='Sin referencia', reproColor='#94a3b8';
       if(rv!=null){
-        reproZ    = calcZ(r.promedio, rv, p.id);
+        reproZ    = calcZ(r.promedio, rv, p.id, r.muestra||muestra);
         var absZ  = Math.abs(reproZ);
         reproPasa = absZ<=2;
         reproColor= absZ<=2?'#16a34a':absZ<=3?'#ca8a04':'#dc2626';
