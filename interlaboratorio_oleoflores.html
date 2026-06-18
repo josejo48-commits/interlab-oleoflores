@@ -179,7 +179,7 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
   <!-- ── FIREBASE ADMIN ──────────────────────────────────────── -->
   <script type="module">
     import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, query, orderBy }
+    import { getFirestore, collection, onSnapshot, query, orderBy, doc, deleteDoc, updateDoc, setDoc }
                                    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -196,6 +196,16 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
 
 
     // ── Escuchar resultados en tiempo real ────────────────────
+    window._eliminarDoc = async function(docId){
+      try{ await deleteDoc(doc(db,'resultados',docId)); return {ok:true}; }
+      catch(e){ return {ok:false, error:e.message}; }
+    };
+
+    window._actualizarDoc = async function(docId, datos){
+      try{ await updateDoc(doc(db,'resultados',docId), datos); return {ok:true}; }
+      catch(e){ return {ok:false, error:e.message}; }
+    };
+
     window._escucharResultados = function(callback) {
       const q = query(collection(db, 'resultados'), orderBy('timestamp', 'desc'));
       return onSnapshot(q, (snap) => {
@@ -296,6 +306,7 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
       <div class="nav-section">Config.</div>
       <div class="nav-item" id="nav-referencia" onclick="gotoSection('referencia',this)">🏛️ Lab. referencia</div>
       <div class="nav-item" id="nav-participantes" onclick="gotoSection('participantes',this)">👥 Participantes</div>
+      <div class="nav-item" id="nav-editor" onclick="gotoSection('editor',this)">&#9998; Editor datos</div>
       <div class="nav-item" id="nav-horno" onclick="gotoSection('horno',this)">&#128293; Humedad horno</div>
       <div class="nav-item" id="nav-competencia" onclick="gotoSection('competencia',this)">&#127919; Competencia analista</div>
       <div class="nav-item" id="nav-auditor" onclick="gotoSection('auditor',this)">📄 Informe auditor</div>
@@ -585,6 +596,42 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
 
 
 
+      <!-- EDITOR DE DATOS -->
+      <div id="sec-editor" class="screen">
+        <div class="page-header"><div>
+          <div class="page-title">&#9998; Editor de datos</div>
+          <div class="page-sub">Agregar &middot; Editar &middot; Eliminar resultados manualmente</div>
+        </div></div>
+
+        <!-- TABLA CON ACCIONES -->
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="card-title" style="margin:0">Documentos en Firestore</div>
+            <button class="btn btn-primary btn-sm" onclick="abrirModalNuevo()">&#43; Agregar entrada</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Lab</th><th>Analista</th><th>Muestra</th><th>Parámetros</th><th>Fecha</th><th>Acciones</th>
+              </tr></thead>
+              <tbody id="editor-tbody"><tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">Sin datos</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL EDITAR/VER PARÁMETROS -->
+      <div id="modal-editor" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;overflow-y:auto">
+        <div style="background:#fff;border-radius:16px;max-width:700px;margin:40px auto;padding:24px;position:relative">
+          <button onclick="cerrarModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#64748b">&#x2715;</button>
+          <div style="font-weight:700;font-size:16px;color:#1e293b;margin-bottom:16px" id="modal-titulo">Editar entrada</div>
+          <div id="modal-body"></div>
+          <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+            <button class="btn" onclick="cerrarModal()" style="background:#f1f5f9;color:#475569">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarModalCambios()" id="btn-guardar-modal">Guardar cambios</button>
+          </div>
+        </div>
+      </div>
       <!-- MONITOREO INTERNO HUMEDAD HORNO -->
       <div id="sec-horno" class="screen">
         <div class="page-header"><div>
@@ -881,6 +928,7 @@ function doLogin(){
       datos.forEach(d => {
         (d.datos||[]).forEach(p => {
           RESULTADOS.push({
+            docId:         d.id,
             user:          d.codigo || d.laboratorio,
             codigo:        d.codigo,
             nombre:        d.laboratorio,
@@ -916,7 +964,7 @@ function doLogout(){ if(!confirm('¿Cerrar sesión?')) return; if(window._unsubs
 // =========================================================
 function setupNav(){
   const isAdmin=SESSION.rol==='admin';
-  ['resultados','estadisticas','referencia','participantes','auditor','competencia','horno'].forEach(id=>{ var el=document.getElementById('nav-'+id); if(el) el.style.display=isAdmin?'flex':'none'; });
+  ['resultados','estadisticas','referencia','participantes','auditor','competencia','horno','editor'].forEach(id=>{ var el=document.getElementById('nav-'+id); if(el) el.style.display=isAdmin?'flex':'none'; });
   const evalNav=document.getElementById('nav-evaluacion'); if(evalNav) evalNav.style.display='flex';
   document.getElementById('nav-misresultados').style.display=isAdmin?'none':'flex';
   document.getElementById('nav-ingreso').style.display=isAdmin?'none':'flex';
@@ -2752,6 +2800,139 @@ function renderHornoInterno(){
     +'</div></div>';
 
   wrap.innerHTML = html;
+}
+// =========================================================
+// EDITOR DE DATOS
+// =========================================================
+var MODAL_DOC = null; // documento actual en edición
+
+function renderEditor(){
+  var tbody = document.getElementById('editor-tbody');
+  if(!tbody) return;
+
+  // Get unique docs from RESULTADOS (group by docId)
+  var docs = {};
+  RESULTADOS.forEach(function(r){
+    if(!r.docId) return;
+    if(!docs[r.docId]) docs[r.docId] = { docId:r.docId, codigo:r.codigo||r.user, nombre:r.nombre||'--', analista:r.analista||'--', muestra:r.muestra, fecha:r.fecha||'--', params:[] };
+    docs[r.docId].params.push(r.paramNombre||r.paramId);
+  });
+
+  var rows = Object.values(docs);
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">Sin datos en Firestore</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function(d){
+    return '<tr>'
+      +'<td><span class="code-badge">'+d.codigo+'</span></td>'
+      +'<td style="font-size:12px;font-weight:600">'+d.analista+'</td>'
+      +'<td><span class="badge '+(d.muestra==='rbd'?'b-rbd':'b-cpo')+'">'+d.muestra.toUpperCase()+'</span></td>'
+      +'<td style="font-size:11px;color:#64748b">'+d.params.slice(0,4).join(', ')+(d.params.length>4?' +'+( d.params.length-4)+' más':'')+'</td>'
+      +'<td style="font-size:11px">'+d.fecha+'</td>'
+      +'<td style="display:flex;gap:6px">'
+      +'<button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;font-size:11px" onclick="abrirModalEditar(this.dataset.id)" data-id="'+d.docId+'">&#9998; Editar</button>'
+      +'<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;font-size:11px" onclick="confirmarEliminar(this.dataset.id,this.dataset.name)" data-id="'+d.docId+'" data-name="'+d.analista+'">&#128465; Eliminar</button>'
+      +'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+function abrirModalEditar(docId){
+  // Find all results for this docId
+  var res = RESULTADOS.filter(function(r){ return r.docId===docId; });
+  if(!res.length){ alert('No se encontraron datos para este documento.'); return; }
+  MODAL_DOC = { docId:docId, items:res };
+
+  document.getElementById('modal-titulo').textContent = 'Editar: '+(res[0].analista||res[0].user)+' · '+(res[0].nombre||res[0].codigo);
+  document.getElementById('btn-guardar-modal').style.display='inline-block';
+
+  var html = '<div style="max-height:60vh;overflow-y:auto">'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<thead><tr style="background:#f8fafc">'
+    +'<th style="padding:8px;text-align:left;border-bottom:1px solid #e2e8f0">Muestra</th>'
+    +'<th style="padding:8px;text-align:left;border-bottom:1px solid #e2e8f0">Parámetro</th>'
+    +'<th style="padding:8px;border-bottom:1px solid #e2e8f0">Rep.1</th>'
+    +'<th style="padding:8px;border-bottom:1px solid #e2e8f0">Rep.2</th>'
+    +'<th style="padding:8px;border-bottom:1px solid #e2e8f0">Rep.3</th>'
+    +'<th style="padding:8px;border-bottom:1px solid #e2e8f0">Promedio</th>'
+    +'</tr></thead><tbody>';
+
+  res.forEach(function(r, idx){
+    var reps = r.reps||[null,null,null];
+    html += '<tr style="border-bottom:1px solid #f1f5f9">'
+      +'<td style="padding:8px"><span class="badge '+(r.muestra==='rbd'?'b-rbd':'b-cpo')+'">'+r.muestra.toUpperCase()+'</span></td>'
+      +'<td style="padding:8px;font-weight:600">'+r.paramNombre+'</td>'
+      +[0,1,2].map(function(i){
+        return '<td style="padding:4px"><input type="number" step="0.0001" style="width:80px;border:1px solid #e2e8f0;border-radius:6px;padding:4px 6px;font-size:12px" '
+          +'id="modal_rep_'+idx+'_'+i+'" value="'+(reps[i]!=null?reps[i]:'')+'" '
+          +'oninput="recalcModalProm('+idx+')"></td>';
+      }).join('')
+      +'<td style="padding:8px;font-weight:700" id="modal_prom_'+idx+'">'+Number(r.promedio).toFixed(4)+'</td>'
+      +'</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-editor').style.display = 'block';
+}
+
+function recalcModalProm(idx){
+  var vals = [0,1,2].map(function(i){
+    var el = document.getElementById('modal_rep_'+idx+'_'+i);
+    return el&&el.value!==''?parseFloat(el.value):null;
+  }).filter(function(v){return v!==null&&isFinite(v);});
+  var prom = vals.length ? vals.reduce(function(a,b){return a+b;},0)/vals.length : null;
+  var el = document.getElementById('modal_prom_'+idx);
+  if(el) el.textContent = prom!==null?prom.toFixed(4):'--';
+}
+
+function guardarModalCambios(){
+  if(!MODAL_DOC) return;
+  var items = MODAL_DOC.items;
+  // Collect updated reps and promedios
+  var nuevosDatos = items.map(function(r, idx){
+    var reps = [0,1,2].map(function(i){
+      var el = document.getElementById('modal_rep_'+idx+'_'+i);
+      return el&&el.value!==''?parseFloat(el.value):null;
+    });
+    var vals = reps.filter(function(v){return v!==null&&isFinite(v);});
+    var prom = vals.length?vals.reduce(function(a,b){return a+b;},0)/vals.length:r.promedio;
+    return Object.assign({},r,{reps:reps,promedio:prom});
+  });
+
+  // Update in Firestore — we need to update the 'datos' array in the doc
+  if(typeof window._actualizarDoc === 'function'){
+    var payload = nuevosDatos.map(function(r){
+      return { paramId:r.paramId, paramNombre:r.paramNombre, unit:r.unit, muestra:r.muestra, reps:r.reps, promedio:r.promedio };
+    });
+    window._actualizarDoc(MODAL_DOC.docId, { datos: payload }).then(function(res){
+      if(res.ok){ alert('✅ Datos actualizados correctamente.'); cerrarModal(); }
+      else alert('Error al guardar: '+res.error);
+    });
+  } else {
+    alert('No hay conexión con Firestore.');
+  }
+}
+
+function cerrarModal(){
+  document.getElementById('modal-editor').style.display='none';
+  MODAL_DOC = null;
+}
+
+function confirmarEliminar(docId, analista){
+  if(!confirm('¿Eliminar TODOS los resultados de "'+analista+'"? Esta acción no se puede deshacer.')) return;
+  if(typeof window._eliminarDoc === 'function'){
+    window._eliminarDoc(docId).then(function(res){
+      if(res.ok){ alert('✅ Eliminado correctamente.'); renderEditor(); }
+      else alert('Error al eliminar: '+res.error);
+    });
+  }
+}
+
+function abrirModalNuevo(){
+  alert('Para agregar resultados use el formulario de analistas. Esta función agrega entradas manualmente solo en casos especiales — próximamente.');
 }
 </script>
 </body>
