@@ -1373,7 +1373,15 @@ function renderMisResultados(){
 function renderAllResults(){
   const tbody=document.getElementById('results-body');
   if(!RESULTADOS.length){ tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:28px;color:var(--light)">Sin resultados aún</td></tr>'; return; }
-  tbody.innerHTML=RESULTADOS.filter(function(r){return r.paramId!=='humedad';}).map(r=>{
+  var sorted = RESULTADOS.filter(function(r){return r.paramId!=='humedad';}).slice().sort(function(a,b){
+    // Sort by analista name, then muestra (rbd before cpo), then param
+    var na=(a.analista||a.user||'').toLowerCase();
+    var nb=(b.analista||b.user||'').toLowerCase();
+    if(na!==nb) return na<nb?-1:1;
+    if(a.muestra!==b.muestra) return a.muestra==='rbd'?-1:1;
+    return (a.paramId||'').localeCompare(b.paramId||'');
+  });
+  tbody.innerHTML=sorted.map(r=>{
     const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
     const rr=(r.reps||[]).map(x=>x!==null&&isFinite(x)?Number(x).toFixed(4):'—');
     const labNombre = r.nombre || r.user || '—';
