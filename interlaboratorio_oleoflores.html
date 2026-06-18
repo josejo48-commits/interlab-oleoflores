@@ -306,7 +306,6 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
       <div class="nav-section">Config.</div>
       <div class="nav-item" id="nav-referencia" onclick="gotoSection('referencia',this)">🏛️ Lab. referencia</div>
       <div class="nav-item" id="nav-participantes" onclick="gotoSection('participantes',this)">👥 Participantes</div>
-      <div class="nav-item" id="nav-editor" onclick="gotoSection('editor',this)">&#9998; Editor datos</div>
       <div class="nav-item" id="nav-horno" onclick="gotoSection('horno',this)">&#128293; Humedad horno</div>
       <div class="nav-item" id="nav-competencia" onclick="gotoSection('competencia',this)">&#127919; Competencia analista</div>
       <div class="nav-item" id="nav-auditor" onclick="gotoSection('auditor',this)">📄 Informe auditor</div>
@@ -964,7 +963,7 @@ function doLogout(){ if(!confirm('¿Cerrar sesión?')) return; if(window._unsubs
 // =========================================================
 function setupNav(){
   const isAdmin=SESSION.rol==='admin';
-  ['resultados','estadisticas','referencia','participantes','auditor','competencia','horno','editor'].forEach(id=>{ var el=document.getElementById('nav-'+id); if(el) el.style.display=isAdmin?'flex':'none'; });
+  ['resultados','estadisticas','referencia','participantes','auditor','competencia','horno'].forEach(id=>{ var el=document.getElementById('nav-'+id); if(el) el.style.display=isAdmin?'flex':'none'; });
   const evalNav=document.getElementById('nav-evaluacion'); if(evalNav) evalNav.style.display='flex';
   document.getElementById('nav-misresultados').style.display=isAdmin?'none':'flex';
   document.getElementById('nav-ingreso').style.display=isAdmin?'none':'flex';
