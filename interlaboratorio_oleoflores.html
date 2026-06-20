@@ -1725,7 +1725,7 @@ function verCarta(nombreEnc, labCodigo){
     'LAB-04': { titulo:'Extractora del Sinú',            color:'#d97706' },
   };
   const info = labInfo[labCodigo] || { titulo: labCodigo, color:'#7c3aed' };
-  const foto = u ? FOTOS[u.user] : null;
+  const foto = FOTOS[fotoKeyAnalista(labCodigo, nombre)] || null;
 
   const resultados = RESULTADOS.filter(r => r.analista === nombre && r.codigo === labCodigo && r.paramId !== 'humedad');
   if(!resultados.length){ alert('No hay resultados registrados para este analista.'); return; }
