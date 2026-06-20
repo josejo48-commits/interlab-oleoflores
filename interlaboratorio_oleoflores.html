@@ -209,8 +209,16 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
         const fotos = {};
         snap.docs.forEach(d => { fotos[d.id] = d.data().foto; });
         return fotos;
-      } catch(e){ return {}; }
+      } catch(e){ console.error('Error cargando fotos:',e); return {}; }
     };
+
+    // Cargar fotos automáticamente y notificar cuando estén listas
+    getDocs(collection(db,'fotos')).then(snap => {
+      const fotos = {};
+      snap.docs.forEach(d => { fotos[d.id] = d.data().foto; });
+      window._fotosIniciales = fotos;
+      window.dispatchEvent(new CustomEvent('fotosListas', { detail: fotos }));
+    }).catch(e => console.error('Error inicial fotos:', e));
 
     window._eliminarDoc = async function(docId){
       try{ await deleteDoc(doc(db,'resultados',docId)); return {ok:true}; }
@@ -1639,17 +1647,22 @@ function uploadFotoAdmin(input, userKey){
   });
 })();
 
-if(typeof window._cargarFotos==='function'){
-  // Esperar 2 segundos para que Firebase esté listo
-  setTimeout(function(){
-    window._cargarFotos().then(function(fotosDB){
-      Object.keys(fotosDB).forEach(k=>{
-        FOTOS[k]=fotosDB[k];
-        try{ localStorage.setItem('foto_'+k, fotosDB[k]); } catch(err){}
-      });
-      renderParticipants();
-    });
-  }, 2000);
+// Escuchar evento de Firebase cuando fotos estén listas
+window.addEventListener('fotosListas', function(e){
+  const fotosDB = e.detail || {};
+  Object.keys(fotosDB).forEach(k=>{
+    FOTOS[k] = fotosDB[k];
+    try{ localStorage.setItem('foto_'+k, fotosDB[k]); } catch(err){}
+  });
+  if(typeof renderParticipants === 'function') renderParticipants();
+});
+
+// Por si Firebase ya cargó antes que este script
+if(window._fotosIniciales){
+  Object.keys(window._fotosIniciales).forEach(k=>{
+    FOTOS[k] = window._fotosIniciales[k];
+    try{ localStorage.setItem('foto_'+k, window._fotosIniciales[k]); } catch(err){}
+  });
 }
 
 function deleteFoto(userKey){
