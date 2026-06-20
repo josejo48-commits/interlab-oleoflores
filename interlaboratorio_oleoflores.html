@@ -43,7 +43,7 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;color:var(--text);b
 .logo-sub{font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .user-badge{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:100px;padding:4px 12px 4px 5px}
-.user-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.user-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,.2)}
 .user-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.9)}
 .user-role-lbl{font-size:10px;color:rgba(255,255,255,.5)}
 .btn-logout{cursor:pointer;border:.5px solid rgba(255,255,255,.2);border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);padding:5px 10px;font-size:11px;font-weight:600;font-family:'Inter',sans-serif}
@@ -353,6 +353,14 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
               <input type="text" id="ing-codigo-muestra" placeholder="Ej: M-2024-001">
             </div>
           </div>
+          <div class="fgrid2" style="margin-top:10px">
+            <div class="fg"><label class="fl">👤 Nombre del analista</label>
+              <input type="text" id="ing-nombre-analista" placeholder="Nombre completo del analista">
+            </div>
+            <div class="fg"><label class="fl">🏭 Laboratorio</label>
+              <input type="text" id="ing-nombre-lab" placeholder="Nombre del laboratorio" readonly style="background:#f1f5f9;color:#64748b">
+            </div>
+          </div>
         </div>
         <div id="ingreso-form-container"></div>
         <div id="save-msg" style="display:none" class="alert alert-success">✅ Datos guardados correctamente.</div>
@@ -490,6 +498,11 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
             </div>
             <div class="fg"><label class="fl">Tipo</label>
               <select id="new-tipo"><option value="participante">Participante (sin DOBI)</option><option value="fisicoquimico">Fisicoquímico (con DOBI)</option></select></div>
+            <div class="fg"><label class="fl">Grupo / Laboratorio</label>
+              <select id="new-grupo">
+                <option value="extractoras">🌴 Extractoras Participantes</option>
+                <option value="oleoflores">🏭 OLEOFLORES S.A.S</option>
+              </select></div>
             <div class="fg"><label class="fl">📷 Foto del analista</label>
               <label style="display:flex;flex-direction:column;gap:8px;cursor:pointer">
                 <div class="photo-upload-btn" id="photo-btn-label">📷 Clic para seleccionar foto</div>
@@ -800,11 +813,19 @@ function calcRep(tipo, pm, v, extra) {
 // ESTADO
 // =========================================================
 let USERS = [
-  { user:'admin',     pass:'1234', rol:'admin',          nombre:'Administrador',           codigo:'ADM',    color:'#7c3aed' },
-  { user:'analista1', pass:'1234', rol:'fisicoquimico',  nombre:'Oleoflores Fisicoquímico', codigo:'LAB-01', color:'#7c3aed' },
-  { user:'analista2', pass:'1234', rol:'participante',   nombre:'Ext Maria la Baja',        codigo:'LAB-02', color:'#0d9488' },
-  { user:'analista3', pass:'1234', rol:'participante',   nombre:'Ext AGC',                  codigo:'LAB-03', color:'#2563eb' },
-  { user:'analista4', pass:'1234', rol:'participante',   nombre:'Ext Sinú',                 codigo:'LAB-04', color:'#d97706' },
+  { user:'admin',     pass:'1234', rol:'admin',          nombre:'Administrador',                    codigo:'ADM',    color:'#7c3aed', grupo:'admin' },
+  { user:'analista1', pass:'1234', rol:'fisicoquimico',  nombre:'Fisico Quimico Codazzi',           codigo:'0.1',    color:'#7c3aed', grupo:'lab01' },
+  { user:'analista2', pass:'1234', rol:'participante',   nombre:'Extractora Maria la Baja',         codigo:'0.2',    color:'#0d9488', grupo:'lab02' },
+  { user:'analista3', pass:'1234', rol:'participante',   nombre:'Grasas y Aceites de Catatumbo',    codigo:'0.3',    color:'#2563eb', grupo:'lab03' },
+  { user:'analista4', pass:'1234', rol:'participante',   nombre:'Extractora del Sinú',              codigo:'0.4',    color:'#d97706', grupo:'lab04' },
+];
+
+// Definición de grupos de laboratorios
+const LAB_GRUPOS = [
+  { id:'lab01', nombre:'🔬 Fisico Quimico Codazzi',        desc:'Laboratorio 0.1 · Oleoflores S.A.S',          bg:'linear-gradient(135deg,#ede9fe,#f5f3ff)', border:'#7c3aed', icon:'🔬' },
+  { id:'lab02', nombre:'🌴 Extractora Maria la Baja',       desc:'Laboratorio 0.2 · Participante',               bg:'linear-gradient(135deg,#f0fdf4,#ecfdf5)', border:'#0d9488', icon:'🧪' },
+  { id:'lab03', nombre:'🏭 Grasas y Aceites de Catatumbo', desc:'Laboratorio 0.3 · Participante',               bg:'linear-gradient(135deg,#eff6ff,#ebf5ff)', border:'#2563eb', icon:'⚗️' },
+  { id:'lab04', nombre:'🌊 Extractora del Sinú',            desc:'Laboratorio 0.4 · Participante',               bg:'linear-gradient(135deg,#fffbeb,#fef9c3)', border:'#d97706', icon:'🫙' },
 ];
 let REF = {
   rbd:{
@@ -874,15 +895,21 @@ function ini(n){ return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCas
 function onUserInput(val) {
   const list = document.getElementById('user-suggest-list');
   const q = val.trim().toLowerCase();
-  const matches = USERS.filter(u => !q || u.user.toLowerCase().includes(q) || u.nombre.toLowerCase().includes(q));
+  // Solo mostrar admin en el login
+  const allowed = USERS.filter(u => u.rol === 'admin');
+  const matches = allowed.filter(u => !q || u.user.toLowerCase().includes(q) || u.nombre.toLowerCase().includes(q));
   if(!matches.length){ list.style.display='none'; return; }
   _sugHL = -1;
   list.innerHTML = matches.map((u,i) => {
     const c = u.color || SUG_COLORS[i%SUG_COLORS.length];
     const rl = u.rol==='admin'?'Administrador':u.rol==='fisicoquimico'?'Fisicoquímico':'Participante';
+    const foto = FOTOS[u.user];
+    const avatarEl = foto
+      ? `<img src="${foto}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+      : `<div style="width:36px;height:36px;border-radius:50%;background:${c};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">${ini(u.nombre)}</div>`;
     return `<div class="user-suggest-item" data-user="${u.user}" onclick="selUser('${u.user}')" onmouseenter="hlSug(${i})"
       style="display:flex;align-items:center;gap:11px;padding:11px 15px;cursor:pointer;transition:background .12s;border-bottom:1px solid rgba(255,255,255,.07)">
-      <div style="width:36px;height:36px;border-radius:50%;background:${c};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">${ini(u.nombre)}</div>
+      ${avatarEl}
       <div><div style="font-size:14px;font-weight:600;color:#fff">${u.nombre}</div>
       <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">${rl} · <span style="color:#a78bfa;font-family:monospace">${u.codigo}</span></div></div>
     </div>`;
@@ -914,8 +941,17 @@ function doLogin(){
   document.getElementById('app').style.display='block';
   document.getElementById('tb-name').textContent=found.nombre;
   document.getElementById('tb-role').textContent=found.rol==='admin'?'Administrador':found.rol==='fisicoquimico'?'Fisicoquímico':'Participante';
-  document.getElementById('tb-avatar').textContent=ini(found.nombre);
-  document.getElementById('tb-avatar').style.background=found.color||'linear-gradient(135deg,#7c3aed,#3b82f6)';
+  // Mostrar foto en topbar si existe, o iniciales
+  const tbAvatar = document.getElementById('tb-avatar');
+  const fotoUser = FOTOS[found.user];
+  if(fotoUser){
+    tbAvatar.innerHTML=`<img src="${fotoUser}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+    tbAvatar.style.background='transparent';
+    tbAvatar.style.padding='0';
+  } else {
+    tbAvatar.textContent=ini(found.nombre);
+    tbAvatar.style.background=found.color||'linear-gradient(135deg,#7c3aed,#3b82f6)';
+  }
   const ce=document.getElementById('tb-code');
   if(found.rol!=='admin'){ ce.textContent=found.codigo; ce.style.display='inline'; } else ce.style.display='none';
   cargarRefGuardada();
@@ -950,10 +986,11 @@ function doLogin(){
       const sec = document.querySelector('.screen.active');
       if(sec){
         const name = sec.id.replace('sec-','');
-        if(name==='dashboard')   renderDashboard && renderDashboard();
-        if(name==='resultados')  renderAllResults && renderAllResults();
+        if(name==='dashboard')    refreshDashboard && refreshDashboard();
+        if(name==='resultados')   renderAllResults && renderAllResults();
         if(name==='estadisticas'){ refreshStatChart && refreshStatChart(); renderZScores && renderZScores(); }
-        if(name==='evaluacion')  renderEvaluacion && renderEvaluacion();
+        if(name==='evaluacion')   renderEvaluacion && renderEvaluacion();
+        if(name==='participantes') renderParticipants && renderParticipants();
       }
     });
   }
@@ -991,6 +1028,9 @@ function buildIngresoForm(){
   const showDobi = SESSION.rol==='fisicoquimico';
   const params = (muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO).filter(p=>!p.dobi||showDobi);
   document.getElementById('ingreso-code').textContent = SESSION.codigo;
+  // Autocompletar laboratorio
+  const labEl = document.getElementById('ing-nombre-lab');
+  if(labEl) labEl.value = SESSION.nombre || '';
   let html = '';
 
   params.forEach(p => {
@@ -1172,6 +1212,8 @@ function saveIngreso(){
   if(!SESSION||SESSION.rol==='admin') return;
   const muestra=document.getElementById('ing-muestra').value;
   const codigoMuestra=document.getElementById('ing-codigo-muestra').value.trim()||'M-001';
+  const nombreAnalista=(document.getElementById('ing-nombre-analista')?.value||'').trim();
+  if(!nombreAnalista){ alert('Por favor ingresa el nombre del analista.'); document.getElementById('ing-nombre-analista')?.focus(); return; }
   const showDobi=SESSION.rol==='fisicoquimico';
   const params=(muestra==='rbd'?PARAMS_RBD:PARAMS_CPO).filter(p=>(!p.dobi||showDobi) && !p.soloInterno);
   let cnt=0;
@@ -1186,9 +1228,9 @@ function saveIngreso(){
       if(cel&&cel.textContent!=='—') reps.push(parseFloat(cel.textContent));
       else reps.push(null);
     }
-    const idx=RESULTADOS.findIndex(r=>r.user===SESSION.user&&r.muestra===muestra&&r.paramId===p.id);
+    const idx=RESULTADOS.findIndex(r=>r.user===SESSION.user&&r.muestra===muestra&&r.paramId===p.id&&r.analista===nombreAnalista);
     if(idx>=0) RESULTADOS.splice(idx,1);
-    RESULTADOS.push({ user:SESSION.user, codigo:SESSION.codigo, nombre:SESSION.nombre, muestra, codigoMuestra, paramId:p.id, paramNombre:p.nombre, unit:p.unit, reps, promedio:avg });
+    RESULTADOS.push({ user:SESSION.user, codigo:SESSION.codigo, nombre:SESSION.nombre, analista:nombreAnalista, muestra, codigoMuestra, paramId:p.id, paramNombre:p.nombre, unit:p.unit, reps, promedio:avg });
     cnt++;
   });
   if(cnt){ const m=document.getElementById('save-msg'); m.style.display='flex'; setTimeout(()=>m.style.display='none',2500); }
@@ -1310,9 +1352,13 @@ function refreshDashboard(){
     <div class="metric-card"><div class="metric-icon" style="background:#FCEBEB">⚠️</div><div><div class="metric-label">No satisfact.</div><div class="metric-val" style="color:#dc2626">${nosat}</div><div class="metric-sub">|Z| &gt; 3</div></div></div>`;
   document.getElementById('dashboard-parts').innerHTML=analistas.map(u=>{
     const cnt=RESULTADOS.filter(r=>r.user===u.user).length;
+    const foto = FOTOS[u.user];
+    const avatarEl = foto
+      ? `<img src="${foto}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid ${u.color||'#7c3aed'};flex-shrink:0">`
+      : `<div class="part-avatar" style="background:${u.color||'#7c3aed'};width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0">${ini(u.nombre)}</div>`;
     return`<div class="part-item">
       <div style="display:flex;align-items:center;gap:8px">
-        <div class="part-avatar" style="background:${u.color||'#7c3aed'}">${ini(u.nombre)}</div>
+        ${avatarEl}
         <div><div style="font-size:12px;font-weight:600">${u.nombre}</div>
         <div style="display:flex;align-items:center;gap:5px;margin-top:2px">
           <span class="code-badge" style="font-size:10px">${u.codigo}</span>
@@ -1455,36 +1501,82 @@ function renderZScores(){
 // PARTICIPANTES
 // =========================================================
 function renderParticipants(){
+  // Construir mapa de analistas reales desde RESULTADOS (Firebase)
+  // agrupados por codigo de laboratorio
+  const labMap = {}; // codigo -> { nombre, analistas: Set, mediciones }
+  RESULTADOS.forEach(r => {
+    const cod = r.codigo || r.user;
+    if(!labMap[cod]) labMap[cod] = { nombre: r.nombre||cod, analistas: new Set(), mediciones: 0 };
+    // Nombre del analista puede venir en r.analista o r.cargo
+    const nombreAnalista = (r.analista || '').trim();
+    if(nombreAnalista) labMap[cod].analistas.add(nombreAnalista);
+    labMap[cod].mediciones++;
+  });
+
+  // Combinar con USERS (para mostrar labs sin datos también)
   const analistas = USERS.filter(u=>u.rol!=='admin');
-  document.getElementById('part-list').innerHTML = analistas.map(u=>{
-    const foto = FOTOS[u.user];
+  analistas.forEach(u => {
+    if(!labMap[u.codigo]) labMap[u.codigo] = { nombre: u.nombre, analistas: new Set(), mediciones: 0 };
+  });
+
+  // Ordenar por codigo
+  const labOrden = ['0.1','0.2','0.3','0.4'];
+  const labInfo = {
+    '0.1': { titulo:'🔬 Fisico Quimico Codazzi',        bg:'linear-gradient(135deg,#ede9fe,#f5f3ff)', border:'#7c3aed', color:'#7c3aed' },
+    '0.2': { titulo:'🌴 Extractora Maria la Baja',       bg:'linear-gradient(135deg,#f0fdf4,#ecfdf5)', border:'#0d9488', color:'#0d9488' },
+    '0.3': { titulo:'🏭 Grasas y Aceites de Catatumbo', bg:'linear-gradient(135deg,#eff6ff,#ebf5ff)', border:'#2563eb', color:'#2563eb' },
+    '0.4': { titulo:'🌊 Extractora del Sinú',            bg:'linear-gradient(135deg,#fffbeb,#fef9c3)', border:'#d97706', color:'#d97706' },
+  };
+
+  const html = labOrden.map(cod => {
+    const lab = labMap[cod];
+    if(!lab) return '';
+    const info = labInfo[cod] || { titulo:`Laboratorio ${cod}`, bg:'#f8fafc', border:'#94a3b8', color:'#94a3b8' };
+    const analistasList = [...lab.analistas];
+    const u = USERS.find(x=>x.codigo===cod);
+    const foto = u ? FOTOS[u.user] : null;
+
+    const analistasHTML = analistasList.length
+      ? analistasList.map(nombre => {
+          const initials = nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+          return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.05)">
+            <div style="width:32px;height:32px;border-radius:50%;background:${info.color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0">${initials}</div>
+            <div style="font-size:12px;font-weight:600;color:#1e293b">${nombre}</div>
+          </div>`;
+        }).join('')
+      : `<div style="font-size:12px;color:#94a3b8;padding:6px 0">Sin datos aún</div>`;
+
     const avatarEl = foto
-      ? `<img src="${foto}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #a78bfa;flex-shrink:0">`
-      : `<div style="width:44px;height:44px;border-radius:50%;background:${u.color||'#7c3aed'};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0">${ini(u.nombre)}</div>`;
-    return `<div class="part-item" style="flex-wrap:wrap;gap:8px">
-      <div style="display:flex;align-items:center;gap:10px;flex:1">
+      ? `<img src="${foto}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:3px solid ${info.border};flex-shrink:0">`
+      : `<div style="width:48px;height:48px;border-radius:50%;background:${info.color};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0">${cod}</div>`;
+
+    return `<div style="margin-bottom:16px;border-radius:14px;overflow:hidden;border:1px solid ${info.border}40">
+      <!-- Cabecera del laboratorio -->
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:${info.bg};border-bottom:1px solid ${info.border}30">
         ${avatarEl}
-        <div>
-          <div style="font-size:12px;font-weight:600">${u.nombre}</div>
-          <div style="display:flex;align-items:center;gap:5px;margin-top:2px">
-            <span class="code-badge" style="font-size:10px">${u.codigo}</span>
-            <span style="font-size:10px;color:var(--light)">@${u.user}</span>
-          </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:800;color:#1e293b">${info.titulo}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px">Laboratorio <strong>${cod}</strong> · ${analistasList.length} analista${analistasList.length!==1?'s':''} · ${lab.mediciones} mediciones</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="badge ${lab.mediciones>0?'b-ok':'b-gray'}" style="font-size:10px">${lab.mediciones>0?lab.mediciones+' med.':'Pendiente'}</span>
+          ${u ? `<label style="cursor:pointer;position:relative" title="Subir foto">
+            <div style="background:rgba(255,255,255,.8);border:1px solid ${info.border};border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;color:${info.color};white-space:nowrap">
+              ${foto ? '🔄 Foto' : '📷 Foto'}
+            </div>
+            <input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="uploadFotoAdmin(this,'${u.user}')">
+          </label>` : ''}
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px">
-        <label style="cursor:pointer;position:relative" title="Subir foto">
-          <div style="background:#f5f3ff;border:1px solid #a78bfa;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:#7c3aed;white-space:nowrap">
-            ${foto ? '🔄 Cambiar foto' : '📷 Subir foto'}
-          </div>
-          <input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%"
-            onchange="uploadFotoAdmin(this,'${u.user}')">
-        </label>
-        ${foto ? `<button class="btn btn-ghost btn-sm" onclick="deleteFoto('${u.user}')" title="Eliminar foto" style="padding:5px 8px;font-size:12px">🗑️</button>` : ''}
-        <button class="btn btn-danger btn-sm" onclick="removeParticipant('${u.user}')">✕</button>
+      <!-- Lista analistas -->
+      <div style="padding:8px 16px;background:#fff">
+        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Analistas</div>
+        ${analistasHTML}
       </div>
     </div>`;
   }).join('');
+
+  document.getElementById('part-list').innerHTML = html || '<p style="color:var(--light);font-size:13px">Sin participantes.</p>';
 }
 
 function uploadFotoAdmin(input, userKey){
@@ -1493,6 +1585,12 @@ function uploadFotoAdmin(input, userKey){
   reader.onload = e => {
     FOTOS[userKey] = e.target.result;
     renderParticipants();
+    // Si la foto es del usuario actual, actualizar topbar
+    if(SESSION && SESSION.user===userKey){
+      const tbAvatar = document.getElementById('tb-avatar');
+      tbAvatar.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+      tbAvatar.style.background='transparent';
+    }
   };
   reader.readAsDataURL(input.files[0]);
 }
@@ -1509,13 +1607,30 @@ function addParticipant(){
   const pass=document.getElementById('new-pass').value;
   const rol=document.getElementById('new-tipo').value;
   const color=document.getElementById('new-color').value;
+  const grupo=document.getElementById('new-grupo')?.value||'extractoras';
   if(!nombre||!codigo||!uname||!pass){ alert('Completa todos los campos.'); return; }
   if(USERS.find(u=>u.user===uname)){ alert('Usuario ya existe.'); return; }
   if(USERS.find(u=>u.codigo===codigo)){ alert('Código ya existe.'); return; }
-  USERS.push({user:uname,pass,rol,nombre,codigo,color});
+  USERS.push({user:uname,pass,rol,nombre,codigo,color,grupo});
   ['new-name','new-codigo','new-user','new-pass'].forEach(id=>document.getElementById(id).value='');
   const m=document.getElementById('part-msg'); m.style.display='flex'; setTimeout(()=>m.style.display='none',2200);
   renderParticipants(); refreshDashboard();
+}
+
+// =========================================================
+// FOTO BANNER LOGIN
+// =========================================================
+function loadBannerPhoto(input){
+  if(!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('login-banner-img');
+    const banner = document.getElementById('login-banner-photo');
+    if(img){ img.src = e.target.result; img.style.display='block'; }
+    if(banner) banner.style.display='none';
+    localStorage.setItem('interlab_banner', e.target.result);
+  };
+  reader.readAsDataURL(input.files[0]);
 }
 
 populateStatParams();
