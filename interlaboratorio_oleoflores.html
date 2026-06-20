@@ -1618,19 +1618,12 @@ function uploadFotoAdmin(input, userKey){
   const reader = new FileReader();
   reader.onload = function(e){
     comprimirFoto(e.target.result, 300, function(base64compressed){
-      // Guardar en memoria
       FOTOS[userKey] = base64compressed;
-      // Guardar en localStorage (persiste sin internet)
-      try{ localStorage.setItem('foto_'+userKey, base64compressed); } catch(err){}
-      // Guardar en Firestore (persiste entre dispositivos)
-      if(typeof window._guardarFoto==='function'){
-        window._guardarFoto(userKey, base64compressed);
-      }
+      try{ localStorage.setItem('foto_'+userKey, base64compressed); } catch(err){ alert('Error: espacio insuficiente en el navegador'); return; }
       renderParticipants();
       if(SESSION && SESSION.user===userKey){
         const tbAvatar=document.getElementById('tb-avatar');
-        tbAvatar.innerHTML=`<img src="${base64compressed}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
-        tbAvatar.style.background='transparent';
+        if(tbAvatar){ tbAvatar.innerHTML=`<img src="${base64compressed}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`; tbAvatar.style.background='transparent'; }
       }
     });
   };
@@ -1647,23 +1640,14 @@ function uploadFotoAdmin(input, userKey){
   });
 })();
 
-// Escuchar evento de Firebase cuando fotos estén listas
-window.addEventListener('fotosListas', function(e){
-  const fotosDB = e.detail || {};
-  Object.keys(fotosDB).forEach(k=>{
-    FOTOS[k] = fotosDB[k];
-    try{ localStorage.setItem('foto_'+k, fotosDB[k]); } catch(err){}
+(function cargarFotosLocales(){
+  USERS.filter(u=>u.rol!=='admin').forEach(u=>{
+    try{
+      const f = localStorage.getItem('foto_'+u.user);
+      if(f) FOTOS[u.user] = f;
+    } catch(err){}
   });
-  if(typeof renderParticipants === 'function') renderParticipants();
-});
-
-// Por si Firebase ya cargó antes que este script
-if(window._fotosIniciales){
-  Object.keys(window._fotosIniciales).forEach(k=>{
-    FOTOS[k] = window._fotosIniciales[k];
-    try{ localStorage.setItem('foto_'+k, window._fotosIniciales[k]); } catch(err){}
-  });
-}
+})();
 
 function deleteFoto(userKey){
   delete FOTOS[userKey];
