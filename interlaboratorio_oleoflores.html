@@ -1624,7 +1624,7 @@ function comprimirFotoCalidad(base64, maxSize, quality, callback){
     // Reducir calidad iterativamente hasta quedar bajo 700KB
     let result = canvas.toDataURL('image/jpeg', quality);
     let q = quality;
-    while(result.length > 700000 && q > 0.2){
+    while(result.length > 900000 && q > 0.3){
       q -= 0.1;
       result = canvas.toDataURL('image/jpeg', q);
     }
@@ -1637,7 +1637,7 @@ function uploadFotoAdmin(input, userKey){
   if(!input.files||!input.files[0]) return;
   const reader = new FileReader();
   reader.onload = function(e){
-    comprimirFotoCalidad(e.target.result, 200, 0.6, function(compressed){
+    comprimirFotoCalidad(e.target.result, 400, 0.85, function(compressed){
       FOTOS[userKey] = compressed;
       renderParticipants();
       // Guardar en Firestore
@@ -1668,7 +1668,7 @@ function uploadFotoAnalista(input, labCodigo, nombreEnc){
   const userKey = fotoKeyAnalista(labCodigo, nombre);
   const reader = new FileReader();
   reader.onload = function(e){
-    comprimirFotoCalidad(e.target.result, 200, 0.6, async function(compressed){
+    comprimirFotoCalidad(e.target.result, 400, 0.85, async function(compressed){
       FOTOS[userKey] = compressed;
       renderParticipants();
       // Guardar en IndexedDB local
@@ -1856,7 +1856,7 @@ function subirFotoCarta(input){
   const reader = new FileReader();
   reader.onload = function(e){
     // Comprimir a max 200px y calidad 0.6 para garantizar < 200KB
-    comprimirFotoCalidad(e.target.result, 200, 0.6, async function(compressed){
+    comprimirFotoCalidad(e.target.result, 400, 0.85, async function(compressed){
 
       // 1. Actualizar avatar en la carta (preview inmediato)
       const first = document.querySelector('#carta-content img[style*="150px"], #carta-content div[style*="150px"]');
