@@ -179,7 +179,7 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
   <!-- ── FIREBASE ADMIN ──────────────────────────────────────── -->
   <script type="module">
     import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, query, orderBy, doc, deleteDoc, updateDoc, setDoc }
+    import { getFirestore, collection, onSnapshot, query, orderBy, doc, deleteDoc, updateDoc, setDoc, getDoc, getDocs }
                                    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -198,17 +198,18 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
     // ── Escuchar resultados en tiempo real ────────────────────
     window._guardarFoto = async function(userKey, base64){
       try{
-        await setDoc(doc(db,'fotos',userKey), { foto: base64, updated: Date.now() });
+        await setDoc(doc(db,'fotos',userKey), { foto: base64, nombre: userKey, updated: Date.now() });
         return {ok:true};
       } catch(e){ return {ok:false, error:e.message}; }
     };
 
-    window._cargarFotos = function(callback){
-      return onSnapshot(collection(db,'fotos'), (snap) => {
+    window._cargarFotos = async function(){
+      try{
+        const snap = await getDocs(collection(db,'fotos'));
         const fotos = {};
         snap.docs.forEach(d => { fotos[d.id] = d.data().foto; });
-        callback(fotos);
-      });
+        return fotos;
+      } catch(e){ return {}; }
     };
 
     window._eliminarDoc = async function(docId){
@@ -1639,7 +1640,7 @@ function uploadFotoAdmin(input, userKey){
 })();
 
 if(typeof window._cargarFotos==='function'){
-  window._cargarFotos(function(fotosDB){
+  window._cargarFotos().then(function(fotosDB){
     Object.keys(fotosDB).forEach(k=>{
       FOTOS[k]=fotosDB[k];
       try{ localStorage.setItem('foto_'+k, fotosDB[k]); } catch(err){}
