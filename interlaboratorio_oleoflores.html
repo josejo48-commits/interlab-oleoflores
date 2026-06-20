@@ -794,7 +794,7 @@ const PARAMS_RBD = [
 const PARAMS_CPO = [
   { id:'acidez',       nombre:'Acidez (palmítico)',      unit:'%',          tipo:'acidez' },
   { id:'humedad_hal',  nombre:'Humedad halógeno',        unit:'%',          tipo:'directo' },
-  { id:'humedad',      nombre:'Humedad',                 unit:'%',          tipo:'directo' },
+  { id:'humedad',      nombre:'Humedad',                 unit:'%',          tipo:'directo', soloInterno:true },
   { id:'impurezas',    nombre:'Impurezas',               unit:'%',          tipo:'directo' },
   { id:'indice_yodo',  nombre:'Índice de Yodo',          unit:'g I₂/100g',  tipo:'yodo' },
   { id:'sfc_20',       nombre:'Perfiles de Sólidos 20°C', unit:'%',         tipo:'directo' },
@@ -1300,7 +1300,8 @@ const SIGMA_OVERRIDE = {
   acidez_cpo:  { sigma:0.058,  r:0.10,  R:0.20, norma:'ISO 660:2020 · Horwitz (ISO 13528) · FFA 2.41%' },
 };
 // Parámetros excluidos del interlaboratorio (solo monitoreo interno)
-const EXCLUIR_INTERLAB = ['humedad'];
+const EXCLUIR_INTERLAB = ['humedad']; // humedad horno — solo monitoreo interno, sin Z-score
+function esExcluido(paramId){ return EXCLUIR_INTERLAB.includes(paramId); }
 function getSigma(paramId, ref, muestra){
   // Horwitz (ISO 13528): σ = 0.02 × C^0.8495
   // C debe estar en fracción (no porcentaje) para Horwitz
@@ -1362,7 +1363,7 @@ function zClass(z){ const a=Math.abs(z); if(a<=2) return{cls:'z-ok',label:'Satis
 function refreshDashboard(){
   const analistas=USERS.filter(u=>u.rol!=='admin');
   const conDatos=new Set(RESULTADOS.map(r=>r.user)).size;
-  const withRef=RESULTADOS.filter(r=>{ if(r.paramId==='humedad') return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+  const withRef=RESULTADOS.filter(r=>{ if(esExcluido(r.paramId)) return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
   const sat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId,r.muestra))<=2; }).length;
   const nosat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId,r.muestra))>3; }).length;
   document.getElementById('dashboard-metrics').innerHTML=`
@@ -1441,7 +1442,7 @@ function renderMisResultados(){
 function renderAllResults(){
   const tbody=document.getElementById('results-body');
   if(!RESULTADOS.length){ tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:28px;color:var(--light)">Sin resultados aún</td></tr>'; return; }
-  var sorted = RESULTADOS.filter(function(r){return r.paramId!=='humedad';}).slice().sort(function(a,b){
+  var sorted = RESULTADOS.filter(function(r){return !esExcluido(r.paramId);}).slice().sort(function(a,b){
     // Sort by analista name, then muestra (rbd before cpo), then param
     var na=(a.analista||a.user||'').toLowerCase();
     var nb=(b.analista||b.user||'').toLowerCase();
@@ -1512,7 +1513,7 @@ function refreshStatChart(){
 function renderZScores(){
   populateAnalistaFilter();
   const tbody=document.getElementById('zscore-body');
-  const withRef=RESULTADOS.filter(r=>{ if(r.paramId==='humedad') return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+  const withRef=RESULTADOS.filter(r=>{ if(esExcluido(r.paramId)) return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
   if(!withRef.length){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--light)">Sin datos</td></tr>'; return; }
   tbody.innerHTML=withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; const s=Math.abs(rv)*0.03||0.1; const z=calcZ(r.promedio,rv,r.paramId,r.muestra); const zc=zClass(z); return`<tr><td><span class="code-badge">${r.codigo}</span></td><td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td><td>${r.paramNombre}</td><td>${r.promedio.toFixed(4)} ${r.unit}</td><td>${rv}</td><td>${s.toFixed(4)}</td><td class="${zc.cls}">${z.toFixed(2)}</td><td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`; }).join('');
 }
@@ -1738,7 +1739,7 @@ function verCarta(nombreEnc, labCodigo){
   const info = labInfo[labCodigo] || { titulo: labCodigo, color:'#7c3aed' };
   const foto = FOTOS[fotoKeyAnalista(labCodigo, nombre)] || null;
 
-  const resultados = RESULTADOS.filter(r => r.analista === nombre && r.codigo === labCodigo && r.paramId !== 'humedad');
+  const resultados = RESULTADOS.filter(r => r.analista === nombre && r.codigo === labCodigo && !esExcluido(r.paramId));
   if(!resultados.length){ alert('No hay resultados registrados para este analista.'); return; }
 
   const muestras = {};
@@ -1766,10 +1767,14 @@ function verCarta(nombreEnc, labCodigo){
       const calIcon = za<=2?'✅':za<=3?'⚠️':'❌';
       if(za<=2) totalSat++; else if(za<=3) totalCues++; else totalNoSat++;
       const reps = (r.reps||[]).map(v=>v!=null?Number(v).toFixed(4):'—').join(' | ');
+      const repsVals = (r.reps||[]).filter(v=>v!=null&&isFinite(v));
+      const cvPct = (()=>{ if(repsVals.length<2) return null; const m=repsVals.reduce((a,b)=>a+b,0)/repsVals.length; if(!m) return null; const de=Math.sqrt(repsVals.reduce((a,b)=>a+(b-m)**2,0)/(repsVals.length-1)); return (de/m*100); })();
+      const cvColor = cvPct===null?'#94a3b8':cvPct<=2?'#16a34a':cvPct<=5?'#d97706':'#dc2626';
       return `<tr style="border-bottom:1px solid #f1f5f9">
         <td style="padding:8px 10px;font-size:12px;font-weight:600">${r.paramNombre||r.paramId}</td>
         <td style="padding:8px 10px;font-size:11px;color:#64748b;text-align:center">${reps}</td>
         <td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center">${r.promedio!=null?Number(r.promedio).toFixed(4):'—'}</td>
+        <td style="padding:8px 10px;font-size:12px;text-align:center;font-weight:600;color:${cvColor}">${cvPct!==null?cvPct.toFixed(2)+'%':'—'}</td>
         <td style="padding:8px 10px;font-size:12px;text-align:center">${ref}</td>
         <td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center;color:${za>2?'#dc2626':'#16a34a'}">${z.toFixed(2)}</td>
         <td style="padding:8px 10px;text-align:center">
@@ -1787,6 +1792,7 @@ function verCarta(nombreEnc, labCodigo){
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:left">PARÁMETRO</th>
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">REP 1 | REP 2 | REP 3</th>
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">PROMEDIO</th>
+          <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">CV%</th>
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">REFERENCIA</th>
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">Z-SCORE</th>
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">CALIFICACIÓN</th>
@@ -1984,7 +1990,7 @@ function calcBias(val,ref){ return ((val-ref)/ref)*100; }
 function calcSigma(ref){ return Math.abs(ref)*0.03||0.1; }
 
 function getAnalistaStats(user){
-  const myRes = RESULTADOS.filter(r=>r.user===user && r.paramId!=='humedad');
+  const myRes = RESULTADOS.filter(r=>r.user===user && !esExcluido(r.paramId));
   const withRef = myRes.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
   if(!withRef.length) return null;
   const zScores = withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv,r.paramId,r.muestra); });
@@ -3095,7 +3101,7 @@ function renderMejorPorParametro(){
     var rows   = '';
 
     params.forEach(function(p){
-      var res = RESULTADOS.filter(function(r){ return r.muestra===m && r.paramId===p.id && r.paramId!=='humedad'; });
+      var res = RESULTADOS.filter(function(r){ return r.muestra===m && r.paramId===p.id && !esExcluido(r.paramId); });
       if(!res.length) return;
       var rv = REFm[p.id];
 
@@ -3162,7 +3168,7 @@ function renderHornoInterno(){
   var muestra = document.getElementById('horno-muestra') ? document.getElementById('horno-muestra').value : 'rbd';
   if(!wrap) return;
 
-  var res = RESULTADOS.filter(function(r){ return r.muestra===muestra && r.paramId==='humedad'; });
+  var res = RESULTADOS.filter(function(r){ return r.muestra===muestra && esExcluido(r.paramId); });
   if(!res.length){
     wrap.innerHTML='<div class="card"><p style="color:#94a3b8;font-size:13px;padding:10px">Sin datos de humedad por horno para '+muestra.toUpperCase()+'.</p></div>';
     return;
