@@ -1601,51 +1601,10 @@ function renderParticipants(){
 }
 
 // =========================================================
-// SISTEMA DE FOTOS CON IndexedDB (igual que inventario)
+// SISTEMA DE FOTOS — Firestore como fuente de verdad
 // =========================================================
-const IDB_NAME = 'interlab_fotos';
-const IDB_STORE = 'fotos';
-let _idb = null;
 
-function abrirIDB(){
-  return new Promise((res, rej) => {
-    if(_idb){ res(_idb); return; }
-    const req = indexedDB.open(IDB_NAME, 1);
-    req.onupgradeneeded = e => e.target.result.createObjectStore(IDB_STORE);
-    req.onsuccess = e => { _idb = e.target.result; res(_idb); };
-    req.onerror = e => rej(e);
-  });
-}
-
-function guardarFotoIDB(userKey, base64){
-  return abrirIDB().then(db => new Promise((res, rej) => {
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).put(base64, userKey);
-    tx.oncomplete = () => res(true);
-    tx.onerror = e => rej(e);
-  }));
-}
-
-function cargarFotoIDB(userKey){
-  return abrirIDB().then(db => new Promise((res, rej) => {
-    const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(userKey);
-    req.onsuccess = e => res(e.target.result || null);
-    req.onerror = e => rej(e);
-  }));
-}
-
-function cargarTodasFotosIDB(){
-  return abrirIDB().then(db => new Promise((res, rej) => {
-    const fotos = {};
-    const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).openCursor();
-    req.onsuccess = e => {
-      const cursor = e.target.result;
-      if(cursor){ fotos[cursor.key] = cursor.value; cursor.continue(); }
-      else res(fotos);
-    };
-    req.onerror = e => rej(e);
-  }));
-}
+function guardarFotoIDB(key, base64){ /* no-op, Firestore es la fuente */ return Promise.resolve(true); }
 
 function comprimirFoto(base64, maxSize, callback){
   const img = new Image();
@@ -1670,12 +1629,13 @@ function uploadFotoAdmin(input, userKey){
     comprimirFoto(e.target.result, 300, function(compressed){
       FOTOS[userKey] = compressed;
       renderParticipants();
-      // Guardar en IndexedDB
-      guardarFotoIDB(userKey, compressed).then(function(){
-        console.log('✅ Foto guardada:', userKey);
-      }).catch(function(err){
-        console.error('❌ Error:', err);
-      });
+      // Guardar en Firestore
+      if(typeof window._guardarFoto === 'function'){
+        window._guardarFoto(userKey, compressed).then(function(res){
+          if(res&&res.ok) console.log('Foto lab guardada:', userKey);
+          else console.warn('Error Firestore foto lab:', res&&res.error);
+        });
+      }
       // Actualizar topbar si es el usuario actual
       if(SESSION && SESSION.user===userKey){
         const tbAvatar = document.getElementById('tb-avatar');
@@ -1689,13 +1649,7 @@ function uploadFotoAdmin(input, userKey){
   reader.readAsDataURL(input.files[0]);
 }
 
-// Cargar todas las fotos al inicio desde IndexedDB
-cargarTodasFotosIDB().then(function(fotosIDB){
-  Object.keys(fotosIDB).forEach(k => { FOTOS[k] = fotosIDB[k]; });
-  renderParticipants();
-}).catch(function(err){
-  console.warn('IndexedDB no disponible:', err);
-});
+// Fotos se cargan desde Firestore via evento fotosListas (ver módulo Firebase)
 
 function uploadFotoAnalista(input, labCodigo, nombreEnc){
   if(!input.files||!input.files[0]) return;
@@ -1707,7 +1661,6 @@ function uploadFotoAnalista(input, labCodigo, nombreEnc){
       FOTOS[userKey] = compressed;
       renderParticipants();
       // Guardar en IndexedDB local
-      guardarFotoIDB(userKey, compressed).catch(function(err){ console.error('IDB error:', err); });
       // Guardar en Firestore
       if(typeof window._guardarFoto === 'function'){
         const res = await window._guardarFoto(userKey, compressed);
@@ -1906,7 +1859,6 @@ function subirFotoCarta(input){
     if(CARTA_CURRENT && typeof window._guardarFoto === 'function'){
       const userKey = CARTA_CURRENT.userKey;
       FOTOS[userKey] = base64;
-      guardarFotoIDB(userKey, base64).catch(function(e){ console.warn('IDB:', e); });
       const res = await window._guardarFoto(userKey, base64);
       if(res && res.ok){
         // 3. Cerrar modal y refrescar vistas
@@ -1938,7 +1890,15 @@ function imprimirCarta(){
 }
 
 populateStatParams();
-const FOTOS = {}; // user -> dataURL
+const FOTOS = {}; // clave -> dataURL (LAB-01::Nombre Analista)
+
+// Escuchar cuando Firestore carga las fotos al inicio
+window.addEventListener('fotosListas', function(e){
+  const fotosDB = e.detail || {};
+  Object.keys(fotosDB).forEach(function(k){ FOTOS[k] = fotosDB[k]; });
+  renderParticipants();
+  renderEvaluacion();
+});
 
 // Clave única por ANALISTA individual: "LAB-01::Adriana Guzman"
 function fotoKeyAnalista(labCodigo, nombreAnalista){
@@ -2398,7 +2358,7 @@ function gotoSection(name,el){
   if(name==='dashboard') refreshDashboard();
   if(name==='resultados') renderAllResults();
   if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); }
-  if(name==="participantes"){ if(typeof window._cargarFotos==="function"){ window._cargarFotos().then(function(fotosDB){ Object.keys(fotosDB).forEach(k=>{ FOTOS[k]=fotosDB[k]; try{localStorage.setItem("foto_"+k,fotosDB[k]);}catch(e){} }); renderParticipants(); }); } else { renderParticipants(); } }
+  if(name==="participantes"){ if(typeof window._cargarFotos==="function"){ window._cargarFotos().then(function(fotosDB){ Object.keys(fotosDB).forEach(function(k){ FOTOS[k]=fotosDB[k]; }); renderParticipants(); }); } else { renderParticipants(); } }
   if(name==='misresultados') renderMisResultados();
   if(name==='auditor') renderAuditor();
   if(name==='evaluacion'){
