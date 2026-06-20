@@ -1588,35 +1588,52 @@ function renderParticipants(){
   document.getElementById('part-list').innerHTML = html || '<p style="color:var(--light);font-size:13px">Sin participantes.</p>';
 }
 
+function comprimirFoto(base64, maxSize, callback){
+  const img = new Image();
+  img.onload = function(){
+    const canvas = document.createElement('canvas');
+    let w = img.width, h = img.height;
+    // Reducir a máximo 300x300
+    if(w>maxSize||h>maxSize){
+      if(w>h){ h=Math.round(h*maxSize/w); w=maxSize; }
+      else { w=Math.round(w*maxSize/h); h=maxSize; }
+    }
+    canvas.width=w; canvas.height=h;
+    canvas.getContext('2d').drawImage(img,0,0,w,h);
+    callback(canvas.toDataURL('image/jpeg', 0.7));
+  };
+  img.src = base64;
+}
+
 function uploadFotoAdmin(input, userKey){
   if(!input.files||!input.files[0]) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    FOTOS[userKey] = e.target.result;
-    renderParticipants();
-    // Guardar en Firestore
-    if(typeof window._guardarFoto === 'function'){
-      window._guardarFoto(userKey, e.target.result).then(r=>{
-        if(r.ok) console.log('✅ Foto guardada en Firestore:', userKey);
-        else console.error('❌ Error guardando foto:', r.error);
-      });
-    }
-    // Si es el usuario actual, actualizar topbar
-    if(SESSION && SESSION.user===userKey){
-      const tbAvatar = document.getElementById('tb-avatar');
-      tbAvatar.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
-      tbAvatar.style.background='transparent';
-    }
+  reader.onload = async e => {
+    // Comprimir antes de guardar
+    comprimirFoto(e.target.result, 300, async function(base64compressed){
+      FOTOS[userKey] = base64compressed;
+      renderParticipants();
+      if(SESSION && SESSION.user===userKey){
+        const tbAvatar = document.getElementById('tb-avatar');
+        tbAvatar.innerHTML=`<img src="${base64compressed}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+        tbAvatar.style.background='transparent';
+      }
+      if(typeof window._guardarFoto === 'function'){
+        const r = await window._guardarFoto(userKey, base64compressed);
+        if(r.ok) console.log('✅ Foto guardada:', userKey);
+        else alert('Error guardando foto: ' + r.error);
+      }
+    });
   };
   reader.readAsDataURL(input.files[0]);
 }
 
-// Cargar fotos desde Firestore al iniciar
+// Cargar fotos desde Firestore al iniciar — solo una vez, sin sobreescribir
 if(typeof window._cargarFotos === 'function'){
   window._cargarFotos(function(fotosDB){
-    Object.assign(FOTOS, fotosDB);
+    // Merge: no borrar fotos locales, solo agregar las de Firestore
+    Object.keys(fotosDB).forEach(k => { if(!FOTOS[k]) FOTOS[k] = fotosDB[k]; });
     renderParticipants();
-    // Actualizar topbar si hay foto del usuario actual
     if(SESSION && FOTOS[SESSION.user]){
       const tbAvatar = document.getElementById('tb-avatar');
       tbAvatar.innerHTML=`<img src="${FOTOS[SESSION.user]}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
