@@ -1564,7 +1564,11 @@ function renderParticipants(){
           return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9">
             <div style="width:30px;height:30px;border-radius:50%;background:${info.color};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0">${ini2}</div>
             <span style="font-size:13px;color:#1e293b;font-weight:500;flex:1">${nombre}</span>
-            <button onclick="verCarta('${nombreEnc}','${cod}')" style="background:${info.color};color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">📄 Ver carta</button>
+            <label style="cursor:pointer;position:relative;display:inline-block">
+            <div style="background:#f5f3ff;border:1px solid #a78bfa;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;color:#7c3aed;white-space:nowrap" title="Subir foto del analista">${getFotoAnalista(cod,nombre)?'🔄':'📷'}</div>
+            <input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="uploadFotoAnalista(this,'${cod}','${nombreEnc}')">
+          </label>
+          <button onclick="verCarta('${nombreEnc}','${cod}')" style="background:${info.color};color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">📄 Ver carta</button>
           </div>`;
         }).join('')
       : `<div style="font-size:12px;color:#94a3b8;padding:6px 0">Sin datos aún</div>`;
@@ -1693,6 +1697,27 @@ cargarTodasFotosIDB().then(function(fotosIDB){
   console.warn('IndexedDB no disponible:', err);
 });
 
+function uploadFotoAnalista(input, labCodigo, nombreEnc){
+  if(!input.files||!input.files[0]) return;
+  const nombre = decodeURIComponent(nombreEnc);
+  const userKey = fotoKeyAnalista(labCodigo, nombre);
+  const reader = new FileReader();
+  reader.onload = function(e){
+    comprimirFoto(e.target.result, 300, async function(compressed){
+      FOTOS[userKey] = compressed;
+      renderParticipants();
+      // Guardar en IndexedDB local
+      guardarFotoIDB(userKey, compressed).catch(function(err){ console.error('IDB error:', err); });
+      // Guardar en Firestore
+      if(typeof window._guardarFoto === 'function'){
+        const res = await window._guardarFoto(userKey, compressed);
+        if(!res||!res.ok) console.warn('Firestore foto error:', res?.error);
+      }
+    });
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
 function deleteFoto(userKey){
   delete FOTOS[userKey];
   renderParticipants();
@@ -1739,7 +1764,7 @@ var CARTA_CURRENT = null; // { nombre, labCodigo, userKey }
 function verCarta(nombreEnc, labCodigo){
   const nombre = decodeURIComponent(nombreEnc);
   const u = USERS.find(x=>x.codigo===labCodigo);
-  CARTA_CURRENT = { nombre, labCodigo, userKey: u ? u.user : labCodigo };
+  CARTA_CURRENT = { nombre, labCodigo, userKey: fotoKeyAnalista(labCodigo, nombre) };
   const labInfo = {
     'LAB-01': { titulo:'Fisico Quimico Codazzi',        color:'#7c3aed' },
     'LAB-02': { titulo:'Extractora Maria la Baja',       color:'#0d9488' },
@@ -1881,6 +1906,7 @@ function subirFotoCarta(input){
     if(CARTA_CURRENT && typeof window._guardarFoto === 'function'){
       const userKey = CARTA_CURRENT.userKey;
       FOTOS[userKey] = base64;
+      guardarFotoIDB(userKey, base64).catch(function(e){ console.warn('IDB:', e); });
       const res = await window._guardarFoto(userKey, base64);
       if(res && res.ok){
         // 3. Cerrar modal y refrescar vistas
@@ -1913,6 +1939,15 @@ function imprimirCarta(){
 
 populateStatParams();
 const FOTOS = {}; // user -> dataURL
+
+// Clave única por ANALISTA individual: "LAB-01::Adriana Guzman"
+function fotoKeyAnalista(labCodigo, nombreAnalista){
+  return labCodigo + '::' + (nombreAnalista||'').trim();
+}
+function getFotoAnalista(labCodigo, nombreAnalista){
+  const key = fotoKeyAnalista(labCodigo, nombreAnalista);
+  return FOTOS[key] || null;
+}
 
 function previewPhoto(input){
   if(!input.files||!input.files[0]) return;
@@ -2043,7 +2078,12 @@ function renderPodio(ranked){
   const podioItems = order.map(i=>{
     if(i>=ranked.length) return '<div class="podio-item"></div>';
     const {u,stats} = ranked[i];
-    const photo = getPhotoEl(u.user, 68, i===0?'podio-photo':'podio-photo');
+    const nombreAn = RESULTADOS.find(r=>r.user===u.user)?.analista || u.nombre;
+    const fotoAnKey = fotoKeyAnalista(u.codigo, nombreAn);
+    const fotoAn = FOTOS[fotoAnKey] || null;
+    const photo = fotoAn
+      ? '<img src="'+fotoAn+'" class="podio-photo" style="width:68px;height:68px">'
+      : '<div class="podio-photo-placeholder" style="background:'+(u.color||'#7c3aed')+';width:68px;height:68px">'+ini(u.nombre)+'</div>';
     return `<div class="podio-item podio-${i+1}">
       <div class="podio-medal">${medals[i]}</div>
       ${photo}
@@ -2065,7 +2105,12 @@ function renderRankingTable(ranked){
     const medal = i<3?medals[i]:`${i+1}°`;
     const zc = stats.pctSat>=80?'b-ok':stats.pctSat>=60?'b-warn':'b-fail';
     const cvc = stats.avgCV===null?'b-gray':stats.avgCV<=2?'b-ok':stats.avgCV<=5?'b-warn':'b-fail';
-    const photo = getPhotoEl(u.user, 32, '');
+    const nombreAnR = RESULTADOS.find(r=>r.user===u.user)?.analista || u.nombre;
+    const fotoRKey = fotoKeyAnalista(u.codigo, nombreAnR);
+    const fotoR = FOTOS[fotoRKey] || null;
+    const photo = fotoR
+      ? '<img src="'+fotoR+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #a78bfa;flex-shrink:0">'
+      : '<div style="width:32px;height:32px;border-radius:50%;background:'+(u.color||'#7c3aed')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0">'+ini(u.nombre)+'</div>';
     return `<tr>
       <td style="font-size:18px;text-align:center">${medal}</td>
       <td><div style="display:flex;align-items:center;gap:8px">${photo}<span style="font-size:12px;font-weight:600">${u.nombre}</span></div></td>
@@ -2137,7 +2182,12 @@ function renderAnalistaCards(ranked, showRank=true){
   if(!ranked.length){ wrap.innerHTML='<p style="color:var(--light);font-size:13px">Sin datos suficientes.</p>'; return; }
 
   wrap.innerHTML = ranked.map(({u,stats},rank)=>{
-    const photo = getPhotoEl(u.user, 64, 'analista-photo');
+    const nombreAnalista = RESULTADOS.find(r=>r.user===u.user)?.analista || u.nombre;
+    const fotoKey = fotoKeyAnalista(u.codigo, nombreAnalista);
+    const foto64 = FOTOS[fotoKey] || null;
+    const photo = foto64
+      ? '<img src="'+foto64+'" class="analista-photo" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #a78bfa;flex-shrink:0">'
+      : '<div class="analista-photo-placeholder" style="background:'+(u.color||'#7c3aed')+';width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0">'+ini(u.nombre)+'</div>';
     const medals = ['🥇','🥈','🥉'];
     const medal = showRank ? (rank<3?medals[rank]:`#${rank+1}`) : '';
     const zc = stats.pctSat>=80?{label:'Satisfactorio',bg:'#dcfce7',color:'#15803d'}:
