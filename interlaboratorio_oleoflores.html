@@ -1607,6 +1607,10 @@ function renderParticipants(){
 function guardarFotoIDB(key, base64){ /* no-op, Firestore es la fuente */ return Promise.resolve(true); }
 
 function comprimirFoto(base64, maxSize, callback){
+  comprimirFotoCalidad(base64, maxSize, 0.7, callback);
+}
+
+function comprimirFotoCalidad(base64, maxSize, quality, callback){
   const img = new Image();
   img.onload = function(){
     const canvas = document.createElement('canvas');
@@ -1617,7 +1621,14 @@ function comprimirFoto(base64, maxSize, callback){
     }
     canvas.width=w; canvas.height=h;
     canvas.getContext('2d').drawImage(img,0,0,w,h);
-    callback(canvas.toDataURL('image/jpeg', 0.7));
+    // Si aun es muy grande, reducir calidad iterativamente
+    let result = canvas.toDataURL('image/jpeg', quality);
+    let q = quality;
+    while(result.length > 700000 && q > 0.2){
+      q -= 0.1;
+      result = canvas.toDataURL('image/jpeg', q);
+    }
+    callback(result);
   };
   img.src = base64;
 }
@@ -1626,7 +1637,7 @@ function uploadFotoAdmin(input, userKey){
   if(!input.files||!input.files[0]) return;
   const reader = new FileReader();
   reader.onload = function(e){
-    comprimirFoto(e.target.result, 300, function(compressed){
+    comprimirFotoCalidad(e.target.result, 200, 0.6, function(compressed){
       FOTOS[userKey] = compressed;
       renderParticipants();
       // Guardar en Firestore
@@ -1657,7 +1668,7 @@ function uploadFotoAnalista(input, labCodigo, nombreEnc){
   const userKey = fotoKeyAnalista(labCodigo, nombre);
   const reader = new FileReader();
   reader.onload = function(e){
-    comprimirFoto(e.target.result, 300, async function(compressed){
+    comprimirFotoCalidad(e.target.result, 200, 0.6, async function(compressed){
       FOTOS[userKey] = compressed;
       renderParticipants();
       // Guardar en IndexedDB local
@@ -1843,35 +1854,31 @@ function verCarta(nombreEnc, labCodigo){
 function subirFotoCarta(input){
   if(!input.files||!input.files[0]) return;
   const reader = new FileReader();
-  reader.onload = async e => {
-    const base64 = e.target.result;
+  reader.onload = function(e){
+    // Comprimir a max 200px y calidad 0.6 para garantizar < 200KB
+    comprimirFotoCalidad(e.target.result, 200, 0.6, async function(compressed){
 
-    // 1. Actualizar avatar en la carta (preview inmediato)
-    const avatarEl = document.querySelector('#carta-content [data-avatar]');
-    if(avatarEl){
-      avatarEl.outerHTML = '<img data-avatar src="'+base64+'" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid currentColor">';
-    } else {
+      // 1. Actualizar avatar en la carta (preview inmediato)
       const first = document.querySelector('#carta-content img[style*="150px"], #carta-content div[style*="150px"]');
-      if(first) first.outerHTML = '<img src="'+base64+'" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid #7c3aed;flex-shrink:0">';
-    }
+      if(first) first.outerHTML = '<img src="'+compressed+'" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid #7c3aed;flex-shrink:0">';
 
-    // 2. Guardar en Firestore y en memoria local
-    if(CARTA_CURRENT && typeof window._guardarFoto === 'function'){
-      const userKey = CARTA_CURRENT.userKey;
-      FOTOS[userKey] = base64;
-      const res = await window._guardarFoto(userKey, base64);
-      if(res && res.ok){
-        // 3. Cerrar modal y refrescar vistas
-        cerrarCarta();
-        renderParticipants();
-        renderEvaluacion();
+      // 2. Guardar en Firestore y en memoria local
+      if(CARTA_CURRENT && typeof window._guardarFoto === 'function'){
+        const userKey = CARTA_CURRENT.userKey;
+        FOTOS[userKey] = compressed;
+        const res = await window._guardarFoto(userKey, compressed);
+        if(res && res.ok){
+          cerrarCarta();
+          renderParticipants();
+          renderEvaluacion();
+        } else {
+          alert('No se pudo guardar la foto: ' + (res ? res.error : 'Sin conexion'));
+        }
       } else {
-        alert('La foto se actualizo en pantalla pero no se pudo guardar en la base de datos: ' + (res ? res.error : 'Sin conexion'));
+        if(CARTA_CURRENT) FOTOS[CARTA_CURRENT.userKey] = compressed;
+        cerrarCarta();
       }
-    } else {
-      if(CARTA_CURRENT) FOTOS[CARTA_CURRENT.userKey] = base64;
-      cerrarCarta();
-    }
+    });
   };
   reader.readAsDataURL(input.files[0]);
 }
