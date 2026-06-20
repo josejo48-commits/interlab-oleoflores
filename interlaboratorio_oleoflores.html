@@ -1734,8 +1734,12 @@ function loadBannerPhoto(input){
 // =========================================================
 // CARTA DE DESEMPEÑO ANALISTA
 // =========================================================
+var CARTA_CURRENT = null; // { nombre, labCodigo, userKey }
+
 function verCarta(nombreEnc, labCodigo){
   const nombre = decodeURIComponent(nombreEnc);
+  const u = USERS.find(x=>x.codigo===labCodigo);
+  CARTA_CURRENT = { nombre, labCodigo, userKey: u ? u.user : labCodigo };
   const labInfo = {
     'LAB-01': { titulo:'Fisico Quimico Codazzi',        color:'#7c3aed' },
     'LAB-02': { titulo:'Extractora Maria la Baja',       color:'#0d9488' },
@@ -1743,7 +1747,6 @@ function verCarta(nombreEnc, labCodigo){
     'LAB-04': { titulo:'Extractora del Sinú',            color:'#d97706' },
   };
   const info = labInfo[labCodigo] || { titulo: labCodigo, color:'#7c3aed' };
-  const u = USERS.find(x=>x.codigo===labCodigo);
   const foto = u ? FOTOS[u.user] : null;
 
   const resultados = RESULTADOS.filter(r => r.analista === nombre && r.codigo === labCodigo && r.paramId !== 'humedad');
@@ -1862,19 +1865,34 @@ function verCarta(nombreEnc, labCodigo){
 function subirFotoCarta(input){
   if(!input.files||!input.files[0]) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    // Actualizar el avatar dentro de la carta
-    const avatar = document.querySelector('#carta-content img.carta-avatar, #carta-content div.carta-avatar');
-    const img = document.querySelector('#carta-content img.carta-avatar');
-    const div = document.querySelector('#carta-content .carta-avatar-div');
-    // Buscar cualquier elemento avatar en la carta
+  reader.onload = async e => {
+    const base64 = e.target.result;
+
+    // 1. Actualizar avatar en la carta (preview inmediato)
     const avatarEl = document.querySelector('#carta-content [data-avatar]');
     if(avatarEl){
-      avatarEl.outerHTML = `<img data-avatar src="${e.target.result}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid currentColor">`;
+      avatarEl.outerHTML = '<img data-avatar src="'+base64+'" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid currentColor">';
     } else {
-      // Reemplazar primer img o div avatar
       const first = document.querySelector('#carta-content img[style*="150px"], #carta-content div[style*="150px"]');
-      if(first) first.outerHTML = `<img src="${e.target.result}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid #7c3aed;flex-shrink:0">`;
+      if(first) first.outerHTML = '<img src="'+base64+'" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid #7c3aed;flex-shrink:0">';
+    }
+
+    // 2. Guardar en Firestore y en memoria local
+    if(CARTA_CURRENT && typeof window._guardarFoto === 'function'){
+      const userKey = CARTA_CURRENT.userKey;
+      FOTOS[userKey] = base64;
+      const res = await window._guardarFoto(userKey, base64);
+      if(res && res.ok){
+        // 3. Cerrar modal y refrescar vistas
+        cerrarCarta();
+        renderParticipants();
+        renderEvaluacion();
+      } else {
+        alert('La foto se actualizo en pantalla pero no se pudo guardar en la base de datos: ' + (res ? res.error : 'Sin conexion'));
+      }
+    } else {
+      if(CARTA_CURRENT) FOTOS[CARTA_CURRENT.userKey] = base64;
+      cerrarCarta();
     }
   };
   reader.readAsDataURL(input.files[0]);
