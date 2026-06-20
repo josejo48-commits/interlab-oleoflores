@@ -1593,7 +1593,6 @@ function comprimirFoto(base64, maxSize, callback){
   img.onload = function(){
     const canvas = document.createElement('canvas');
     let w = img.width, h = img.height;
-    // Reducir a máximo 300x300
     if(w>maxSize||h>maxSize){
       if(w>h){ h=Math.round(h*maxSize/w); w=maxSize; }
       else { w=Math.round(w*maxSize/h); h=maxSize; }
@@ -1608,37 +1607,44 @@ function comprimirFoto(base64, maxSize, callback){
 function uploadFotoAdmin(input, userKey){
   if(!input.files||!input.files[0]) return;
   const reader = new FileReader();
-  reader.onload = async e => {
-    // Comprimir antes de guardar
-    comprimirFoto(e.target.result, 300, async function(base64compressed){
+  reader.onload = function(e){
+    comprimirFoto(e.target.result, 300, function(base64compressed){
+      // Guardar en memoria
       FOTOS[userKey] = base64compressed;
+      // Guardar en localStorage (persiste sin internet)
+      try{ localStorage.setItem('foto_'+userKey, base64compressed); } catch(err){}
+      // Guardar en Firestore (persiste entre dispositivos)
+      if(typeof window._guardarFoto==='function'){
+        window._guardarFoto(userKey, base64compressed);
+      }
       renderParticipants();
       if(SESSION && SESSION.user===userKey){
-        const tbAvatar = document.getElementById('tb-avatar');
+        const tbAvatar=document.getElementById('tb-avatar');
         tbAvatar.innerHTML=`<img src="${base64compressed}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
         tbAvatar.style.background='transparent';
-      }
-      if(typeof window._guardarFoto === 'function'){
-        const r = await window._guardarFoto(userKey, base64compressed);
-        if(r.ok) console.log('✅ Foto guardada:', userKey);
-        else alert('Error guardando foto: ' + r.error);
       }
     });
   };
   reader.readAsDataURL(input.files[0]);
 }
 
-// Cargar fotos desde Firestore al iniciar — solo una vez, sin sobreescribir
-if(typeof window._cargarFotos === 'function'){
+// Cargar fotos: primero localStorage (inmediato), luego Firestore
+(function cargarFotosLocales(){
+  USERS.filter(u=>u.rol!=='admin').forEach(u=>{
+    try{
+      const f = localStorage.getItem('foto_'+u.user);
+      if(f) FOTOS[u.user] = f;
+    } catch(err){}
+  });
+})();
+
+if(typeof window._cargarFotos==='function'){
   window._cargarFotos(function(fotosDB){
-    // Merge: no borrar fotos locales, solo agregar las de Firestore
-    Object.keys(fotosDB).forEach(k => { if(!FOTOS[k]) FOTOS[k] = fotosDB[k]; });
+    Object.keys(fotosDB).forEach(k=>{
+      FOTOS[k]=fotosDB[k];
+      try{ localStorage.setItem('foto_'+k, fotosDB[k]); } catch(err){}
+    });
     renderParticipants();
-    if(SESSION && FOTOS[SESSION.user]){
-      const tbAvatar = document.getElementById('tb-avatar');
-      tbAvatar.innerHTML=`<img src="${FOTOS[SESSION.user]}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
-      tbAvatar.style.background='transparent';
-    }
   });
 }
 
