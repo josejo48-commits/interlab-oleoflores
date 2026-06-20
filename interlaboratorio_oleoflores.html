@@ -198,7 +198,7 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
     // ── Escuchar resultados en tiempo real ────────────────────
     window._guardarFoto = async function(userKey, base64){
       try{
-        await setDoc(doc(db,'fotos',userKey), { foto: base64, nombre: userKey, updated: Date.now() });
+        await setDoc(doc(db,'fotos',userKey), { foto: base64, updated: Date.now() });
         return {ok:true};
       } catch(e){ return {ok:false, error:e.message}; }
     };
@@ -209,16 +209,15 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
         const fotos = {};
         snap.docs.forEach(d => { fotos[d.id] = d.data().foto; });
         return fotos;
-      } catch(e){ console.error('Error cargando fotos:',e); return {}; }
+      } catch(e){ return {}; }
     };
 
-    // Cargar fotos automáticamente y notificar cuando estén listas
-    getDocs(collection(db,'fotos')).then(snap => {
+    // Cargar fotos al iniciar y disparar evento cuando estén listas
+    getDocs(collection(db,'fotos')).then(function(snap){
       const fotos = {};
-      snap.docs.forEach(d => { fotos[d.id] = d.data().foto; });
-      window._fotosIniciales = fotos;
+      snap.docs.forEach(function(d){ fotos[d.id] = d.data().foto; });
       window.dispatchEvent(new CustomEvent('fotosListas', { detail: fotos }));
-    }).catch(e => console.error('Error inicial fotos:', e));
+    }).catch(function(e){ console.error('Error cargando fotos:', e.message); });
 
     window._eliminarDoc = async function(docId){
       try{ await deleteDoc(doc(db,'resultados',docId)); return {ok:true}; }
@@ -1597,6 +1596,53 @@ function renderParticipants(){
   document.getElementById('part-list').innerHTML = html || '<p style="color:var(--light);font-size:13px">Sin participantes.</p>';
 }
 
+// =========================================================
+// SISTEMA DE FOTOS CON IndexedDB (igual que inventario)
+// =========================================================
+const IDB_NAME = 'interlab_fotos';
+const IDB_STORE = 'fotos';
+let _idb = null;
+
+function abrirIDB(){
+  return new Promise((res, rej) => {
+    if(_idb){ res(_idb); return; }
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(IDB_STORE);
+    req.onsuccess = e => { _idb = e.target.result; res(_idb); };
+    req.onerror = e => rej(e);
+  });
+}
+
+function guardarFotoIDB(userKey, base64){
+  return abrirIDB().then(db => new Promise((res, rej) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put(base64, userKey);
+    tx.oncomplete = () => res(true);
+    tx.onerror = e => rej(e);
+  }));
+}
+
+function cargarFotoIDB(userKey){
+  return abrirIDB().then(db => new Promise((res, rej) => {
+    const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(userKey);
+    req.onsuccess = e => res(e.target.result || null);
+    req.onerror = e => rej(e);
+  }));
+}
+
+function cargarTodasFotosIDB(){
+  return abrirIDB().then(db => new Promise((res, rej) => {
+    const fotos = {};
+    const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).openCursor();
+    req.onsuccess = e => {
+      const cursor = e.target.result;
+      if(cursor){ fotos[cursor.key] = cursor.value; cursor.continue(); }
+      else res(fotos);
+    };
+    req.onerror = e => rej(e);
+  }));
+}
+
 function comprimirFoto(base64, maxSize, callback){
   const img = new Image();
   img.onload = function(){
@@ -1617,37 +1663,55 @@ function uploadFotoAdmin(input, userKey){
   if(!input.files||!input.files[0]) return;
   const reader = new FileReader();
   reader.onload = function(e){
-    comprimirFoto(e.target.result, 300, function(base64compressed){
-      FOTOS[userKey] = base64compressed;
-      try{ localStorage.setItem('foto_'+userKey, base64compressed); } catch(err){ alert('Error: espacio insuficiente en el navegador'); return; }
+    comprimirFoto(e.target.result, 300, function(compressed){
+      FOTOS[userKey] = compressed;
       renderParticipants();
+      // Guardar en IndexedDB
+      guardarFotoIDB(userKey, compressed).then(function(){
+        console.log('✅ Foto guardada en IndexedDB:', userKey);
+      }).catch(function(err){
+        console.error('❌ Error IndexedDB:', err);
+      });
+      // También guardar en Firestore como respaldo
+      if(typeof window._guardarFoto === 'function'){
+        window._guardarFoto(userKey, compressed);
+      }
+      // Actualizar topbar si es el usuario actual
       if(SESSION && SESSION.user===userKey){
-        const tbAvatar=document.getElementById('tb-avatar');
-        if(tbAvatar){ tbAvatar.innerHTML=`<img src="${base64compressed}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`; tbAvatar.style.background='transparent'; }
+        const tbAvatar = document.getElementById('tb-avatar');
+        if(tbAvatar){
+          tbAvatar.innerHTML=`<img src="${compressed}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+          tbAvatar.style.background='transparent';
+        }
       }
     });
   };
   reader.readAsDataURL(input.files[0]);
 }
 
-// Cargar fotos: primero localStorage (inmediato), luego Firestore
-(function cargarFotosLocales(){
+// Cargar todas las fotos al inicio desde IndexedDB
+cargarTodasFotosIDB().then(function(fotosIDB){
+  Object.keys(fotosIDB).forEach(k => { FOTOS[k] = fotosIDB[k]; });
+  renderParticipants();
+}).catch(function(err){
+  console.warn('IndexedDB no disponible, usando localStorage:', err);
+  // Fallback localStorage
   USERS.filter(u=>u.rol!=='admin').forEach(u=>{
-    try{
-      const f = localStorage.getItem('foto_'+u.user);
-      if(f) FOTOS[u.user] = f;
-    } catch(err){}
+    try{ const f=localStorage.getItem('foto_'+u.user); if(f) FOTOS[u.user]=f; } catch(e){}
   });
-})();
+});
 
-(function cargarFotosLocales(){
-  USERS.filter(u=>u.rol!=='admin').forEach(u=>{
-    try{
-      const f = localStorage.getItem('foto_'+u.user);
-      if(f) FOTOS[u.user] = f;
-    } catch(err){}
+// También cargar desde Firestore cuando esté listo (sincronización)
+window.addEventListener('fotosListas', function(e){
+  const fotosDB = e.detail||{};
+  Object.keys(fotosDB).forEach(k=>{
+    if(!FOTOS[k]){ // Solo si no tenemos la foto ya
+      FOTOS[k]=fotosDB[k];
+      guardarFotoIDB(k, fotosDB[k]); // Guardar en IDB para uso offline
+    }
   });
-})();
+  renderParticipants();
+});
 
 function deleteFoto(userKey){
   delete FOTOS[userKey];
