@@ -1685,12 +1685,20 @@ function uploadFotoAdmin(input, userKey){
   reader.readAsDataURL(input.files[0]);
 }
 
-// Cargar todas las fotos al inicio desde IndexedDB
+// Cargar todas las fotos al inicio — IDB primero, luego localStorage como fallback
 cargarTodasFotosIDB().then(function(fotosIDB){
+  // Primero cargar desde localStorage (fotos viejas)
+  ['analista1','analista2','analista3','analista4'].forEach(function(u){
+    try{ var f=localStorage.getItem('foto_'+u); if(f && !fotosIDB[u]){ fotosIDB[u]=f; guardarFotoIDB(u,f); } }catch(e){}
+  });
   Object.keys(fotosIDB).forEach(k => { FOTOS[k] = fotosIDB[k]; });
   renderParticipants();
 }).catch(function(err){
-  console.warn('IndexedDB no disponible:', err);
+  console.warn('IndexedDB no disponible, usando localStorage:', err);
+  ['analista1','analista2','analista3','analista4'].forEach(function(u){
+    try{ var f=localStorage.getItem('foto_'+u); if(f) FOTOS[u]=f; }catch(e){}
+  });
+  renderParticipants();
 });
 
 function deleteFoto(userKey){
@@ -2331,7 +2339,17 @@ function gotoSection(name,el){
   if(name==='dashboard') refreshDashboard();
   if(name==='resultados') renderAllResults();
   if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); }
-  if(name==="participantes"){ cargarTodasFotosIDB().then(function(fotosIDB){ Object.keys(fotosIDB).forEach(k=>{ FOTOS[k]=fotosIDB[k]; }); renderParticipants(); }).catch(function(){ renderParticipants(); }); }
+  if(name==="participantes"){ cargarTodasFotosIDB().then(function(fotosIDB){
+    ["analista1","analista2","analista3","analista4"].forEach(function(u){
+      try{ var f=localStorage.getItem("foto_"+u); if(f&&!fotosIDB[u]){ fotosIDB[u]=f; guardarFotoIDB(u,f); } }catch(e){}
+    });
+    Object.keys(fotosIDB).forEach(k=>{ FOTOS[k]=fotosIDB[k]; }); renderParticipants();
+  }).catch(function(){
+    ["analista1","analista2","analista3","analista4"].forEach(function(u){
+      try{ var f=localStorage.getItem("foto_"+u); if(f) FOTOS[u]=f; }catch(e){}
+    });
+    renderParticipants();
+  }); }
   if(name==='misresultados') renderMisResultados();
   if(name==='auditor') renderAuditor();
   if(name==='evaluacion'){
