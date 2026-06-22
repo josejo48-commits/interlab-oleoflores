@@ -1,0 +1,3360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interlaboratorio · OLEOFLORES S.A.S</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f0f2f5;--white:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--light:#94a3b8;--hero-bg:linear-gradient(135deg,#3730a3 0%,#5b21b6 40%,#7c3aed 80%,#9333ea 100%);--violet:#7c3aed;--violet-bg:#f5f3ff;--green:#16a34a;--red:#dc2626;--red-bg:#fef2f2;--amber:#d97706}
+body{font-family:'Inter',system-ui,sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh}
+#splash{position:fixed;inset:0;background:linear-gradient(135deg,#1e1b4b,#312e81,#7c3aed);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s}
+#splash-logo{width:80px;height:80px;background:rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:42px;margin-bottom:12px;animation:sP 1s ease infinite alternate}
+#splash-text{color:#fff;font-size:22px;font-weight:800}
+#splash-sub{color:rgba(255,255,255,.6);font-size:12px;margin-top:6px}
+#splash-bar{width:200px;height:3px;background:rgba(255,255,255,.2);border-radius:100px;margin-top:24px;overflow:hidden}
+#splash-bar-fill{height:100%;background:#fff;border-radius:100px;animation:sB 1.6s ease forwards}
+@keyframes sP{from{transform:scale(1)}to{transform:scale(1.06)}}
+@keyframes sB{from{width:0}to{width:100%}}
+#login-screen{position:fixed;inset:0;z-index:9000;background:linear-gradient(135deg,#1e1b4b 0%,#2e1065 30%,#3b0764 60%,#4a044e 100%);display:none;align-items:center;justify-content:center}
+#login-screen::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 50%,rgba(124,58,237,.15) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(59,130,246,.1) 0%,transparent 50%);pointer-events:none}
+.login-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:40px 36px;width:100%;max-width:400px;backdrop-filter:blur(20px);position:relative;z-index:1;box-shadow:0 40px 80px rgba(0,0,0,.4)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;justify-content:center}
+.login-logo-icon{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#7c3aed,#3b82f6);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(124,58,237,.4)}
+.login-logo-title{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.login-logo-title span{background:linear-gradient(135deg,#c4b5fd,#93c5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-logo-sub{font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+.login-title{font-size:22px;font-weight:700;color:#fff;text-align:center;margin-bottom:6px}
+.login-sub{font-size:13px;color:rgba(255,255,255,.55);text-align:center;margin-bottom:28px}
+.login-label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:7px}
+.login-input{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:14px;color:#fff;font-family:'Inter',sans-serif;outline:none;transition:all .2s;margin-bottom:14px}
+.login-input::placeholder{color:rgba(255,255,255,.3)}
+.login-input:focus{border-color:#7c3aed;background:rgba(124,58,237,.15);box-shadow:0 0 0 3px rgba(124,58,237,.25)}
+.login-btn{width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:4px;transition:all .2s;letter-spacing:.3px}
+.login-btn:hover{opacity:.9;transform:translateY(-1px)}
+.login-error{background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#fca5a5;margin-bottom:14px;display:none;text-align:center}
+.login-footer{text-align:center;margin-top:20px;font-size:11px;color:rgba(255,255,255,.3)}
+.topbar{background:linear-gradient(135deg,#1e1b4b 0%,#2e1065 40%,#3b0764 80%,#4c0519 100%);padding:0 24px;display:flex;align-items:center;height:56px;gap:10px;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-icon{width:38px;height:38px;border-radius:10px;background:var(--hero-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-title{font-size:14px;font-weight:800;color:#fff}
+.logo-title span{background:linear-gradient(135deg,#c4b5fd,#93c5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.user-badge{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:100px;padding:4px 12px 4px 5px}
+.user-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,.2)}
+.user-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.9)}
+.user-role-lbl{font-size:10px;color:rgba(255,255,255,.5)}
+.btn-logout{cursor:pointer;border:.5px solid rgba(255,255,255,.2);border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);padding:5px 10px;font-size:11px;font-weight:600;font-family:'Inter',sans-serif}
+.layout{display:flex;min-height:calc(100vh - 56px)}
+.sidebar{width:190px;background:linear-gradient(180deg,#3730a3 0%,#5b21b6 40%,#7c3aed 80%,#9333ea 100%);padding:10px 7px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;flex-shrink:0}
+.nav-section{font-size:9px;font-weight:600;color:rgba(255,255,255,.45);letter-spacing:1px;text-transform:uppercase;padding:8px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;margin-bottom:2px;font-size:12px;font-weight:500;color:rgba(255,255,255,.8);transition:all .15s;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,.15);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.2);color:#fff;font-weight:600}
+.main{flex:1;padding:14px 20px;overflow-x:hidden;min-width:0;max-width:1120px}
+.screen{display:none}.screen.active{display:block}
+/* Contenido de cada pantalla con ancho máximo */
+.screen > *{max-width:1060px}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.page-title{font-size:18px;font-weight:800;color:#1e293b}
+.page-sub{font-size:12px;color:#64748b;margin-top:2px}
+.screen-inner{max-width:1060px}
+.hero-card{background:var(--hero-bg);border-radius:12px;padding:16px 20px;margin-bottom:14px;position:relative;overflow:hidden}
+.hero-card::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 80% 20%,rgba(255,255,255,.08) 0%,transparent 50%);pointer-events:none}
+.hero-inner{position:relative;z-index:1}
+.hero-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.hero-icon{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px}
+.hero-title{font-size:15px;font-weight:700;color:#fff}
+.hero-desc{font-size:12px;color:rgba(255,255,255,.7);line-height:1.6}
+.hero-desc strong{color:rgba(255,255,255,.95)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.metric-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.metric-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.metric-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.metric-val{font-size:22px;font-weight:800;line-height:1;margin-bottom:2px}
+.metric-sub{font-size:10px;color:var(--light)}
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:8px 10px;text-align:left;font-size:9px;font-weight:600;color:var(--light);letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfc}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600;white-space:nowrap}
+.b-ok{background:#dcfce7;color:#15803d}
+.b-warn{background:#fef9c3;color:#a16207}
+.b-fail{background:#fee2e2;color:#b91c1c}
+.b-rbd{background:#dbeafe;color:#1d4ed8}
+.b-cpo{background:#fef9c3;color:#92400e}
+.b-gray{background:#f1f5f9;color:#475569}
+input[type=number],input[type=text],input[type=password],select{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border .15s;width:100%}
+input:focus,select:focus{border-color:var(--violet);box-shadow:0 0 0 3px rgba(124,58,237,.1);background:#fff}
+select{-webkit-appearance:none;appearance:none;background:#f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 9px center;background-size:13px;padding-right:28px}
+label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px}
+.fg{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--hero-bg);color:#fff}
+.btn-primary:hover{opacity:.9}
+.btn-ghost{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid #fecaca}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:6px}
+.alert{padding:9px 13px;border-radius:8px;font-size:12px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.alert-info{background:#E6F1FB;color:#185FA5;border:1px solid #B5D4F4}
+.alert-success{background:#EAF3DE;color:#3B6D11;border:1px solid #C0DD97}
+.alert-warn{background:#FAEEDA;color:#633806;border:1px solid #FCD34D}
+.z-ok{color:#16a34a;font-weight:700}
+.z-warn{color:#d97706;font-weight:700}
+.z-fail{color:#dc2626;font-weight:700}
+.code-badge{background:#1e1b4b;color:#c4b5fd;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;font-family:monospace;letter-spacing:1px}
+/* PODIO */
+.podio{display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:20px 0 10px}
+.podio-item{display:flex;flex-direction:column;align-items:center;gap:8px}
+.podio-photo{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.podio-photo-placeholder{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.podio-name{font-size:12px;font-weight:700;text-align:center;max-width:90px}
+.podio-score{font-size:11px;color:var(--muted)}
+.podio-bar{border-radius:8px 8px 0 0;width:80px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff}
+.podio-1 .podio-bar{height:100px;background:linear-gradient(135deg,#f59e0b,#d97706)}
+.podio-2 .podio-bar{height:75px;background:linear-gradient(135deg,#94a3b8,#64748b)}
+.podio-3 .podio-bar{height:55px;background:linear-gradient(135deg,#c07a3c,#92400e)}
+.podio-medal{font-size:28px;margin-bottom:2px}
+.analista-card{background:#f8f7ff;border:1px solid #ddd6fe;border-radius:14px;padding:14px;margin-bottom:16px}
+.analista-card-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.analista-photo{width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #a78bfa;flex-shrink:0}
+.analista-photo-placeholder{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0}
+.analista-card-info{flex:1}
+.analista-card-name{font-size:15px;font-weight:700;color:#1e293b}
+.analista-card-meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.mini-stat{background:#fff;border:1px solid #ede9fe;border-radius:8px;padding:8px;text-align:center}
+.mini-stat-val{font-size:18px;font-weight:800;color:#3730a3}
+.mini-stat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.params-detail{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.params-detail th{background:#ede9fe;color:#5b21b6;font-size:10px;font-weight:700;padding:6px 10px;text-align:center;border:1px solid #ddd6fe;text-transform:uppercase;letter-spacing:.5px}
+.params-detail td{padding:7px 10px;border:1px solid #ede9fe;text-align:center}
+.photo-upload-btn{background:#f5f3ff;border:2px dashed #a78bfa;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:600;color:#7c3aed;text-align:center;cursor:pointer}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:10px}
+.page-title{font-size:18px;font-weight:700;color:var(--text)}
+.page-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.sec-label{font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;margin-top:4px;display:flex;align-items:center;gap:6px}
+.sec-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#ddd6fe,transparent)}
+.part-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.part-item:last-child{border-bottom:none}
+.part-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0}
+
+/* ===== TRIPLICADO PANEL ===== */
+.param-block{background:#f8f7ff;border:1px solid #ddd6fe;border-radius:12px;padding:16px;margin-bottom:16px}
+.param-block-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.param-block-title{font-size:13px;font-weight:700;color:#3730a3;display:flex;align-items:center;gap:7px}
+.result-pill{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #a78bfa;border-radius:20px;padding:5px 14px}
+.result-pill-label{font-size:10px;color:#7c3aed;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.result-pill-val{font-size:17px;font-weight:800;color:#3730a3;font-family:monospace}
+.result-pill-unit{font-size:11px;color:#7c3aed;font-weight:500}
+.reps-table{width:100%;border-collapse:collapse;font-size:12px}
+.reps-table th{background:#ede9fe;color:#5b21b6;font-size:10px;font-weight:700;padding:7px 10px;text-align:center;border:1px solid #ddd6fe;text-transform:uppercase;letter-spacing:.5px}
+.reps-table td{padding:6px 8px;border:1px solid #ede9fe;text-align:center;vertical-align:middle}
+.reps-table tr:first-child td{border-top:none}
+.reps-table .row-label{text-align:left;font-weight:600;color:#5b21b6;font-size:11px;background:#f5f3ff;white-space:nowrap;padding:6px 10px}
+.reps-table .calc-row td{background:#ede9fe;font-weight:700;color:#3730a3}
+.reps-table .avg-row td{background:#7c3aed;color:#fff;font-weight:800}
+.reps-table input[type=number]{background:transparent;border:none;border-radius:0;padding:2px 4px;font-size:12px;text-align:center;width:100%;min-width:70px;font-family:'Inter',sans-serif}
+.reps-table input[type=number]:focus{background:rgba(124,58,237,.08);box-shadow:none;border-bottom:2px solid #7c3aed;outline:none}
+.common-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;padding:10px 12px;background:#fff;border-radius:8px;border:1px solid #ede9fe}
+.info-block{background:#f8fafc;border-radius:8px;padding:10px 14px;border:1px solid #e2e8f0}
+.info-label{display:block;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.info-val{display:block;font-size:13px;font-weight:600;color:#1e293b}
+@media print{.sidebar,.topbar,#nav-auditor{display:none!important}.main{padding:0!important}.screen.active{display:block!important}}
+.info-block{background:#f8fafc;border-radius:8px;padding:10px 14px;border:1px solid #e2e8f0}
+.info-label{display:block;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.info-val{display:block;font-size:13px;font-weight:600;color:#1e293b}
+@media print{.sidebar,.topbar{display:none!important}.main{padding:0!important}}
+</style>
+
+  <!-- ── FIREBASE ADMIN ──────────────────────────────────────── -->
+  <script type="module">
+    import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, query, orderBy, doc, deleteDoc, updateDoc, setDoc, getDoc, getDocs }
+                                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AlzaSyBYkuaWE4e_-jWEHb6bJxtCHekDUHrgOuU",
+      authDomain:        "interlab-oleoflores.firebaseapp.com",
+      projectId:         "interlab-oleoflores",
+      storageBucket:     "interlab-oleoflores.firebasestorage.app",
+      messagingSenderId: "737093298066",
+      appId:             "1:737093298066:web:316b26872fc7b553e4c34b"
+    };
+
+    const app      = initializeApp(firebaseConfig);
+    const db       = getFirestore(app);
+
+
+    // ── Escuchar resultados en tiempo real ────────────────────
+    window._guardarFoto = async function(userKey, base64){
+      try{
+        await setDoc(doc(db,'fotos',userKey), { foto: base64, updated: Date.now() });
+        return {ok:true};
+      } catch(e){ return {ok:false, error:e.message}; }
+    };
+
+    window._cargarFotos = async function(){
+      try{
+        const snap = await getDocs(collection(db,'fotos'));
+        const fotos = {};
+        snap.docs.forEach(d => { fotos[d.id] = d.data().foto; });
+        return fotos;
+      } catch(e){ return {}; }
+    };
+
+    // Cargar fotos al iniciar y disparar evento cuando estén listas
+    getDocs(collection(db,'fotos')).then(function(snap){
+      const fotos = {};
+      snap.docs.forEach(function(d){ fotos[d.id] = d.data().foto; });
+      window.dispatchEvent(new CustomEvent('fotosListas', { detail: fotos }));
+    }).catch(function(e){ console.error('Error cargando fotos:', e.message); });
+
+    window._eliminarDoc = async function(docId){
+      try{ await deleteDoc(doc(db,'resultados',docId)); return {ok:true}; }
+      catch(e){ return {ok:false, error:e.message}; }
+    };
+
+    window._actualizarDoc = async function(docId, datos){
+      try{ await updateDoc(doc(db,'resultados',docId), datos); return {ok:true}; }
+      catch(e){ return {ok:false, error:e.message}; }
+    };
+
+    window._escucharResultados = function(callback) {
+      const q = query(collection(db, 'resultados'), orderBy('timestamp', 'desc'));
+      return onSnapshot(q, (snap) => {
+        const datos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        callback(datos);
+      });
+    };
+  </script>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div id="splash-logo">⚗️</div>
+  <div id="splash-text">OLEOFLORES S.A.S</div>
+  <div id="splash-sub">Cargando interlaboratorio...</div><div style="position:fixed;bottom:6px;right:8px;font-size:10px;color:rgba(255,255,255,0.5);z-index:9999">v2-IDB</div>
+  <div id="splash-bar"><div id="splash-bar-fill"></div></div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg width="28" height="28" viewBox="0 0 26 26" fill="none">
+          <circle cx="13" cy="8" r="3" fill="white" opacity="0.9"/>
+          <circle cx="7" cy="18" r="2.5" fill="white" opacity="0.7"/>
+          <circle cx="19" cy="18" r="2.5" fill="white" opacity="0.7"/>
+          <line x1="13" y1="11" x2="7" y2="15.5" stroke="white" stroke-width="1.5" opacity="0.8"/>
+          <line x1="13" y1="11" x2="19" y2="15.5" stroke="white" stroke-width="1.5" opacity="0.8"/>
+          <line x1="7" y1="18" x2="19" y2="18" stroke="white" stroke-width="1.5" opacity="0.6"/>
+          <circle cx="13" cy="8" r="1.2" fill="#a78bfa"/>
+          <circle cx="7" cy="18" r="1" fill="#60a5fa"/>
+          <circle cx="19" cy="18" r="1" fill="#34d399"/>
+        </svg>
+      </div>
+      <div>
+        <div class="login-logo-title">OLEO<span>FLORES</span> S.A.S</div>
+        <div class="login-logo-sub">⚗ Laboratorio Fisico Quimico</div>
+      </div>
+    </div>
+    <div class="login-title">Bienvenido</div>
+    <div class="login-sub">Inicia sesión para acceder al interlaboratorio</div>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+    <div style="position:relative">
+      <label class="login-label">Usuario</label>
+      <input class="login-input" id="login-user" type="text" placeholder="Tu usuario" autocomplete="off"
+        oninput="onUserInput(this.value)" onfocus="onUserInput(this.value)" onkeydown="onUserKeydown(event)">
+      <div id="user-suggest-list" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 2px);background:rgba(22,14,60,.98);border:1px solid rgba(255,255,255,.15);border-radius:12px;overflow:hidden;z-index:200;box-shadow:0 16px 40px rgba(0,0,0,.5)"></div>
+    </div>
+    <label class="login-label" style="margin-top:4px">Contraseña</label>
+    <input class="login-input" id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Ingresar al sistema →</button>
+    <div class="login-footer">Interlaboratorio v2 · OLEOFLORES S.A.S</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="logo-wrap">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+          <circle cx="13" cy="8" r="3" fill="white" opacity="0.9"/>
+          <circle cx="7" cy="18" r="2.5" fill="white" opacity="0.7"/>
+          <circle cx="19" cy="18" r="2.5" fill="white" opacity="0.7"/>
+          <line x1="13" y1="11" x2="7" y2="15.5" stroke="white" stroke-width="1.5" opacity="0.8"/>
+          <line x1="13" y1="11" x2="19" y2="15.5" stroke="white" stroke-width="1.5" opacity="0.8"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-title">OLEO<span>FLORES</span> · Interlaboratorio</div>
+        <div class="logo-sub">Aceite de Palma Africana</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="tb-avatar" style="background:linear-gradient(135deg,#7c3aed,#3b82f6)">AD</div>
+        <div>
+          <div class="user-name" id="tb-name">Admin</div>
+          <div class="user-role-lbl" id="tb-role">Administrador</div>
+        </div>
+      </div>
+      <span id="tb-code" class="code-badge" style="display:none"></span>
+      <button class="btn-logout" onclick="doLogout()">✕ Salir</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="nav-section">Menú</div>
+      <div class="nav-item active" id="nav-dashboard" onclick="gotoSection('dashboard',this)">📊 Panel</div>
+      <div class="nav-item" id="nav-ingreso" onclick="gotoSection('ingreso',this)">📝 Ingresar datos</div>
+      <div class="nav-item" id="nav-misresultados" onclick="gotoSection('misresultados',this)">🔬 Mis resultados</div>
+      <div class="nav-item" id="nav-resultados" onclick="gotoSection('resultados',this)">📋 Todos los resultados</div>
+      <div class="nav-item" id="nav-estadisticas" onclick="gotoSection('estadisticas',this)">📈 Estadísticas</div>
+      <div class="nav-item" id="nav-evaluacion" onclick="gotoSection('evaluacion',this)">🏆 Ranking &amp; Evaluación</div>
+      <div class="nav-section">Config.</div>
+      <div class="nav-item" id="nav-referencia" onclick="gotoSection('referencia',this)">🏛️ Lab. referencia</div>
+      <div class="nav-item" id="nav-participantes" onclick="gotoSection('participantes',this)">👥 Participantes</div>
+      <div class="nav-item" id="nav-horno" onclick="gotoSection('horno',this)">&#128293; Humedad horno</div>
+      <div class="nav-item" id="nav-competencia" onclick="gotoSection('competencia',this)">&#127919; Competencia analista</div>
+      <div class="nav-item" id="nav-auditor" onclick="gotoSection('auditor',this)">📄 Informe auditor</div>
+    </div>
+
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div id="sec-dashboard" class="screen active">
+        <div class="hero-card">
+          <div class="hero-inner">
+            <div class="hero-head"><div class="hero-icon">⚗️</div><div class="hero-title">Interlaboratorio · Aceite de Palma</div></div>
+            <div class="hero-desc">Datos primarios por <strong>triplicado</strong> con cálculo automático. Código de analista ciego para comparación imparcial.</div>
+          </div>
+        </div>
+        <div class="metrics" id="dashboard-metrics"></div>
+        <div class="grid2">
+          <div class="card"><div class="card-title">👥 Estado participantes</div><div id="dashboard-parts"></div></div>
+          <div class="card"><div class="card-title">📊 Desempeño</div><div style="position:relative;height:200px"><canvas id="dash-chart" role="img" aria-label="Desempeño"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- INGRESO -->
+      <div id="sec-ingreso" class="screen">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Ingreso de datos primarios</div>
+            <div class="page-sub">Triplicado por parámetro — el sistema calcula automáticamente</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--muted)">Código:</span>
+            <span id="ingreso-code" class="code-badge"></span>
+          </div>
+        </div>
+        <div class="alert alert-info">🔢 Ingresa los datos primarios de cada parámetro. Cada repetición calcula su propio resultado y al final se obtiene el <strong>promedio final</strong>.</div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="fgrid2">
+            <div class="fg"><label class="fl">Tipo de muestra</label>
+              <select id="ing-muestra" onchange="buildIngresoForm()">
+                <option value="rbd">Aceite Refinado (RBD)</option>
+                <option value="cpo">Aceite Crudo (CPO)</option>
+              </select>
+            </div>
+            <div class="fg"><label class="fl">Código de muestra</label>
+              <input type="text" id="ing-codigo-muestra" placeholder="Ej: M-2024-001">
+            </div>
+          </div>
+          <div class="fgrid2" style="margin-top:10px">
+            <div class="fg"><label class="fl">👤 Nombre del analista</label>
+              <input type="text" id="ing-nombre-analista" placeholder="Nombre completo del analista">
+            </div>
+            <div class="fg"><label class="fl">🏭 Laboratorio</label>
+              <input type="text" id="ing-nombre-lab" placeholder="Nombre del laboratorio" readonly style="background:#f1f5f9;color:#64748b">
+            </div>
+          </div>
+        </div>
+        <div id="ingreso-form-container"></div>
+        <div id="save-msg" style="display:none" class="alert alert-success">✅ Datos guardados correctamente.</div>
+        <button class="btn btn-primary" onclick="saveIngreso()">💾 Guardar todos los datos</button>
+      </div>
+
+      <!-- MIS RESULTADOS -->
+      <div id="sec-misresultados" class="screen">
+        <div class="page-header"><div><div class="page-title">Mis resultados calculados</div><div class="page-sub">Resultados finales a partir de tus datos primarios</div></div></div>
+        <div id="mis-resultados-content"></div>
+      </div>
+
+      <!-- TODOS (admin) -->
+      <div id="sec-resultados" class="screen">
+        <div class="page-header"><div><div class="page-title">Todos los resultados</div><div class="page-sub">Vista por código de analista (ciego)</div></div></div>
+        <div class="card"><div class="table-wrap"><table>
+          <thead><tr><th>Código</th><th>Laboratorio</th><th>Analista</th><th>Muestra</th><th>Parámetro</th><th>Rep.1</th><th>Rep.2</th><th>Rep.3</th><th>Promedio</th><th>Referencia</th><th>Z-score</th><th>Calificación</th></tr></thead>
+          <tbody id="results-body"></tbody>
+        </table></div></div>
+      </div>
+
+      <!-- ESTADÍSTICAS -->
+      <div id="sec-estadisticas" class="screen">
+        <div class="page-header"><div><div class="page-title">Estadísticas</div><div class="page-sub">Paso a paso · Z-score · CV% · Sesgo · por analista</div></div></div>
+
+        <!-- FILTROS -->
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div class="fg" style="flex:1;min-width:150px;margin:0"><label class="fl">Analista</label>
+              <select id="stat-analista" onchange="refreshEstadisticas();renderPasoAPaso()">
+                <option value="todos">Todos</option>
+              </select></div>
+            <div class="fg" style="flex:1;min-width:120px;margin:0"><label class="fl">Muestra</label>
+              <select id="stat-muestra" onchange="populateStatParams();refreshEstadisticas();syncRPIMuestra();renderTablaRPI()">
+                <option value="rbd">RBD</option><option value="cpo">CPO</option>
+              </select></div>
+            <div class="fg" style="flex:2;min-width:180px;margin:0"><label class="fl">Parámetro</label>
+              <select id="stat-param" onchange="refreshEstadisticas();renderTablaRPI()"></select></div>
+          </div>
+        </div>
+
+        <!-- GRÁFICA -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📊 Comparación de resultados por laboratorio</div>
+          <div style="position:relative;height:260px"><canvas id="stat-chart" role="img" aria-label="Comparación"></canvas></div>
+        </div>
+
+        <!-- PASO A PASO -->
+        <div id="stat-paso-wrap"></div>
+
+        <!-- TABLA Z-SCORES -->
+
+        <!-- TABLA GENERAL RPI -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📊 Tabla General RPI — Estadísticas Descriptivas Completas</div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:10px">
+            Resumen estadístico por parámetro · Todos los laboratorios participantes
+          </div>
+          <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+            <div class="fg" style="flex:1;min-width:120px;margin:0"><label class="fl">Muestra</label>
+              <select id="rpi-muestra" onchange="renderTablaRPI()">
+                <option value="cpo">CPO</option><option value="rbd">RBD</option>
+              </select></div>
+          </div>
+          <div class="table-wrap">
+            <table id="rpi-table">
+              <thead><tr>
+                <th style="text-align:left">Parámetro</th>
+                <th>N° Datos</th>
+                <th>Mediana</th>
+                <th>Promedio Global</th>
+                <th>DE</th>
+                <th>CV%</th>
+                <th>CV% Global</th>
+                <th>U Relativa</th>
+                <th>Varianza</th>
+                <th>Referencia</th>
+                <th>Sesgo%</th>
+              </tr></thead>
+              <tbody id="rpi-tbody"><tr><td colspan="11" style="text-align:center;color:#94a3b8;padding:20px">Sin datos</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ANOVA -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📐 ANOVA — Análisis de Varianza entre Laboratorios</div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:10px;line-height:1.6">
+            Separa la variación <strong>entre laboratorios</strong> (reproducibilidad) de la variación <strong>dentro de cada laboratorio</strong> (repetibilidad).
+            Si F calculado > F crítico → hay diferencia significativa entre laboratorios.
+          </div>
+          <div id="anova-wrap"><p style="color:#94a3b8;font-size:13px">Sin datos suficientes para ANOVA (se necesitan al menos 2 laboratorios).</p></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📋 Tabla resumen Z-scores</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Lab.</th><th>Analista</th><th>Muestra</th><th>Parámetro</th><th>Promedio</th><th>Ref.</th><th>σ</th><th>Z</th><th>Calificación</th></tr></thead>
+            <tbody id="zscore-body"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- REFERENCIA -->
+      <div id="sec-referencia" class="screen">
+        <div class="page-header"><div><div class="page-title">Laboratorio de referencia</div><div class="page-sub">Valores certificados</div></div></div>
+        <div class="card">
+          <div class="sec-label">🔵 Aceite RBD</div>
+          <div class="fgrid3" id="ref-rbd-form" style="margin-bottom:14px"></div>
+          <div class="sec-label">🟡 Aceite CPO</div>
+          <div class="fgrid3" id="ref-cpo-form" style="margin-bottom:14px"></div>
+          <div id="ref-saved" style="display:none" class="alert alert-success">✅ Valores guardados.</div>
+          <button class="btn btn-primary" onclick="saveRef()">💾 Guardar referencia</button>
+        </div>
+      </div>
+
+      <!-- PARTICIPANTES -->
+      <div id="sec-participantes" class="screen">
+        <div class="page-header"><div><div class="page-title">Participantes</div><div class="page-sub">Gestión de analistas y códigos</div></div></div>
+        <div class="card"><div class="card-title">👥 Analistas</div><div id="part-list"></div></div>
+      </div>
+
+      <!-- EVALUACIÓN & RANKING -->
+      <div id="sec-evaluacion" class="screen">
+        <div class="page-header">
+          <div>
+            <div class="page-title" id="eval-page-title">🏆 Evaluación & Ranking</div>
+            <div class="page-sub" id="eval-page-sub">Desempeño por analista — Z-score · CV% · Sesgo · Ranking final</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="renderEvaluacion()">🔄 Actualizar</button>
+        </div>
+
+        <!-- PODIO -->
+        <div id="podio-wrap"></div>
+
+        <!-- FICHAS POR ANALISTA — primero para visibilidad inmediata -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">👤 Ficha por analista · RBD y CPO separados</div>
+          <div id="analista-cards"></div>
+        </div>
+
+        <!-- R&R justo después de fichas -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📊 Ejercicio R&R — Repetibilidad y Reproducibilidad</div>
+          <div style="margin-bottom:10px;font-size:12px;color:#64748b;line-height:1.6">
+            <strong>Repetibilidad</strong>: variación dentro del mismo laboratorio (CV% promedio del triplicado) ·
+            <strong>Reproducibilidad</strong>: variación entre laboratorios (CV% de promedios entre labs)
+          </div>
+          <div id="rr-section"><p style="color:#94a3b8;font-size:13px">Sin datos suficientes para R&R.</p></div>
+        </div>
+
+        <!-- FILTROS RANKING -->
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div class="fg" style="flex:1;min-width:150px;margin:0"><label class="fl">Analista</label>
+              <select id="rank-analista" onchange="renderEvaluacion()">
+                <option value="todos">— Todos —</option>
+              </select></div>
+            <div class="fg" style="flex:1;min-width:120px;margin:0"><label class="fl">Muestra</label>
+              <select id="rank-muestra" onchange="populateRankAnalistaFilter();renderEvaluacion()">
+                <option value="todos">Todas</option>
+                <option value="cpo">CPO</option>
+                <option value="rbd">RBD</option>
+              </select></div>
+          </div>
+        </div>
+
+        <!-- MEJOR POR PARÁMETRO -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">🥇 Mejor analista por parámetro</div>
+          <div id="mejor-param-wrap"><p style="color:#94a3b8;font-size:13px">Sin datos.</p></div>
+        </div>
+
+        <!-- RANKING TABLE -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📋 Ranking completo de analistas</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Analista</th><th>Código</th><th>Parámetros eval.</th><th>% Satisfactorios</th><th>CV% promedio</th><th>Sesgo% promedio</th><th>Puntuación</th><th>Calificación</th></tr></thead>
+              <tbody id="ranking-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- GRÁFICAS DE CONTROL -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📈 Gráfica de control — Z-scores por parámetro</div>
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
+            <div class="fg" style="flex:1;min-width:140px;margin:0"><label class="fl">Muestra</label>
+              <select id="eval-muestra" onchange="populateEvalParams();renderControlChart()">
+                <option value="rbd">RBD</option><option value="cpo">CPO</option>
+              </select></div>
+            <div class="fg" style="flex:2;min-width:180px;margin:0"><label class="fl">Parámetro</label>
+              <select id="eval-param" onchange="renderControlChart()"></select></div>
+          </div>
+          <div style="position:relative;height:280px"><canvas id="control-chart" role="img" aria-label="Gráfica de control Z-score"></canvas></div>
+          <div style="display:flex;gap:10px;margin-top:10px;font-size:11px;flex-wrap:wrap">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:3px;background:#16a34a;display:inline-block;border-radius:2px"></span>Satisfactorio |Z|≤2</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:3px;background:#d97706;display:inline-block;border-radius:2px"></span>Cuestionable |Z|≤3</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:3px;background:#dc2626;display:inline-block;border-radius:2px"></span>No satisfactorio |Z|>3</span>
+          </div>
+        </div>
+
+
+
+        <div style="display:none">
+        </div>
+      </div>
+
+
+
+      <!-- EDITOR DE DATOS -->
+      <div id="sec-editor" class="screen">
+        <div class="page-header"><div>
+          <div class="page-title">&#9998; Editor de datos</div>
+          <div class="page-sub">Agregar &middot; Editar &middot; Eliminar resultados manualmente</div>
+        </div></div>
+
+        <!-- TABLA CON ACCIONES -->
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="card-title" style="margin:0">Documentos en Firestore</div>
+            <button class="btn btn-primary btn-sm" onclick="abrirModalNuevo()">&#43; Agregar entrada</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Lab</th><th>Analista</th><th>Muestra</th><th>Parámetros</th><th>Fecha</th><th>Acciones</th>
+              </tr></thead>
+              <tbody id="editor-tbody"><tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">Sin datos</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL EDITAR/VER PARÁMETROS -->
+      <div id="modal-editor" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;overflow-y:auto">
+        <div style="background:#fff;border-radius:16px;max-width:700px;margin:40px auto;padding:24px;position:relative">
+          <button onclick="cerrarModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#64748b">&#x2715;</button>
+          <div style="font-weight:700;font-size:16px;color:#1e293b;margin-bottom:16px" id="modal-titulo">Editar entrada</div>
+          <div id="modal-body"></div>
+          <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+            <button class="btn" onclick="cerrarModal()" style="background:#f1f5f9;color:#475569">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarModalCambios()" id="btn-guardar-modal">Guardar cambios</button>
+          </div>
+        </div>
+      </div>
+      <!-- MONITOREO INTERNO HUMEDAD HORNO -->
+      <div id="sec-horno" class="screen">
+        <div class="page-header"><div>
+          <div class="page-title">&#128293; Humedad por Horno — Monitoreo Interno</div>
+          <div class="page-sub">Solo LAB-01 Oleoflores &middot; Sin valor de referencia externo &middot; Seguimiento de tendencias</div>
+        </div></div>
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;gap:10px">
+            <div class="fg" style="flex:1;margin:0"><label class="fl">Muestra</label>
+              <select id="horno-muestra" onchange="renderHornoInterno()">
+                <option value="rbd">RBD</option><option value="cpo">CPO</option>
+              </select></div>
+          </div>
+        </div>
+        <div id="horno-wrap"><p style="color:#94a3b8;font-size:13px">Sin datos.</p></div>
+      </div>
+      <!-- COMPETENCIA DEL ANALISTA -->
+      <div id="sec-competencia" class="screen">
+        <div class="page-header"><div>
+          <div class="page-title">&#127919; Competencia del Analista</div>
+          <div class="page-sub">Repetibilidad &middot; Reproducibilidad entre pares &middot; ISO/IEC 17025:2017</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="window.print()">&#128424; Imprimir</button>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div class="fg" style="flex:1;min-width:150px;margin:0"><label class="fl">Analista</label>
+              <select id="comp-analista" onchange="renderCompetencia()">
+                <option value="todos">— Todos —</option>
+              </select></div>
+            <div class="fg" style="flex:1;min-width:120px;margin:0"><label class="fl">Muestra</label>
+              <select id="comp-muestra" onchange="populateCompAnalistaFilter();renderCompetencia()">
+                <option value="cpo">CPO</option><option value="rbd">RBD</option>
+              </select></div>
+          </div>
+        </div>
+        <div id="comp-wrap"><p style="color:#94a3b8;font-size:13px">Sin datos.</p></div>
+      </div>
+
+      <!-- INFORME AUDITOR -->
+      <div id="sec-auditor" class="screen">
+        <div class="page-header"><div>
+          <div class="page-title">📄 Informe para Auditor</div>
+          <div class="page-sub">Trazabilidad completa · Metodología · Criterios de evaluación · Resultados</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Imprimir / PDF</button>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">🏛️ Laboratorio de referencia acreditado</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:8px">
+            <div class="info-block"><span class="info-label">Certificado</span><span class="info-val">LABGIBQ-575-26</span></div>
+            <div class="info-block"><span class="info-label">Laboratorio</span><span class="info-val">General Inspections SAS</span></div>
+            <div class="info-block"><span class="info-label">Fecha análisis</span><span class="info-val">06/06/2026</span></div>
+            <div class="info-block"><span class="info-label">Lote RBD</span><span class="info-val">010626 · RBD PALMA TK 13</span></div>
+            <div class="info-block"><span class="info-label">Lote CPO</span><span class="info-val">L010626 · CPO DE PALMA</span></div>
+            <div class="info-block"><span class="info-label">Cliente</span><span class="info-val">OLEOFLORES S.A.S</span></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">⚗️ Metodología analítica y normas aplicadas</div>
+          <div class="table-wrap" style="margin-top:8px">
+            <table>
+              <thead><tr><th>Parámetro</th><th>Norma</th><th>Fórmula de cálculo</th><th>Unidad</th></tr></thead>
+              <tbody>
+                <tr><td>Acidez (F.F.A. palmítico)</td><td>ISO 660:2020</td><td>% = (V × N × 25.6) / Pm</td><td>%</td></tr>
+                <tr><td>Humedad y Materia Volátil</td><td>ISO 662:2016</td><td>Promedio de triplicado gravimétrico</td><td>%</td></tr>
+                <tr><td>Impurezas insolubles</td><td>ISO 663:2017</td><td>Promedio de triplicado gravimétrico</td><td>%</td></tr>
+                <tr><td>Color Lovibond</td><td>ISO 15305:1998</td><td>Lectura directa celda 5¼"</td><td>R / Y / A</td></tr>
+                <tr><td>Índice de Yodo (Wijs)</td><td>ISO 3961:2024</td><td>IV = ((Vblanco − V) × N × 12.69) / Pm</td><td>g I₂/100g</td></tr>
+                <tr><td>Índice de Peróxido</td><td>ISO 3960:2017</td><td>IP = (V × 10) / Pm</td><td>meq O₂/kg</td></tr>
+                <tr><td>DOBI</td><td>ISO 17932:2011</td><td>DOBI = A₄₄₆ / A₂₆₉</td><td>adimensional</td></tr>
+                <tr><td>SFC (Contenido grasa sólida)</td><td>AOCS Cd 16b-93</td><td>RMN pulsada a 20/30/35/40°C</td><td>%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📐 Criterios estadísticos de evaluación (ISO 13528)</div>
+          <div style="margin-top:10px;font-size:13px;line-height:1.8">
+            <p style="margin:0 0 8px"><strong>Z-score</strong> — Desviación del resultado del participante respecto al valor certificado:</p>
+            <div style="background:#f8fafc;border-left:3px solid #7c3aed;padding:10px 16px;border-radius:0 8px 8px 0;margin-bottom:12px;font-size:13px">
+              Z = (X<sub>analista</sub> − X<sub>referencia</sub>) / σ &nbsp;&nbsp;·&nbsp;&nbsp; σ = |X<sub>ref</sub>| × 0.03 &nbsp;(3% del valor certificado)
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
+              <div style="background:#dcfce7;border-radius:8px;padding:10px 14px;border-left:3px solid #16a34a">
+                <div style="font-weight:600;color:#15803d;font-size:13px">✅ Satisfactorio</div>
+                <div style="font-size:12px;color:#166534">|Z| ≤ 2 · Resultado aceptable</div>
+              </div>
+              <div style="background:#fef9c3;border-radius:8px;padding:10px 14px;border-left:3px solid #ca8a04">
+                <div style="font-weight:600;color:#854d0e;font-size:13px">⚠️ Cuestionable</div>
+                <div style="font-size:12px;color:#854d0e">2 &lt; |Z| ≤ 3 · Requiere revisión</div>
+              </div>
+              <div style="background:#fee2e2;border-radius:8px;padding:10px 14px;border-left:3px solid #dc2626">
+                <div style="font-weight:600;color:#991b1b;font-size:13px">❌ No satisfactorio</div>
+                <div style="font-size:12px;color:#991b1b">|Z| &gt; 3 · Acción correctiva requerida</div>
+              </div>
+            </div>
+            <p style="margin:0 0 6px"><strong>CV%</strong> — Repetibilidad interna: CV% = (DE / Promedio) × 100 &nbsp;→&nbsp; Aceptable: CV% ≤ 5%</p>
+            <p style="margin:0"><strong>Sesgo%</strong> — Exactitud sistemática: Sesgo% = ((Promedio − Referencia) / Referencia) × 100</p>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📋 Resultados por laboratorio con evaluación estadística</div>
+          <div class="table-wrap" style="margin-top:8px">
+            <table>
+              <thead><tr><th>Lab.</th><th>Analista</th><th>Muestra</th><th>Parámetro</th><th>Rep.1</th><th>Rep.2</th><th>Rep.3</th><th>Promedio</th><th>Referencia</th><th>σ</th><th>Z-score</th><th>CV%</th><th>Sesgo%</th><th>Calificación</th></tr></thead>
+              <tbody id="auditor-tbody"><tr><td colspan="14" style="text-align:center;color:#94a3b8;padding:20px">Sin datos</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🏆 Resumen de desempeño por laboratorio</div>
+          <div id="auditor-resumen" style="margin-top:8px"><p style="color:#94a3b8;font-size:13px">Sin datos suficientes.</p></div>
+        </div>
+      </div>
+    </div><!-- /main -->
+  </div><!-- /layout -->
+<!-- MODAL CARTA ANALISTA -->
+<div id="carta-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;overflow-y:auto;padding:20px">
+  <div style="max-width:800px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <!-- Botones acción -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#f8fafc;border-bottom:1px solid #e2e8f0">
+      <span style="font-size:13px;font-weight:600;color:#64748b">📄 Carta de Desempeño</span>
+      <div style="display:flex;gap:8px">
+        <label style="cursor:pointer;position:relative">
+          <div style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">📷 Foto analista</div>
+          <input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="subirFotoCarta(this)">
+        </label>
+        <button onclick="imprimirCarta()" style="background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">🖨️ Imprimir / PDF</button>
+        <button onclick="cerrarCarta()" style="background:#f1f5f9;color:#64748b;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">✕ Cerrar</button>
+      </div>
+    </div>
+    <!-- Contenido imprimible -->
+    <div id="carta-content" style="padding:32px">
+      <!-- Se genera dinámicamente -->
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// =========================================================
+// DEFINICIÓN DE PARÁMETROS
+// =========================================================
+const PARAMS_RBD = [
+  { id:'color_y',      nombre:'Color Lovibond Y',       unit:'Y',          tipo:'directo' },
+  { id:'color_r',      nombre:'Color Lovibond R',       unit:'R',          tipo:'directo' },
+  { id:'color_a',      nombre:'Color Lovibond A (Azul)',unit:'A',          tipo:'directo' },
+  { id:'acidez',       nombre:'Acidez (palmítico)',     unit:'%',          tipo:'acidez' },
+  { id:'humedad_hal',  nombre:'Humedad halógeno',       unit:'%',          tipo:'directo' },
+  { id:'peroxido',     nombre:'Índice de Peróxido',     unit:'meq O₂/kg',  tipo:'peroxido' },
+  { id:'punto_fusion', nombre:'Punto de fusión',        unit:'°C',         tipo:'directo' },
+  { id:'indice_yodo',  nombre:'Índice de Yodo',         unit:'g I₂/100g',  tipo:'yodo' },
+  { id:'sfc_20',       nombre:'SFC 20°C',               unit:'%',          tipo:'directo' },
+  { id:'sfc_30',       nombre:'SFC 30°C',               unit:'%',          tipo:'directo' },
+  { id:'sfc_35',       nombre:'SFC 35°C',               unit:'%',          tipo:'directo' },
+  { id:'sfc_40',       nombre:'SFC 40°C',               unit:'%',          tipo:'directo' },
+];
+
+const PARAMS_CPO = [
+  { id:'acidez',       nombre:'Acidez (palmítico)',      unit:'%',          tipo:'acidez' },
+  { id:'humedad_hal',  nombre:'Humedad halógeno',        unit:'%',          tipo:'directo' },
+  { id:'humedad',      nombre:'Humedad',                 unit:'%',          tipo:'directo', soloInterno:true },
+  { id:'impurezas',    nombre:'Impurezas',               unit:'%',          tipo:'directo' },
+  { id:'indice_yodo',  nombre:'Índice de Yodo',          unit:'g I₂/100g',  tipo:'yodo' },
+  { id:'sfc_20',       nombre:'Perfiles de Sólidos 20°C', unit:'%',         tipo:'directo' },
+  { id:'dobi',         nombre:'DOBI',                    unit:'',           tipo:'dobi', dobi:true },
+];
+
+// =========================================================
+// FÓRMULAS INDIVIDUALES POR REPETICIÓN
+// =========================================================
+function calcRep(tipo, pm, v, extra) {
+  if(!pm || !v) return null;
+  switch(tipo) {
+    case 'acidez':   return (v * extra.n * 25.6) / pm;
+    case 'peroxido': return (v * 10) / pm;
+    case 'yodo':     return ((extra.vb - v) * extra.n * 12.69) / pm;
+    default:         return null;
+  }
+}
+
+// =========================================================
+// ESTADO
+// =========================================================
+let USERS = [
+  { user:'admin',     pass:'1234', rol:'admin',          nombre:'Administrador',                    codigo:'ADM',    color:'#7c3aed', grupo:'admin' },
+  { user:'analista1', pass:'1234', rol:'fisicoquimico',  nombre:'Fisico Quimico Codazzi',           codigo:'LAB-01', color:'#7c3aed', grupo:'lab01' },
+  { user:'analista2', pass:'1234', rol:'participante',   nombre:'Extractora Maria la Baja',         codigo:'LAB-02', color:'#0d9488', grupo:'lab02' },
+  { user:'analista3', pass:'1234', rol:'participante',   nombre:'Grasas y Aceites de Catatumbo',    codigo:'LAB-03', color:'#2563eb', grupo:'lab03' },
+  { user:'analista4', pass:'1234', rol:'participante',   nombre:'Extractora del Sinú',              codigo:'LAB-04', color:'#d97706', grupo:'lab04' },
+];
+
+// Definición de grupos de laboratorios
+const LAB_GRUPOS = [
+  { id:'lab01', nombre:'🔬 Fisico Quimico Codazzi',        desc:'Laboratorio LAB-01 · Oleoflores S.A.S', bg:'linear-gradient(135deg,#ede9fe,#f5f3ff)', border:'#7c3aed', icon:'🔬' },
+  { id:'lab02', nombre:'🌴 Extractora Maria la Baja',       desc:'Laboratorio LAB-02 · Participante',     bg:'linear-gradient(135deg,#f0fdf4,#ecfdf5)', border:'#0d9488', icon:'🧪' },
+  { id:'lab03', nombre:'🏭 Grasas y Aceites de Catatumbo', desc:'Laboratorio LAB-03 · Participante',     bg:'linear-gradient(135deg,#eff6ff,#ebf5ff)', border:'#2563eb', icon:'⚗️' },
+  { id:'lab04', nombre:'🌊 Extractora del Sinú',            desc:'Laboratorio LAB-04 · Participante',     bg:'linear-gradient(135deg,#fffbeb,#fef9c3)', border:'#d97706', icon:'🫙' },
+];
+let REF = {
+  rbd:{
+    acidez:       0.05,
+    humedad:      0.02,
+    impurezas:    0.00,
+    color_y:      27,
+    color_r:      2.0,
+    color_a:      0.0,
+    indice_yodo:  50.24,
+    punto_fusion: 38.5,
+    humedad_hal:  0.02,
+    peroxido:     0.50,
+    sfc_20:       25.84,
+    sfc_30:       9.00,
+    sfc_35:       5.12,
+    sfc_40:       2.25,
+  },
+  cpo:{
+    acidez:       2.41,
+    humedad:      0.20,
+    humedad_hal:  0.20,
+    impurezas:    0.04,
+    dobi:         2.86,
+    indice_yodo:  53.93,
+    sfc_20:       24.10,
+  }
+};
+const REF_META = {
+  certificado: 'LABGIBQ-575-26',
+  laboratorio: 'General Inspections SAS',
+  fecha:       '06/06/2026',
+  lote_rbd:    '010626 - RBD PALMA TK 13',
+  lote_cpo:    'L010626 - CPO DE PALMA',
+  normas: {
+    acidez:      'ISO 660:2020',
+    humedad:     'ISO 662:2016',
+    impurezas:   'ISO 663:2017',
+    color:       'ISO 15305:1998',
+    indice_yodo: 'ISO 3961:2024',
+    peroxido:    'ISO 3960:2017',
+    dobi:        'ISO 17932:2011',
+    sfc:         '*Cd 16b-93 (AOCS)',
+  }
+};
+let RESULTADOS = [];
+let SESSION = null;
+let statChart = null, dashChart = null;
+let _sugHL = -1;
+const SUG_COLORS = ['#7c3aed','#0d9488','#2563eb','#d97706','#dc2626','#16a34a'];
+
+// =========================================================
+// SPLASH
+// =========================================================
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const s = document.getElementById('splash');
+    s.style.opacity = '0';
+    setTimeout(() => { s.style.display='none'; document.getElementById('login-screen').style.display='flex'; }, 600);
+  }, 1700);
+});
+
+function ini(n){ return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+
+// =========================================================
+// LOGIN
+// =========================================================
+function onUserInput(val) {
+  const list = document.getElementById('user-suggest-list');
+  const q = val.trim().toLowerCase();
+  // Solo mostrar admin en el login
+  const allowed = USERS.filter(u => u.rol === 'admin');
+  const matches = allowed.filter(u => !q || u.user.toLowerCase().includes(q) || u.nombre.toLowerCase().includes(q));
+  if(!matches.length){ list.style.display='none'; return; }
+  _sugHL = -1;
+  list.innerHTML = matches.map((u,i) => {
+    const c = u.color || SUG_COLORS[i%SUG_COLORS.length];
+    const rl = u.rol==='admin'?'Administrador':u.rol==='fisicoquimico'?'Fisicoquímico':'Participante';
+    const foto = FOTOS[u.user];
+    const avatarEl = foto
+      ? `<img src="${foto}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+      : `<div style="width:36px;height:36px;border-radius:50%;background:${c};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">${ini(u.nombre)}</div>`;
+    return `<div class="user-suggest-item" data-user="${u.user}" onclick="selUser('${u.user}')" onmouseenter="hlSug(${i})"
+      style="display:flex;align-items:center;gap:11px;padding:11px 15px;cursor:pointer;transition:background .12s;border-bottom:1px solid rgba(255,255,255,.07)">
+      ${avatarEl}
+      <div><div style="font-size:14px;font-weight:600;color:#fff">${u.nombre}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">${rl} · <span style="color:#a78bfa;font-family:monospace">${u.codigo}</span></div></div>
+    </div>`;
+  }).join('');
+  list.style.display='block';
+}
+function hlSug(i){ _sugHL=i; document.querySelectorAll('.user-suggest-item').forEach((el,j)=>{ el.style.background=j===i?'rgba(124,58,237,.35)':''; }); }
+function onUserKeydown(e){
+  const l=document.getElementById('user-suggest-list'), items=document.querySelectorAll('.user-suggest-item');
+  if(l.style.display==='none'||!items.length) return;
+  if(e.key==='ArrowDown'){e.preventDefault();hlSug(Math.min(_sugHL+1,items.length-1));}
+  else if(e.key==='ArrowUp'){e.preventDefault();hlSug(Math.max(_sugHL-1,0));}
+  else if(e.key==='Enter'&&_sugHL>=0){e.preventDefault();selUser(items[_sugHL].dataset.user);}
+  else if(e.key==='Escape'){l.style.display='none';}
+}
+function selUser(u){ document.getElementById('login-user').value=u; document.getElementById('user-suggest-list').style.display='none'; document.getElementById('login-error').style.display='none'; setTimeout(()=>document.getElementById('login-pass').focus(),100); }
+document.addEventListener('click',e=>{ const l=document.getElementById('user-suggest-list'),i=document.getElementById('login-user'); if(l&&!l.contains(e.target)&&e.target!==i) l.style.display='none'; });
+
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-error');
+  if(!u){err.textContent='Selecciona un usuario';err.style.display='block';return;}
+  if(!p){err.textContent='Ingresa tu contraseña';err.style.display='block';return;}
+  const found=USERS.find(x=>x.user===u&&x.pass===p);
+  if(!found){err.textContent='Contraseña incorrecta';err.style.display='block';document.getElementById('login-pass').value='';document.getElementById('login-pass').focus();return;}
+  err.style.display='none'; SESSION=found;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('tb-name').textContent=found.nombre;
+  document.getElementById('tb-role').textContent=found.rol==='admin'?'Administrador':found.rol==='fisicoquimico'?'Fisicoquímico':'Participante';
+  // Mostrar foto en topbar si existe, o iniciales
+  const tbAvatar = document.getElementById('tb-avatar');
+  const fotoUser = FOTOS[found.user];
+  if(fotoUser){
+    tbAvatar.innerHTML=`<img src="${fotoUser}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+    tbAvatar.style.background='transparent';
+    tbAvatar.style.padding='0';
+  } else {
+    tbAvatar.textContent=ini(found.nombre);
+    tbAvatar.style.background=found.color||'linear-gradient(135deg,#7c3aed,#3b82f6)';
+  }
+  const ce=document.getElementById('tb-code');
+  if(found.rol!=='admin'){ ce.textContent=found.codigo; ce.style.display='inline'; } else ce.style.display='none';
+  cargarRefGuardada();
+  setupNav(); buildIngresoForm(); buildRefForms();
+  gotoSection('dashboard',document.getElementById('nav-dashboard'));
+  // Si es admin, escuchar resultados en tiempo real desde Firestore
+  if(found.rol==='admin' && typeof window._escucharResultados === 'function'){
+    if(window._unsubscribe) window._unsubscribe();
+    window._unsubscribe = window._escucharResultados(function(datos){
+      RESULTADOS = [];
+      // Debug: ver campos del primer documento
+      if(datos.length > 0) console.log('🔥 Firebase doc keys:', Object.keys(datos[0]), datos[0]);
+      datos.forEach(d => {
+        // Nombre del analista: intentar todos los campos posibles
+        const nombreAnalista = (d.analista || d.nombreAnalista || d.nombre_analista || d.user || d.laboratorio || '').trim();
+        (d.datos||[]).forEach(p => {
+          RESULTADOS.push({
+            docId:         d.id,
+            user:          d.codigo || d.laboratorio,
+            codigo:        d.codigo,
+            nombre:        d.laboratorio,
+            analista:      nombreAnalista,
+            cargo:         d.cargo,
+            muestra:       p.muestra || d.muestra,
+            codigoMuestra: d.codigoMuestra,
+            fecha:         d.fecha,
+            paramId:       p.paramId,
+            paramNombre:   p.paramNombre,
+            unit:          p.unit,
+            reps:          p.reps,
+            promedio:      p.promedio
+          });
+        });
+      });
+      // Refrescar pantalla activa
+      const sec = document.querySelector('.screen.active');
+      if(sec){
+        const name = sec.id.replace('sec-','');
+        if(name==='dashboard')    refreshDashboard && refreshDashboard();
+        if(name==='resultados')   renderAllResults && renderAllResults();
+        if(name==='estadisticas'){ refreshStatChart && refreshStatChart(); renderZScores && renderZScores(); }
+        if(name==='evaluacion')   renderEvaluacion && renderEvaluacion();
+        if(name==='participantes') renderParticipants && renderParticipants();
+      }
+      // Siempre refrescar participantes aunque no esté activa (para que esté listo al abrir)
+      renderParticipants && renderParticipants();
+    });
+  }
+}
+function doLogout(){ if(!confirm('¿Cerrar sesión?')) return; if(window._unsubscribe){window._unsubscribe();window._unsubscribe=null;} SESSION=null; document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; document.getElementById('login-user').value=''; document.getElementById('login-pass').value=''; document.getElementById('login-error').style.display='none'; }
+
+// =========================================================
+// NAV
+// =========================================================
+function setupNav(){
+  const isAdmin=SESSION.rol==='admin';
+  ['resultados','estadisticas','referencia','participantes','auditor','competencia','horno'].forEach(id=>{ var el=document.getElementById('nav-'+id); if(el) el.style.display=isAdmin?'flex':'none'; });
+  const evalNav=document.getElementById('nav-evaluacion'); if(evalNav) evalNav.style.display='flex';
+  document.getElementById('nav-misresultados').style.display=isAdmin?'none':'flex';
+  document.getElementById('nav-ingreso').style.display=isAdmin?'none':'flex';
+}
+function gotoSection(name,el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(name==='dashboard') refreshDashboard();
+  if(name==='resultados') renderAllResults();
+  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); }
+  if(name==='participantes') renderParticipants();
+  if(name==='misresultados') renderMisResultados();
+}
+
+// =========================================================
+// CONSTRUCCIÓN DEL FORMULARIO DE DATOS PRIMARIOS
+// =========================================================
+function buildIngresoForm(){
+  if(!SESSION || SESSION.rol==='admin') return;
+  const muestra = document.getElementById('ing-muestra').value;
+  const showDobi = SESSION.rol==='fisicoquimico';
+  const params = (muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO).filter(p=>!p.dobi||showDobi);
+  document.getElementById('ingreso-code').textContent = SESSION.codigo;
+  // Autocompletar laboratorio
+  const labEl = document.getElementById('ing-nombre-lab');
+  if(labEl) labEl.value = SESSION.nombre || '';
+  let html = '';
+
+  params.forEach(p => {
+    const pid = p.id;
+    html += `<div class="param-block" id="block_${pid}">
+      <div class="param-block-header">
+        <div class="param-block-title">🧪 ${p.nombre}</div>
+        <div class="result-pill">
+          <span class="result-pill-label">Promedio final</span>
+          <span class="result-pill-val" id="res_${pid}">—</span>
+          <span class="result-pill-unit">${p.unit}</span>
+        </div>
+      </div>`;
+
+    if(p.tipo === 'directo') {
+      // Tabla simple 3 lecturas → promedio
+      html += `<table class="reps-table">
+        <thead><tr><th>Repetición</th><th>Lectura (${p.unit})</th><th>Resultado</th></tr></thead>
+        <tbody>`;
+      for(let i=1;i<=3;i++){
+        html += `<tr>
+          <td class="row-label">Rep. ${i}</td>
+          <td><input type="number" step="0.001" id="${pid}_r${i}" placeholder="0.000" oninput="calcDirecto('${pid}')"></td>
+          <td id="${pid}_calc${i}" style="color:#7c3aed;font-weight:600">—</td>
+        </tr>`;
+      }
+      html += `<tr class="avg-row">
+        <td colspan="2" style="text-align:right;padding:8px 12px">📊 Promedio</td>
+        <td id="${pid}_avg">—</td>
+      </tr></tbody></table>`;
+
+    } else if(p.tipo === 'acidez') {
+      html += `<div class="common-fields">
+        <div class="fg"><label class="fl">Normalidad NaOH</label><input type="number" step="0.001" id="${pid}_n" placeholder="0.1000" oninput="calcTitulacion('${pid}','acidez')"></div>
+      </div>
+      <table class="reps-table">
+        <thead><tr><th>Rep.</th><th>Peso muestra (g)</th><th>Vol. NaOH (mL)</th><th>Resultado (%)</th></tr></thead>
+        <tbody>`;
+      for(let i=1;i<=3;i++){
+        html += `<tr>
+          <td class="row-label">Rep. ${i}</td>
+          <td><input type="number" step="0.0001" id="${pid}_pm${i}" placeholder="0.0000" oninput="calcTitulacion('${pid}','acidez')"></td>
+          <td><input type="number" step="0.0001" id="${pid}_v${i}"  placeholder="0.0000" oninput="calcTitulacion('${pid}','acidez')"></td>
+          <td id="${pid}_calc${i}" style="color:#7c3aed;font-weight:600">—</td>
+        </tr>`;
+      }
+      html += `<tr class="avg-row">
+        <td colspan="3" style="text-align:right;padding:8px 12px">📊 Promedio</td>
+        <td id="${pid}_avg">—</td>
+      </tr></tbody></table>`;
+
+    } else if(p.tipo === 'peroxido') {
+      html += `<table class="reps-table">
+        <thead><tr><th>Rep.</th><th>Peso muestra (g)</th><th>Vol. Na₂S₂O₃ (mL)</th><th>Resultado (meq O₂/kg)</th></tr></thead>
+        <tbody>`;
+      for(let i=1;i<=3;i++){
+        html += `<tr>
+          <td class="row-label">Rep. ${i}</td>
+          <td><input type="number" step="0.0001" id="${pid}_pm${i}" placeholder="0.0000" oninput="calcTitulacion('${pid}','peroxido')"></td>
+          <td><input type="number" step="0.0001" id="${pid}_v${i}"  placeholder="0.0000" oninput="calcTitulacion('${pid}','peroxido')"></td>
+          <td id="${pid}_calc${i}" style="color:#7c3aed;font-weight:600">—</td>
+        </tr>`;
+      }
+      html += `<tr class="avg-row">
+        <td colspan="3" style="text-align:right;padding:8px 12px">📊 Promedio</td>
+        <td id="${pid}_avg">—</td>
+      </tr></tbody></table>`;
+
+    } else if(p.tipo === 'yodo') {
+      html += `<div class="common-fields">
+        <div class="fg"><label class="fl">Normalidad tiosulfato</label><input type="number" step="0.001" id="${pid}_n" placeholder="0.1000" oninput="calcYodo('${pid}')"></div>
+        <div class="fg"><label class="fl">Vol. blanco (mL)</label><input type="number" step="0.0001" id="${pid}_vb" placeholder="0.0000" oninput="calcYodo('${pid}')"></div>
+      </div>
+      <table class="reps-table">
+        <thead><tr><th>Rep.</th><th>Peso muestra (g)</th><th>Vol. tiosulfato (mL)</th><th>Resultado (${p.unit})</th></tr></thead>
+        <tbody>`;
+      for(let i=1;i<=3;i++){
+        html += `<tr>
+          <td class="row-label">Rep. ${i}</td>
+          <td><input type="number" step="0.0001" id="${pid}_pm${i}" placeholder="0.0000" oninput="calcYodo('${pid}')"></td>
+          <td><input type="number" step="0.0001" id="${pid}_v${i}"  placeholder="0.0000" oninput="calcYodo('${pid}')"></td>
+          <td id="${pid}_calc${i}" style="color:#7c3aed;font-weight:600">—</td>
+        </tr>`;
+      }
+      html += `<tr class="avg-row">
+        <td colspan="3" style="text-align:right;padding:8px 12px">📊 Promedio</td>
+        <td id="${pid}_avg">—</td>
+      </tr></tbody></table>`;
+
+    } else if(p.tipo === 'dobi') {
+      html += `<table class="reps-table">
+        <thead><tr><th>Rep.</th><th>A₂₆₉</th><th>A₄₄₆</th><th>A₅₀₈</th><th>DOBI calc.</th></tr></thead>
+        <tbody>`;
+      for(let i=1;i<=3;i++){
+        html += `<tr>
+          <td class="row-label">Rep. ${i}</td>
+          <td><input type="number" step="0.001" id="${pid}_a269_${i}" placeholder="0.000" oninput="calcDobi('${pid}')"></td>
+          <td><input type="number" step="0.001" id="${pid}_a446_${i}" placeholder="0.000" oninput="calcDobi('${pid}')"></td>
+          <td><input type="number" step="0.001" id="${pid}_a508_${i}" placeholder="0.000" oninput="calcDobi('${pid}')"></td>
+          <td id="${pid}_calc${i}" style="color:#7c3aed;font-weight:600">—</td>
+        </tr>`;
+      }
+      html += `<tr class="avg-row">
+        <td colspan="4" style="text-align:right;padding:8px 12px">📊 Promedio DOBI</td>
+        <td id="${pid}_avg">—</td>
+      </tr></tbody></table>`;
+    }
+
+    html += '</div>'; // fin param-block
+  });
+
+  document.getElementById('ingreso-form-container').innerHTML = html;
+}
+
+// =========================================================
+// FUNCIONES DE CÁLCULO EN TIEMPO REAL
+// =========================================================
+function v(id){ return parseFloat(document.getElementById(id)?.value)||0; }
+function setCell(id, val){ const el=document.getElementById(id); if(el){ el.textContent=isFinite(val)&&val>0?val.toFixed(4):'—'; } }
+
+function calcDirecto(pid){
+  const vals = [v(`${pid}_r1`), v(`${pid}_r2`), v(`${pid}_r3`)];
+  vals.forEach((x,i)=>{ document.getElementById(`${pid}_calc${i+1}`).textContent = x>0?x.toFixed(4):'—'; });
+  const valid = vals.filter(x=>x>0);
+  const avg = valid.length ? valid.reduce((a,b)=>a+b,0)/valid.length : null;
+  document.getElementById(`${pid}_avg`).textContent = avg?avg.toFixed(4):'—';
+  document.getElementById(`res_${pid}`).textContent = avg?avg.toFixed(4):'—';
+}
+
+function calcTitulacion(pid, tipo){
+  const n = v(`${pid}_n`);
+  let validos=[], reps=[];
+  for(let i=1;i<=3;i++){
+    const pm=v(`${pid}_pm${i}`), vol=v(`${pid}_v${i}`);
+    let res = null;
+    if(tipo==='acidez'  && pm>0 && n>0) res = (vol * n * 25.6) / pm;
+    if(tipo==='peroxido'&& pm>0)        res = (vol * 10) / pm;
+    reps.push(res);
+    setCell(`${pid}_calc${i}`, res);
+    if(res!==null && isFinite(res) && res>0) validos.push(res);
+  }
+  const avg = validos.length ? validos.reduce((a,b)=>a+b,0)/validos.length : null;
+  document.getElementById(`${pid}_avg`).textContent = avg?avg.toFixed(4):'—';
+  document.getElementById(`res_${pid}`).textContent = avg?avg.toFixed(4):'—';
+}
+
+function calcYodo(pid){
+  const n = v(`${pid}_n`), vb = v(`${pid}_vb`);
+  let validos=[];
+  for(let i=1;i<=3;i++){
+    const pm=v(`${pid}_pm${i}`), vi=v(`${pid}_v${i}`);
+    const res = (pm>0&&n>0) ? ((vb-vi)*n*12.69)/pm : null;
+    setCell(`${pid}_calc${i}`, res);
+    if(res!==null && isFinite(res) && res>0) validos.push(res);
+  }
+  const avg = validos.length ? validos.reduce((a,b)=>a+b,0)/validos.length : null;
+  document.getElementById(`${pid}_avg`).textContent = avg?avg.toFixed(4):'—';
+  document.getElementById(`res_${pid}`).textContent = avg?avg.toFixed(4):'—';
+}
+
+function calcDobi(pid){
+  let validos=[];
+  for(let i=1;i<=3;i++){
+    const a269=v(`${pid}_a269_${i}`), a446=v(`${pid}_a446_${i}`), a508=v(`${pid}_a508_${i}`);
+    const den=a446+a508;
+    const res = (den>0) ? a269/den : null;
+    setCell(`${pid}_calc${i}`, res);
+    if(res!==null && isFinite(res) && res>0) validos.push(res);
+  }
+  const avg = validos.length ? validos.reduce((a,b)=>a+b,0)/validos.length : null;
+  document.getElementById(`${pid}_avg`).textContent = avg?avg.toFixed(4):'—';
+  document.getElementById(`res_${pid}`).textContent = avg?avg.toFixed(4):'—';
+}
+
+// =========================================================
+// GUARDAR
+// =========================================================
+function saveIngreso(){
+  if(!SESSION||SESSION.rol==='admin') return;
+  const muestra=document.getElementById('ing-muestra').value;
+  const codigoMuestra=document.getElementById('ing-codigo-muestra').value.trim()||'M-001';
+  const nombreAnalista=(document.getElementById('ing-nombre-analista')?.value||'').trim();
+  if(!nombreAnalista){ alert('Por favor ingresa el nombre del analista.'); document.getElementById('ing-nombre-analista')?.focus(); return; }
+  const showDobi=SESSION.rol==='fisicoquimico';
+  const params=(muestra==='rbd'?PARAMS_RBD:PARAMS_CPO).filter(p=>(!p.dobi||showDobi) && !p.soloInterno);
+  let cnt=0;
+  params.forEach(p=>{
+    const avgEl=document.getElementById(`${p.id}_avg`);
+    if(!avgEl||avgEl.textContent==='—') return;
+    const avg=parseFloat(avgEl.textContent);
+    if(!isFinite(avg)) return;
+    const reps=[];
+    for(let i=1;i<=3;i++){
+      const cel=document.getElementById(`${p.id}_calc${i}`);
+      if(cel&&cel.textContent!=='—') reps.push(parseFloat(cel.textContent));
+      else reps.push(null);
+    }
+    const idx=RESULTADOS.findIndex(r=>r.user===SESSION.user&&r.muestra===muestra&&r.paramId===p.id&&r.analista===nombreAnalista);
+    if(idx>=0) RESULTADOS.splice(idx,1);
+    RESULTADOS.push({ user:SESSION.user, codigo:SESSION.codigo, nombre:SESSION.nombre, analista:nombreAnalista, muestra, codigoMuestra, paramId:p.id, paramNombre:p.nombre, unit:p.unit, reps, promedio:avg });
+    cnt++;
+  });
+  if(cnt){ const m=document.getElementById('save-msg'); m.style.display='flex'; setTimeout(()=>m.style.display='none',2500); }
+  else alert('No hay resultados calculados. Completa los datos primarios.');
+}
+
+// =========================================================
+// REFERENCIA
+// =========================================================
+function buildRefForms(){
+  document.getElementById('ref-rbd-form').innerHTML = PARAMS_RBD.map(p=>`
+    <div class="fg"><label class="fl">${p.nombre}${p.unit?' ('+p.unit+')':''}</label>
+    <input type="number" step="0.0001" id="ref_rbd_${p.id}" value="${REF.rbd[p.id]!==undefined?REF.rbd[p.id]:''}"></div>`).join('');
+  document.getElementById('ref-cpo-form').innerHTML = PARAMS_CPO.map(p=>`
+    <div class="fg"><label class="fl">${p.nombre}${p.unit?' ('+p.unit+')':''}</label>
+    <input type="number" step="0.0001" id="ref_cpo_${p.id}" value="${REF.cpo[p.id]!==undefined?REF.cpo[p.id]:''}"></div>`).join('');
+}
+function saveRef(){
+  PARAMS_RBD.forEach(p=>{ const el=document.getElementById('ref_rbd_'+p.id); if(el&&el.value!=='') REF.rbd[p.id]=parseFloat(el.value); });
+  PARAMS_CPO.forEach(p=>{ const el=document.getElementById('ref_cpo_'+p.id); if(el&&el.value!=='') REF.cpo[p.id]=parseFloat(el.value); });
+  // Guardar en localStorage para persistencia entre recargas
+  try{
+    localStorage.setItem('interlab_ref_rbd', JSON.stringify(REF.rbd));
+    localStorage.setItem('interlab_ref_cpo', JSON.stringify(REF.cpo));
+  } catch(e){ console.warn('localStorage no disponible'); }
+  // Guardar en Firestore si está disponible
+  if(typeof window._guardarReferencia === 'function'){
+    window._guardarReferencia({rbd: REF.rbd, cpo: REF.cpo});
+  }
+  const m=document.getElementById('ref-saved');
+  if(m){ m.style.display='flex'; setTimeout(function(){ m.style.display='none'; },2500); }
+}
+
+function cargarRefGuardada(){
+  // Cargar desde localStorage
+  try{
+    var rbd = localStorage.getItem('interlab_ref_rbd');
+    var cpo = localStorage.getItem('interlab_ref_cpo');
+    if(rbd) REF.rbd = Object.assign({}, REF.rbd, JSON.parse(rbd));
+    if(cpo) REF.cpo = Object.assign({}, REF.cpo, JSON.parse(cpo));
+  } catch(e){ console.warn('Error cargando ref:', e); }
+}
+
+// =========================================================
+// Z-SCORE
+// =========================================================
+const SIGMA_OVERRIDE = {
+  sfc_20:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
+  sfc_30:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
+  sfc_35:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
+  sfc_40:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
+  humedad_hal: { sigma:0.025,  r:0.05,  R:0.05, norma:'ISO 662:2016 · σ aptitud para uso ISO 13528 §9.3 (rango 0.15%-0.25%)'   },
+  color_a:     { sigma:0.5,    r:0.5,   R:1.0,  norma:'AOCS Cc 13e-92' },
+  acidez_rbd:  { sigma:0.0027, r:0.005, R:0.01, norma:'ISO 660:2020 · Horwitz (ISO 13528) · FFA 0.05%' },
+  acidez_cpo:  { sigma:0.058,  r:0.10,  R:0.20, norma:'ISO 660:2020 · Horwitz (ISO 13528) · FFA 2.41%' },
+};
+// Parámetros excluidos del interlaboratorio (solo monitoreo interno)
+const EXCLUIR_INTERLAB = ['humedad']; // humedad horno — solo monitoreo interno, sin Z-score
+function esExcluido(paramId){ return EXCLUIR_INTERLAB.includes(paramId); }
+function getSigma(paramId, ref, muestra){
+  // Horwitz (ISO 13528): σ = 0.02 × C^0.8495
+  // C debe estar en fracción (no porcentaje) para Horwitz
+  // Excepciones con sigma definido por norma específica
+  if(SIGMA_OVERRIDE[paramId]) return SIGMA_OVERRIDE[paramId].sigma;
+  if(paramId==='acidez'){
+    var key = 'acidez_'+(muestra||'cpo');
+    if(SIGMA_OVERRIDE[key]) return SIGMA_OVERRIDE[key].sigma;
+  }
+  // Horwitz: convertir referencia a fracción másica
+  var absRef = Math.abs(ref);
+  if(absRef <= 0) return 0.1;
+  // Para porcentajes convertir a fracción (dividir /100)
+  var C = absRef / 100;
+  var sigma = 0.02 * Math.pow(C, 0.8495);
+  // Convertir de vuelta a unidades del parámetro (multiplicar x100)
+  sigma = sigma * 100;
+  return sigma > 0.0001 ? sigma : 0.1;
+}
+function checkRepetibilidad(paramId, reps){
+  var ov = SIGMA_OVERRIDE[paramId];
+  if(!ov) return null;
+  var vals = (reps||[]).filter(function(x){return x!=null&&isFinite(x);});
+  if(vals.length<2) return null;
+  var maxDiff = Math.max.apply(null,vals)-Math.min.apply(null,vals);
+  return { maxDiff:maxDiff, r:ov.r, pasa:maxDiff<=ov.r };
+}
+function buildRepSFCBlock(paramId, reps){
+  var rep = checkRepetibilidad(paramId, reps);
+  if(!rep) return '';
+  var vals = (reps||[]).filter(function(x){return x!=null&&isFinite(x);});
+  var maxV = Math.max.apply(null,vals).toFixed(4);
+  var minV = Math.min.apply(null,vals).toFixed(4);
+  var diff = rep.maxDiff.toFixed(4);
+  var pasa = rep.pasa;
+  var bg   = pasa?'#dcfce7':'#fee2e2';
+  var bdr  = pasa?'#16a34a':'#dc2626';
+  var col  = pasa?'#15803d':'#991b1b';
+  var sim  = pasa?'&le;':'&gt;';
+  var ico  = pasa?'&#x2705;':'&#x274c;';
+  var txt  = pasa?'PASA repetibilidad':'NO PASA repetibilidad';
+  return '<div style="background:'+bg+';border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid '+bdr+'">'
+    +'<div style="font-size:13px;font-weight:700;color:'+col+';margin-bottom:6px">&#128208; Paso 3b &mdash; Repetibilidad SFC (AOCS Cd 16b-93)</div>'
+    +'<div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Criterio: Rango (max &minus; min) &le; r = 1.3 unidades absolutas</div>'
+    +'<div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Rango = max('+maxV+') &minus; min('+minV+') = <strong>'+diff+'</strong></div>'
+    +'<div style="font-size:16px;font-weight:800;color:'+col+'">'+ico+' '+txt+' &nbsp;&middot;&nbsp; '+diff+' '+sim+' 1.3</div>'
+    +'<div style="font-size:11px;color:#78716c;margin-top:4px">La diferencia entre la replica mayor y menor no debe superar r = 1.3 %SFC (AOCS Cd 16b-93)</div>'
+    +'</div>';
+}
+function calcZ(val,ref,paramId,muestra){
+  if(ref===undefined||ref===null) return null;
+  return (val-ref)/getSigma(paramId||'',ref,muestra);
+}
+function zClass(z){ const a=Math.abs(z); if(a<=2) return{cls:'z-ok',label:'Satisfactorio',badge:'b-ok'}; if(a<=3) return{cls:'z-warn',label:'Cuestionable',badge:'b-warn'}; return{cls:'z-fail',label:'No satisfactorio',badge:'b-fail'}; }
+
+// =========================================================
+// DASHBOARD
+// =========================================================
+function refreshDashboard(){
+  const analistas=USERS.filter(u=>u.rol!=='admin');
+  const conDatos=new Set(RESULTADOS.map(r=>r.user)).size;
+  const withRef=RESULTADOS.filter(r=>{ if(esExcluido(r.paramId)) return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+  const sat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId,r.muestra))<=2; }).length;
+  const nosat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId,r.muestra))>3; }).length;
+  document.getElementById('dashboard-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-icon" style="background:#E6F1FB">👥</div><div><div class="metric-label">Participantes</div><div class="metric-val" style="color:#185FA5">${analistas.length}</div><div class="metric-sub">Laboratorios</div></div></div>
+    <div class="metric-card"><div class="metric-icon" style="background:#EAF3DE">✅</div><div><div class="metric-label">Con datos</div><div class="metric-val" style="color:#3B6D11">${conDatos}</div><div class="metric-sub">Han ingresado</div></div></div>
+    <div class="metric-card"><div class="metric-icon" style="background:#EAF3DE">🎯</div><div><div class="metric-label">Satisfactorios</div><div class="metric-val" style="color:#16a34a">${sat}</div><div class="metric-sub">|Z| ≤ 2</div></div></div>
+    <div class="metric-card"><div class="metric-icon" style="background:#FCEBEB">⚠️</div><div><div class="metric-label">No satisfact.</div><div class="metric-val" style="color:#dc2626">${nosat}</div><div class="metric-sub">|Z| &gt; 3</div></div></div>`;
+  document.getElementById('dashboard-parts').innerHTML=analistas.map(u=>{
+    const cnt=RESULTADOS.filter(r=>r.user===u.user).length;
+    const foto = FOTOS[u.user];
+    const avatarEl = foto
+      ? `<img src="${foto}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid ${u.color||'#7c3aed'};flex-shrink:0">`
+      : `<div class="part-avatar" style="background:${u.color||'#7c3aed'};width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0">${ini(u.nombre)}</div>`;
+    return`<div class="part-item">
+      <div style="display:flex;align-items:center;gap:8px">
+        ${avatarEl}
+        <div><div style="font-size:12px;font-weight:600">${u.nombre}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-top:2px">
+          <span class="code-badge" style="font-size:10px">${u.codigo}</span>
+          <span style="font-size:10px;color:var(--light)">${u.rol==='fisicoquimico'?'Con DOBI':'Sin DOBI'}</span>
+        </div></div>
+      </div>
+      <span class="badge ${cnt>0?'b-ok':'b-gray'}">${cnt>0?cnt+' mediciones':'Pendiente'}</span>
+    </div>`;
+  }).join('');
+  renderDashChart();
+}
+function renderDashChart(){
+  const ctx=document.getElementById('dash-chart').getContext('2d');
+  if(dashChart) dashChart.destroy();
+  const analistas=USERS.filter(u=>u.rol!=='admin');
+  const labels=analistas.map(u=>u.codigo);
+  const data=analistas.map(u=>{
+    const myR=RESULTADOS.filter(r=>r.user===u.user);
+    const withRef=myR.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+    if(!withRef.length) return 0;
+    const sat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId,r.muestra))<=2; }).length;
+    return Math.round(sat/withRef.length*100);
+  });
+  dashChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'% Satisfactorios',data,backgroundColor:analistas.map((u,i)=>data[i]>=80?'#16a34a':data[i]>=60?'#d97706':'#dc2626'),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{max:100,ticks:{callback:v=>v+'%'},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+}
+
+// =========================================================
+// MIS RESULTADOS
+// =========================================================
+function renderMisResultados(){
+  if(!SESSION) return;
+  const myR=RESULTADOS.filter(r=>r.user===SESSION.user);
+  const el=document.getElementById('mis-resultados-content');
+  if(!myR.length){ el.innerHTML='<div class="alert alert-warn">⚠️ Aún no has guardado datos. Ve a "Ingresar datos".</div>'; return; }
+  const por={};
+  myR.forEach(r=>{ if(!por[r.muestra]) por[r.muestra]=[]; por[r.muestra].push(r); });
+  let html='';
+  Object.entries(por).forEach(([m,rows])=>{
+    html+=`<div class="card"><div class="card-title"><span class="badge ${m==='rbd'?'b-rbd':'b-cpo'}">${m.toUpperCase()}</span> Código muestra: <span class="code-badge">${rows[0].codigoMuestra}</span></div>
+    <div class="table-wrap"><table>
+    <thead><tr><th>Parámetro</th><th>Rep.1</th><th>Rep.2</th><th>Rep.3</th><th>Promedio</th><th>Unidad</th><th>Referencia</th><th>Z</th><th>Calificación</th></tr></thead><tbody>`;
+    rows.forEach(r=>{
+      const rv=m==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
+      const rr=r.reps.map(x=>x!==null&&isFinite(x)?x.toFixed(4):'—');
+      if(rv===undefined){
+        html+=`<tr><td>${r.paramNombre}</td><td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td><td><strong>${r.promedio.toFixed(4)}</strong></td><td>${r.unit}</td><td colspan="3" style="color:var(--light)">Sin referencia</td></tr>`;
+      } else {
+        const z=calcZ(r.promedio,rv,r.paramId,r.muestra); const zc=zClass(z);
+        html+=`<tr><td>${r.paramNombre}</td><td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td><td><strong>${r.promedio.toFixed(4)}</strong></td><td>${r.unit}</td><td>${rv}</td><td class="${zc.cls}">${z.toFixed(2)}</td><td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`;
+      }
+    });
+    html+='</tbody></table></div></div>';
+  });
+  el.innerHTML=html;
+}
+
+// =========================================================
+// TODOS LOS RESULTADOS (admin)
+// =========================================================
+function renderAllResults(){
+  const tbody=document.getElementById('results-body');
+  if(!RESULTADOS.length){ tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:28px;color:var(--light)">Sin resultados aún</td></tr>'; return; }
+  var sorted = RESULTADOS.filter(function(r){return !esExcluido(r.paramId);}).slice().sort(function(a,b){
+    // Sort by analista name, then muestra (rbd before cpo), then param
+    var na=(a.analista||a.user||'').toLowerCase();
+    var nb=(b.analista||b.user||'').toLowerCase();
+    if(na!==nb) return na<nb?-1:1;
+    if(a.muestra!==b.muestra) return a.muestra==='rbd'?-1:1;
+    return (a.paramId||'').localeCompare(b.paramId||'');
+  });
+  tbody.innerHTML=sorted.map(r=>{
+    const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
+    const rr=(r.reps||[]).map(x=>x!==null&&isFinite(x)?Number(x).toFixed(4):'—');
+    const labNombre = r.nombre || r.user || '—';
+    const analista  = r.analista || '—';
+    const badgeMuestra = `<span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span>`;
+    if(rv===undefined) return`<tr>
+      <td><span class="code-badge">${r.codigo}</span></td>
+      <td style="font-size:12px">${labNombre}</td>
+      <td style="font-size:12px">${analista}</td>
+      <td>${badgeMuestra}</td>
+      <td style="font-size:12px">${r.paramNombre}</td>
+      <td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td>
+      <td><strong>${Number(r.promedio).toFixed(4)}</strong></td>
+      <td>—</td><td>—</td><td><span class="badge b-gray">Sin ref.</span></td></tr>`;
+    const z=calcZ(r.promedio,rv,r.paramId,r.muestra); const zc=zClass(z);
+    return`<tr>
+      <td><span class="code-badge">${r.codigo}</span></td>
+      <td style="font-size:12px">${labNombre}</td>
+      <td style="font-size:12px">${analista}</td>
+      <td>${badgeMuestra}</td>
+      <td style="font-size:12px">${r.paramNombre}</td>
+      <td>${rr[0]||'—'}</td><td>${rr[1]||'—'}</td><td>${rr[2]||'—'}</td>
+      <td><strong>${Number(r.promedio).toFixed(4)}</strong></td>
+      <td>${rv}</td>
+      <td class="${zc.cls}" style="font-weight:700">${z.toFixed(2)}</td>
+      <td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`;
+  }).join('');
+}
+
+// =========================================================
+// ESTADÍSTICAS
+// =========================================================
+function populateStatParams(){
+  const m = document.getElementById('stat-muestra').value;
+  const params = m==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  const sel = document.getElementById('stat-param');
+  const current = sel.value; // keep current selection if possible
+  sel.innerHTML = params.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  // Restore previous selection if still valid
+  if(params.find(p=>p.id===current)) sel.value = current;
+}
+function refreshStatChart(){
+  const m=document.getElementById('stat-muestra').value;
+  const pid=document.getElementById('stat-param').value;
+  const param=(m==='rbd'?PARAMS_RBD:PARAMS_CPO).find(p=>p.id===pid);
+  const refV=(m==='rbd'?REF.rbd:REF.cpo)[pid];
+  // Group by lab — one bar per lab
+  const allFiltered=RESULTADOS.filter(r=>r.muestra===m&&r.paramId===pid);
+  // Get unique labs and average their promedio (in case of duplicates)
+  const labMap={};
+  allFiltered.forEach(r=>{ const k=r.codigo||r.user; if(!labMap[k]) labMap[k]={codigo:k,nombre:r.nombre||k,promedios:[]}; labMap[k].promedios.push(r.promedio); });
+  const filtered=Object.values(labMap).map(l=>({ codigo:l.codigo, nombre:l.nombre, promedio:l.promedios.reduce((a,b)=>a+b,0)/l.promedios.length }));
+  const ctx=document.getElementById('stat-chart').getContext('2d');
+  if(statChart) statChart.destroy();
+  if(!filtered.length){ ctx.clearRect(0,0,800,260); return; }
+  const datasets=[{label:'Promedio',data:filtered.map(r=>r.promedio),backgroundColor:filtered.map(r=>{ if(!refV) return'#378ADD'; const z=Math.abs(calcZ(r.promedio,refV)); return z<=2?'#16a34a':z<=3?'#d97706':'#dc2626'; }),borderRadius:5,borderSkipped:false}];
+  if(refV!==undefined) datasets.push({type:'line',label:'Referencia',data:Array(filtered.length).fill(refV),borderColor:'#185FA5',borderDash:[5,3],borderWidth:2,pointRadius:0,fill:false});
+  statChart=new Chart(ctx,{type:'bar',data:{labels:filtered.map(r=>r.codigo+' · '+(r.nombre||'')),datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(4)}`}}},scales:{y:{title:{display:true,text:param?param.unit:''},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+}
+function renderZScores(){
+  populateAnalistaFilter();
+  const tbody=document.getElementById('zscore-body');
+  const withRef=RESULTADOS.filter(r=>{ if(esExcluido(r.paramId)) return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+  if(!withRef.length){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--light)">Sin datos</td></tr>'; return; }
+  tbody.innerHTML=withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; const s=Math.abs(rv)*0.03||0.1; const z=calcZ(r.promedio,rv,r.paramId,r.muestra); const zc=zClass(z); return`<tr><td><span class="code-badge">${r.codigo}</span></td><td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td><td>${r.paramNombre}</td><td>${r.promedio.toFixed(4)} ${r.unit}</td><td>${rv}</td><td>${s.toFixed(4)}</td><td class="${zc.cls}">${z.toFixed(2)}</td><td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`; }).join('');
+}
+
+// =========================================================
+// PARTICIPANTES
+// =========================================================
+function renderParticipants(){
+  const labInfo = {
+    'LAB-01': { titulo:'🔬 Fisico Quimico Codazzi',        bg:'linear-gradient(135deg,#ede9fe,#f5f3ff)', border:'#7c3aed', color:'#7c3aed' },
+    'LAB-02': { titulo:'🌴 Extractora Maria la Baja',       bg:'linear-gradient(135deg,#f0fdf4,#ecfdf5)', border:'#0d9488', color:'#0d9488' },
+    'LAB-03': { titulo:'🏭 Grasas y Aceites de Catatumbo', bg:'linear-gradient(135deg,#eff6ff,#ebf5ff)', border:'#2563eb', color:'#2563eb' },
+    'LAB-04': { titulo:'🌊 Extractora del Sinú',            bg:'linear-gradient(135deg,#fffbeb,#fef9c3)', border:'#d97706', color:'#d97706' },
+  };
+
+  // Agrupar RESULTADOS por codigo de laboratorio
+  const grupos = {}; // codigo -> { laboratorio, analistas: Set, mediciones }
+  RESULTADOS.forEach(r => {
+    const cod  = r.codigo  || '';
+    const lab  = r.nombre  || cod;
+    const anal = (r.analista || lab || '').trim();
+    if(!cod) return;
+    if(!grupos[cod]) grupos[cod] = { laboratorio: lab, analistas: new Set(), mediciones: 0 };
+    if(anal) grupos[cod].analistas.add(anal);
+    grupos[cod].mediciones++;
+  });
+
+  // Si un laboratorio no tiene datos aún, igual mostrarlo desde USERS
+  USERS.filter(u=>u.rol!=='admin').forEach(u => {
+    if(!grupos[u.codigo]) grupos[u.codigo] = { laboratorio: u.nombre, analistas: new Set(), mediciones: 0 };
+  });
+
+  const html = ['LAB-01','LAB-02','LAB-03','LAB-04'].map(cod => {
+    const g    = grupos[cod];
+    if(!g) return '';
+    const info = labInfo[cod];
+    const u    = USERS.find(x => x.codigo === cod);
+    const foto = u ? FOTOS[u.user] : null;
+
+    const avatarEl = foto
+      ? `<img src="${foto}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:3px solid ${info.border};flex-shrink:0">`
+      : `<div style="width:48px;height:48px;border-radius:50%;background:${info.color};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0">${cod}</div>`;
+
+    const analistasList = [...g.analistas];
+    const analistasHTML = analistasList.length
+      ? analistasList.map(nombre => {
+          const ini2 = nombre.split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+          const nombreEnc = encodeURIComponent(nombre);
+          return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9">
+            <div style="width:30px;height:30px;border-radius:50%;background:${info.color};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0">${ini2}</div>
+            <span style="font-size:13px;color:#1e293b;font-weight:500;flex:1">${nombre}</span>
+            <label style="cursor:pointer;position:relative;display:inline-block">
+            <div style="background:#f5f3ff;border:1px solid #a78bfa;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;color:#7c3aed;white-space:nowrap" title="Subir foto del analista">${getFotoAnalista(cod,nombre)?'🔄':'📷'}</div>
+            <input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="uploadFotoAnalista(this,'${cod}','${nombreEnc}')">
+          </label>
+          <button onclick="verCarta('${nombreEnc}','${cod}')" style="background:${info.color};color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">📄 Ver carta</button>
+          </div>`;
+        }).join('')
+      : `<div style="font-size:12px;color:#94a3b8;padding:6px 0">Sin datos aún</div>`;
+
+    return `<div style="margin-bottom:16px;border-radius:14px;overflow:hidden;border:1px solid ${info.border}40">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:${info.bg};border-bottom:1px solid ${info.border}30">
+        ${avatarEl}
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:800;color:#1e293b">${info.titulo}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px">
+            Código <strong>${cod}</strong> · ${analistasList.length} analista${analistasList.length!==1?'s':''} · ${g.mediciones} mediciones
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="badge ${g.mediciones>0?'b-ok':'b-gray'}" style="font-size:10px">${g.mediciones>0?g.mediciones+' med.':'Pendiente'}</span>
+          ${u?`<label style="cursor:pointer;position:relative">
+            <div style="background:rgba(255,255,255,.8);border:1px solid ${info.border};border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;color:${info.color};white-space:nowrap">${foto?'🔄 Foto':'📷 Foto'}</div>
+            <input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="uploadFotoAdmin(this,'${u.user}')">
+          </label>`:''}
+        </div>
+      </div>
+      <div style="padding:8px 16px;background:#fff">
+        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Analistas</div>
+        ${analistasHTML}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('part-list').innerHTML = html || '<p style="color:var(--light);font-size:13px">Sin participantes.</p>';
+}
+
+// =========================================================
+// SISTEMA DE FOTOS — Firestore como fuente de verdad
+// =========================================================
+
+function guardarFotoIDB(key, base64){ /* no-op, Firestore es la fuente */ return Promise.resolve(true); }
+
+function comprimirFoto(base64, maxSize, callback){
+  comprimirFotoCalidad(base64, maxSize, 0.7, callback);
+}
+
+function comprimirFotoCalidad(base64, maxSize, quality, callback){
+  const img = new Image();
+  img.onload = function(){
+    // Recorte cuadrado centrado (evita que la cara quede cortada o estirada)
+    const side = Math.min(img.width, img.height);
+    const sx = Math.round((img.width - side) / 2);
+    const sy = Math.round((img.height - side) / 2);
+    const canvas = document.createElement('canvas');
+    canvas.width = maxSize;
+    canvas.height = maxSize;
+    canvas.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, maxSize, maxSize);
+    // Reducir calidad iterativamente hasta quedar bajo 700KB
+    let result = canvas.toDataURL('image/jpeg', quality);
+    let q = quality;
+    while(result.length > 900000 && q > 0.3){
+      q -= 0.1;
+      result = canvas.toDataURL('image/jpeg', q);
+    }
+    callback(result);
+  };
+  img.src = base64;
+}
+
+function uploadFotoAdmin(input, userKey){
+  if(!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    comprimirFotoCalidad(e.target.result, 400, 0.85, function(compressed){
+      FOTOS[userKey] = compressed;
+      renderParticipants();
+      // Guardar en Firestore
+      if(typeof window._guardarFoto === 'function'){
+        window._guardarFoto(userKey, compressed).then(function(res){
+          if(res&&res.ok) console.log('Foto lab guardada:', userKey);
+          else console.warn('Error Firestore foto lab:', res&&res.error);
+        });
+      }
+      // Actualizar topbar si es el usuario actual
+      if(SESSION && SESSION.user===userKey){
+        const tbAvatar = document.getElementById('tb-avatar');
+        if(tbAvatar){
+          tbAvatar.innerHTML=`<img src="${compressed}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+          tbAvatar.style.background='transparent';
+        }
+      }
+    });
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// Fotos se cargan desde Firestore via evento fotosListas (ver módulo Firebase)
+
+function uploadFotoAnalista(input, labCodigo, nombreEnc){
+  if(!input.files||!input.files[0]) return;
+  const nombre = decodeURIComponent(nombreEnc);
+  const userKey = fotoKeyAnalista(labCodigo, nombre);
+  const reader = new FileReader();
+  reader.onload = function(e){
+    comprimirFotoCalidad(e.target.result, 400, 0.85, async function(compressed){
+      FOTOS[userKey] = compressed;
+      renderParticipants();
+      // Guardar en IndexedDB local
+      // Guardar en Firestore
+      if(typeof window._guardarFoto === 'function'){
+        const res = await window._guardarFoto(userKey, compressed);
+        if(!res||!res.ok) console.warn('Firestore foto error:', res?.error);
+      }
+    });
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function deleteFoto(userKey){
+  delete FOTOS[userKey];
+  renderParticipants();
+}
+function removeParticipant(uname){ if(!confirm('¿Eliminar?')) return; USERS=USERS.filter(u=>u.user!==uname); RESULTADOS=RESULTADOS.filter(r=>r.user!==uname); renderParticipants(); refreshDashboard(); }
+function addParticipant(){
+  const nombre=document.getElementById('new-name').value.trim();
+  const codigo=document.getElementById('new-codigo').value.trim().toUpperCase();
+  const uname=document.getElementById('new-user').value.trim();
+  const pass=document.getElementById('new-pass').value;
+  const rol=document.getElementById('new-tipo').value;
+  const color=document.getElementById('new-color').value;
+  const grupo=document.getElementById('new-grupo')?.value||'extractoras';
+  if(!nombre||!codigo||!uname||!pass){ alert('Completa todos los campos.'); return; }
+  if(USERS.find(u=>u.user===uname)){ alert('Usuario ya existe.'); return; }
+  if(USERS.find(u=>u.codigo===codigo)){ alert('Código ya existe.'); return; }
+  USERS.push({user:uname,pass,rol,nombre,codigo,color,grupo});
+  ['new-name','new-codigo','new-user','new-pass'].forEach(id=>document.getElementById(id).value='');
+  const m=document.getElementById('part-msg'); m.style.display='flex'; setTimeout(()=>m.style.display='none',2200);
+  renderParticipants(); refreshDashboard();
+}
+
+// =========================================================
+// FOTO BANNER LOGIN
+// =========================================================
+function loadBannerPhoto(input){
+  if(!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('login-banner-img');
+    const banner = document.getElementById('login-banner-photo');
+    if(img){ img.src = e.target.result; img.style.display='block'; }
+    if(banner) banner.style.display='none';
+    localStorage.setItem('interlab_banner', e.target.result);
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// =========================================================
+// CARTA DE DESEMPEÑO ANALISTA
+// =========================================================
+var CARTA_CURRENT = null; // { nombre, labCodigo, userKey }
+
+function verCarta(nombreEnc, labCodigo){
+  const nombre = decodeURIComponent(nombreEnc);
+  const u = USERS.find(x=>x.codigo===labCodigo);
+  CARTA_CURRENT = { nombre, labCodigo, userKey: fotoKeyAnalista(labCodigo, nombre) };
+  const labInfo = {
+    'LAB-01': { titulo:'Fisico Quimico Codazzi',        color:'#7c3aed' },
+    'LAB-02': { titulo:'Extractora Maria la Baja',       color:'#0d9488' },
+    'LAB-03': { titulo:'Grasas y Aceites de Catatumbo', color:'#2563eb' },
+    'LAB-04': { titulo:'Extractora del Sinú',            color:'#d97706' },
+  };
+  const info = labInfo[labCodigo] || { titulo: labCodigo, color:'#7c3aed' };
+  const foto = FOTOS[fotoKeyAnalista(labCodigo, nombre)] || null;
+
+  const resultados = RESULTADOS.filter(r => r.analista === nombre && r.codigo === labCodigo && !esExcluido(r.paramId));
+  if(!resultados.length){ alert('No hay resultados registrados para este analista.'); return; }
+
+  const muestras = {};
+  resultados.forEach(r => {
+    const m = r.muestra || 'cpo';
+    if(!muestras[m]) muestras[m] = [];
+    muestras[m].push(r);
+  });
+
+  let totalSat=0, totalCues=0, totalNoSat=0;
+
+  const muestrasHTML = Object.entries(muestras).map(([muestra, params])=>{
+    const mNombre = muestra==='rbd' ? 'Aceite Refinado (RBD)' : 'Aceite Crudo de Palma (CPO)';
+    const mColor  = muestra==='rbd' ? '#2563eb' : '#d97706';
+    const mIcon   = muestra==='rbd' ? '⚪' : '🟡';
+    const filas = params.map(r=>{
+      const ref = (REF[muestra]||{})[r.paramId];
+      if(ref===undefined||ref===null) return '';
+      const sigma = getSigma(r.paramId, ref, muestra);
+      const z = (r.promedio - ref) / sigma;
+      const za = Math.abs(z);
+      const cal = za<=2?'Satisfactorio':za<=3?'Cuestionable':'No satisfactorio';
+      const calColor = za<=2?'#16a34a':za<=3?'#d97706':'#dc2626';
+      const calBg = za<=2?'#f0fdf4':za<=3?'#fffbeb':'#fef2f2';
+      const calIcon = za<=2?'✅':za<=3?'⚠️':'❌';
+      if(za<=2) totalSat++; else if(za<=3) totalCues++; else totalNoSat++;
+      const reps = (r.reps||[]).map(v=>v!=null?Number(v).toFixed(4):'—').join(' | ');
+      const repsVals = (r.reps||[]).filter(v=>v!=null&&isFinite(v));
+      const cvPct = (()=>{ if(repsVals.length<2) return null; const m=repsVals.reduce((a,b)=>a+b,0)/repsVals.length; if(!m) return null; const de=Math.sqrt(repsVals.reduce((a,b)=>a+(b-m)**2,0)/(repsVals.length-1)); return (de/m*100); })();
+      const cvColor = cvPct===null?'#94a3b8':cvPct<=2?'#16a34a':cvPct<=5?'#d97706':'#dc2626';
+      return `<tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:8px 10px;font-size:12px;font-weight:600">${r.paramNombre||r.paramId}</td>
+        <td style="padding:8px 10px;font-size:11px;color:#64748b;text-align:center">${reps}</td>
+        <td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center">${r.promedio!=null?Number(r.promedio).toFixed(4):'—'}</td>
+        <td style="padding:8px 10px;font-size:12px;text-align:center;font-weight:600;color:${cvColor}">${cvPct!==null?cvPct.toFixed(2)+'%':'—'}</td>
+        <td style="padding:8px 10px;font-size:12px;text-align:center">${ref}</td>
+        <td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center;color:${za>2?'#dc2626':'#16a34a'}">${z.toFixed(2)}</td>
+        <td style="padding:8px 10px;text-align:center">
+          <span style="background:${calBg};color:${calColor};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">${calIcon} ${cal}</span>
+        </td>
+      </tr>`;
+    }).join('');
+    return `<div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:16px">${mIcon}</span>
+        <span style="font-size:14px;font-weight:800;color:${mColor}">${mNombre}</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+        <thead><tr style="background:#f8fafc">
+          <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:left">PARÁMETRO</th>
+          <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">REP 1 | REP 2 | REP 3</th>
+          <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">PROMEDIO</th>
+          <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">CV%</th>
+          <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">REFERENCIA</th>
+          <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">Z-SCORE</th>
+          <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">CALIFICACIÓN</th>
+        </tr></thead>
+        <tbody>${filas}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+
+  const total = totalSat+totalCues+totalNoSat;
+  const pct = total>0?Math.round((totalSat/total)*100):0;
+  const globalColor = pct>=80?'#16a34a':pct>=60?'#d97706':'#dc2626';
+  const globalLabel = pct>=80?'Desempeño Satisfactorio':pct>=60?'Desempeño Cuestionable':'Desempeño No Satisfactorio';
+  const avatarEl = foto
+    ? `<img src="${foto}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid ${info.color};flex-shrink:0">`
+    : `<div style="width:150px;height:150px;border-radius:50%;background:${info.color};display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:800;color:#fff;flex-shrink:0">${nombre.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>`;
+  const fecha = new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'});
+
+  document.getElementById('carta-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:20px;border-bottom:3px solid ${info.color}">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:1px;text-transform:uppercase">OLEOFLORES S.A.S</div>
+        <div style="font-size:20px;font-weight:900;color:#1e293b;margin-top:4px">Carta de Desempeño</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">Ejercicio Interlaboratorio · Aceite de Palma</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px">Evaluado bajo <strong>ISO 13528</strong> · ${fecha}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:#94a3b8">Certificado de referencia</div>
+        <div style="font-size:12px;font-weight:700;color:#1e293b">${REF_META.certificado||'—'}</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:4px">${REF_META.laboratorio||''}</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding:16px;background:#f8fafc;border-radius:12px;border-left:4px solid ${info.color}">
+      ${avatarEl}
+      <div style="flex:1">
+        <div style="font-size:18px;font-weight:800;color:#1e293b">${nombre}</div>
+        <div style="font-size:13px;color:#64748b;margin-top:3px">🏭 ${info.titulo}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:2px">Código: <strong>${labCodigo}</strong> · Analista de Laboratorio</div>
+      </div>
+      <div style="text-align:center;padding:12px 20px;background:${globalColor}15;border-radius:12px;border:2px solid ${globalColor}40">
+        <div style="font-size:28px;font-weight:900;color:${globalColor}">${pct}%</div>
+        <div style="font-size:10px;font-weight:700;color:${globalColor};text-transform:uppercase;margin-bottom:6px">${globalLabel}</div>
+        <div style="display:flex;gap:6px;justify-content:center">
+          <span style="font-size:10px;background:#f0fdf4;color:#16a34a;border-radius:10px;padding:2px 8px;font-weight:700">✅ ${totalSat}</span>
+          <span style="font-size:10px;background:#fffbeb;color:#d97706;border-radius:10px;padding:2px 8px;font-weight:700">⚠️ ${totalCues}</span>
+          <span style="font-size:10px;background:#fef2f2;color:#dc2626;border-radius:10px;padding:2px 8px;font-weight:700">❌ ${totalNoSat}</span>
+        </div>
+      </div>
+    </div>
+    ${muestrasHTML}
+    <div style="margin-top:32px;padding-top:20px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-end">
+      <div style="font-size:10px;color:#94a3b8">
+        <div>Organizado por: <strong>OLEOFLORES S.A.S</strong> · Laboratorio Fisicoquímico</div>
+        <div>Codazzi, Cesar · Colombia</div>
+        <div style="margin-top:4px">Método estadístico: <strong>ISO 13528</strong> · σ: Horwitz / Aptitud para uso</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:150px;border-top:1px solid #1e293b;padding-top:6px;font-size:11px;color:#1e293b;font-weight:600">Coordinador del Ejercicio</div>
+      </div>
+    </div>`;
+
+  document.getElementById('carta-modal').style.display='block';
+  document.body.style.overflow='hidden';
+}
+function subirFotoCarta(input){
+  if(!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    // Comprimir a max 200px y calidad 0.6 para garantizar < 200KB
+    comprimirFotoCalidad(e.target.result, 400, 0.85, async function(compressed){
+
+      // 1. Actualizar avatar en la carta (preview inmediato)
+      const first = document.querySelector('#carta-content img[style*="150px"], #carta-content div[style*="150px"]');
+      if(first) first.outerHTML = '<img src="'+compressed+'" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid #7c3aed;flex-shrink:0">';
+
+      // 2. Guardar en Firestore y en memoria local
+      if(CARTA_CURRENT && typeof window._guardarFoto === 'function'){
+        const userKey = CARTA_CURRENT.userKey;
+        FOTOS[userKey] = compressed;
+        const res = await window._guardarFoto(userKey, compressed);
+        if(res && res.ok){
+          cerrarCarta();
+          renderParticipants();
+          renderEvaluacion();
+        } else {
+          alert('No se pudo guardar la foto: ' + (res ? res.error : 'Sin conexion'));
+        }
+      } else {
+        if(CARTA_CURRENT) FOTOS[CARTA_CURRENT.userKey] = compressed;
+        cerrarCarta();
+      }
+    });
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+function cerrarCarta(){
+  document.getElementById('carta-modal').style.display='none';
+  document.body.style.overflow='';
+}
+function imprimirCarta(){
+  const content = document.getElementById('carta-content').innerHTML;
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Carta de Desempeño</title>
+  <style>body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:32px;color:#1e293b}table{width:100%;border-collapse:collapse}@media print{body{padding:16px}}</style>
+  </head><body>${content}</body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(),600);
+}
+
+populateStatParams();
+const FOTOS = {}; // clave -> dataURL (LAB-01::Nombre Analista)
+
+// Escuchar cuando Firestore carga las fotos al inicio
+window.addEventListener('fotosListas', function(e){
+  const fotosDB = e.detail || {};
+  Object.keys(fotosDB).forEach(function(k){ FOTOS[k] = fotosDB[k]; });
+  renderParticipants();
+  renderEvaluacion();
+});
+
+// Clave única por ANALISTA individual: "LAB-01::Adriana Guzman"
+function fotoKeyAnalista(labCodigo, nombreAnalista){
+  return labCodigo + '::' + (nombreAnalista||'').trim();
+}
+function getFotoAnalista(labCodigo, nombreAnalista){
+  const key = fotoKeyAnalista(labCodigo, nombreAnalista);
+  return FOTOS[key] || null;
+}
+
+function previewPhoto(input){
+  if(!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  const fname = input.files[0].name;
+  reader.onload = e => {
+    const prev = document.getElementById('photo-preview');
+    const wrap = document.getElementById('photo-preview-wrap');
+    const btn  = document.getElementById('photo-btn-label');
+    const nm   = document.getElementById('photo-name');
+    if(prev) prev.src = e.target.result;
+    if(wrap) wrap.style.display = 'flex';
+    if(btn)  btn.textContent = '✅ Foto seleccionada';
+    if(nm)   nm.textContent = fname;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function getPhotoEl(user, size=48, cls=''){
+  const u = USERS.find(x=>x.user===user);
+  const foto = FOTOS[user];
+  if(foto) return `<img src="${foto}" class="${cls}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:2px solid #a78bfa;flex-shrink:0">`;
+  const bg = u ? u.color||'#7c3aed' : '#7c3aed';
+  const name = u ? u.nombre : user;
+  return `<div class="${cls}" style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.33)}px;font-weight:800;color:#fff;flex-shrink:0">${ini(name)}</div>`;
+}
+
+// Patch addParticipant to save photo
+const _origAdd = addParticipant;
+function addParticipant(){
+  const nombre=document.getElementById('new-name').value.trim();
+  const codigo=document.getElementById('new-codigo').value.trim().toUpperCase();
+  const uname=document.getElementById('new-user').value.trim();
+  const pass=document.getElementById('new-pass').value;
+  const rol=document.getElementById('new-tipo').value;
+  const color=document.getElementById('new-color').value;
+  if(!nombre||!codigo||!uname||!pass){ alert('Completa todos los campos.'); return; }
+  if(USERS.find(u=>u.user===uname)){ alert('Usuario ya existe.'); return; }
+  if(USERS.find(u=>u.codigo===codigo)){ alert('Código ya existe.'); return; }
+  USERS.push({user:uname,pass,rol,nombre,codigo,color});
+  // save photo if uploaded
+  const photoEl = document.getElementById('new-photo');
+  if(photoEl && photoEl.files && photoEl.files[0]){
+    const reader = new FileReader();
+    reader.onload = e => { FOTOS[uname] = e.target.result; };
+    reader.readAsDataURL(photoEl.files[0]);
+  }
+  ['new-name','new-codigo','new-user','new-pass'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('photo-preview-wrap').style.display='none';
+  document.getElementById('photo-btn-label').textContent='📷 Seleccionar foto';
+  const m=document.getElementById('part-msg'); m.style.display='flex'; setTimeout(()=>m.style.display='none',2200);
+  renderParticipants(); refreshDashboard();
+}
+
+// =========================================================
+// ESTADÍSTICAS: calcular por analista
+// =========================================================
+function calcCV(reps){
+  const vals = reps.filter(r=>r!==null&&isFinite(r));
+  if(vals.length<2) return null;
+  const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
+  if(mean===0) return null;
+  const std = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1));
+  return (std/mean)*100;
+}
+function calcBias(val,ref){ return ((val-ref)/ref)*100; }
+function calcSigma(ref){ return Math.abs(ref)*0.03||0.1; }
+
+function getAnalistaStats(user){
+  const myRes = RESULTADOS.filter(r=>r.user===user && !esExcluido(r.paramId));
+  const withRef = myRes.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+  if(!withRef.length) return null;
+  const zScores = withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv,r.paramId,r.muestra); });
+  const sat = zScores.filter(z=>Math.abs(z)<=2).length;
+  const cues = zScores.filter(z=>Math.abs(z)>2&&Math.abs(z)<=3).length;
+  const nosat = zScores.filter(z=>Math.abs(z)>3).length;
+  const pctSat = (sat/zScores.length)*100;
+  const cvVals = withRef.map(r=>calcCV(r.reps)).filter(v=>v!==null);
+  const avgCV = cvVals.length ? cvVals.reduce((a,b)=>a+b,0)/cvVals.length : null;
+  const biasVals = withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcBias(r.promedio,rv)); });
+  const avgBias = biasVals.reduce((a,b)=>a+b,0)/biasVals.length;
+  // Puntuación: 60% z-score + 25% CV + 15% sesgo (invertido, menor=mejor)
+  const scoreZ = pctSat;
+  const scoreCV = avgCV!==null ? Math.max(0,100-avgCV*10) : 50;
+  const scoreBias = Math.max(0,100-avgBias*5);
+  const score = scoreZ*0.6 + scoreCV*0.25 + scoreBias*0.15;
+  return { withRef, zScores, sat, cues, nosat, pctSat, avgCV, avgBias, score };
+}
+
+// =========================================================
+// RENDER EVALUACIÓN COMPLETA
+// =========================================================
+let controlChart = null;
+
+function renderEvaluacion(){
+  populateRankAnalistaFilter();
+  renderMejorPorParametro();
+  const isAdmin = SESSION && SESSION.rol==='admin';
+  const analistas = USERS.filter(u=>u.rol!=='admin');
+  const ranked = analistas.map(u=>({ u, stats: getAnalistaStats(u.user) }))
+    .filter(x=>x.stats)
+    .sort((a,b)=>b.stats.score-a.stats.score);
+
+  // Podio y ranking: solo admin
+  const podioWrap   = document.getElementById('podio-wrap');
+  const rankingCard = document.getElementById('ranking-body')?.closest('.card');
+  if(podioWrap)   podioWrap.style.display   = isAdmin ? 'block' : 'none';
+  if(rankingCard) rankingCard.style.display = isAdmin ? 'block' : 'none';
+
+  if(isAdmin){
+    renderPodio(ranked);
+    renderRankingTable(ranked);
+  }
+
+  populateEvalParams();
+  renderControlChart();
+
+  // Tarjetas: admin ve todos, analista solo la suya
+  const myRanked = isAdmin ? ranked : ranked.filter(x=>x.u.user===SESSION.user);
+  renderAnalistaCards(myRanked, isAdmin);
+}
+
+function renderPodio(ranked){
+  const wrap = document.getElementById('podio-wrap');
+  if(!ranked.length){ wrap.innerHTML=''; return; }
+  const medals = ['🥇','🥈','🥉'];
+  const order = [1,0,2]; // visual order: 2nd, 1st, 3rd
+  const podioItems = order.map(i=>{
+    if(i>=ranked.length) return '<div class="podio-item"></div>';
+    const {u,stats} = ranked[i];
+    const nombreAn = RESULTADOS.find(r=>r.user===u.user)?.analista || u.nombre;
+    const fotoAnKey = fotoKeyAnalista(u.codigo, nombreAn);
+    const fotoAn = FOTOS[fotoAnKey] || null;
+    const photo = fotoAn
+      ? '<img src="'+fotoAn+'" class="podio-photo" style="width:68px;height:68px">'
+      : '<div class="podio-photo-placeholder" style="background:'+(u.color||'#7c3aed')+';width:68px;height:68px">'+ini(u.nombre)+'</div>';
+    return `<div class="podio-item podio-${i+1}">
+      <div class="podio-medal">${medals[i]}</div>
+      ${photo}
+      <div class="podio-name">${u.nombre.split(' ').slice(0,2).join(' ')}</div>
+      <span class="code-badge" style="font-size:10px">${u.codigo}</span>
+      <div class="podio-score">${stats.score.toFixed(1)} pts</div>
+      <div class="podio-bar">${i+1}°</div>
+    </div>`;
+  });
+  wrap.innerHTML=`<div class="card"><div class="card-title">🏆 Podio de mejores analistas</div>
+    <div class="podio">${podioItems.join('')}</div></div>`;
+}
+
+function renderRankingTable(ranked){
+  const tbody = document.getElementById('ranking-body');
+  if(!ranked.length){ tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:14px;color:var(--light)">Sin datos suficientes</td></tr>'; return; }
+  const medals=['🥇','🥈','🥉'];
+  tbody.innerHTML = ranked.map(({u,stats},i)=>{
+    const medal = i<3?medals[i]:`${i+1}°`;
+    const zc = stats.pctSat>=80?'b-ok':stats.pctSat>=60?'b-warn':'b-fail';
+    const cvc = stats.avgCV===null?'b-gray':stats.avgCV<=2?'b-ok':stats.avgCV<=5?'b-warn':'b-fail';
+    const nombreAnR = RESULTADOS.find(r=>r.user===u.user)?.analista || u.nombre;
+    const fotoRKey = fotoKeyAnalista(u.codigo, nombreAnR);
+    const fotoR = FOTOS[fotoRKey] || null;
+    const photo = fotoR
+      ? '<img src="'+fotoR+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #a78bfa;flex-shrink:0">'
+      : '<div style="width:32px;height:32px;border-radius:50%;background:'+(u.color||'#7c3aed')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0">'+ini(u.nombre)+'</div>';
+    return `<tr>
+      <td style="font-size:18px;text-align:center">${medal}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">${photo}<span style="font-size:12px;font-weight:600">${u.nombre}</span></div></td>
+      <td><span class="code-badge">${u.codigo}</span></td>
+      <td style="text-align:center">${stats.withRef.length}</td>
+      <td><span class="badge ${zc}">${stats.pctSat.toFixed(1)}%</span></td>
+      <td><span class="badge ${cvc}">${stats.avgCV!==null?stats.avgCV.toFixed(2)+'%':'—'}</span></td>
+      <td>${stats.avgBias.toFixed(2)}%</td>
+      <td><strong>${stats.score.toFixed(1)}</strong></td>
+      <td><span class="badge ${stats.pctSat>=80?'b-ok':stats.pctSat>=60?'b-warn':'b-fail'}">${stats.pctSat>=80?'Satisfactorio':stats.pctSat>=60?'Cuestionable':'No satisfactorio'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function populateEvalParams(){
+  const sel=document.getElementById('eval-param');
+  if(!sel) return;
+  const m=document.getElementById('eval-muestra').value;
+  const params=(m==='rbd'?PARAMS_RBD:PARAMS_CPO).filter(function(p){return !p.soloInterno;});
+  sel.innerHTML=params.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+}
+
+function renderControlChart(){
+  const m = document.getElementById('eval-muestra')?.value;
+  const pid = document.getElementById('eval-param')?.value;
+  if(!m||!pid) return;
+  const param = (m==='rbd'?PARAMS_RBD:PARAMS_CPO).find(p=>p.id===pid);
+  const refV = (m==='rbd'?REF.rbd:REF.cpo)[pid];
+  const filtered = RESULTADOS.filter(r=>r.muestra===m&&r.paramId===pid);
+  const ctx = document.getElementById('control-chart')?.getContext('2d');
+  if(!ctx) return;
+  if(controlChart) controlChart.destroy();
+  if(!filtered.length||refV===undefined){ ctx.clearRect(0,0,800,280); return; }
+  const sigma = calcSigma(refV);
+  const labels = filtered.map(r=>r.codigo);
+  const zData = filtered.map(r=>calcZ(r.promedio,refV));
+  const isAdminCtrl = SESSION && SESSION.rol==='admin';
+  const colors = filtered.map((r,i)=>{
+    const z = zData[i];
+    const base = Math.abs(z)<=2?'#16a34a':Math.abs(z)<=3?'#d97706':'#dc2626';
+    if(!isAdminCtrl && r.user!==SESSION.user) return base+'55'; // fade others
+    return base;
+  });
+  controlChart = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        { label:'Z-score', data:zData, backgroundColor:colors, borderRadius:5, borderSkipped:false },
+        { type:'line', label:'+2σ (límite satisfactorio)', data:Array(labels.length).fill(2), borderColor:'#16a34a', borderDash:[5,3], borderWidth:1.5, pointRadius:0, fill:false },
+        { type:'line', label:'-2σ', data:Array(labels.length).fill(-2), borderColor:'#16a34a', borderDash:[5,3], borderWidth:1.5, pointRadius:0, fill:false },
+        { type:'line', label:'+3σ (límite acción)', data:Array(labels.length).fill(3), borderColor:'#dc2626', borderDash:[4,2], borderWidth:1.5, pointRadius:0, fill:false },
+        { type:'line', label:'-3σ', data:Array(labels.length).fill(-3), borderColor:'#dc2626', borderDash:[4,2], borderWidth:1.5, pointRadius:0, fill:false },
+        { type:'line', label:'Centro (0)', data:Array(labels.length).fill(0), borderColor:'#185FA5', borderWidth:1.5, pointRadius:0, fill:false },
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`Z=${ctx.parsed.y.toFixed(3)}`}}},
+      scales:{
+        y:{title:{display:true,text:'Z-score'},grid:{color:'#f1f5f9'},
+           ticks:{callback:v=>`Z=${v}`}},
+        x:{grid:{display:false}}
+      }}
+  });
+}
+
+function renderAnalistaCards(ranked, showRank=true){
+  const wrap = document.getElementById('analista-cards');
+  if(!ranked.length){ wrap.innerHTML='<p style="color:var(--light);font-size:13px">Sin datos suficientes.</p>'; return; }
+
+  wrap.innerHTML = ranked.map(({u,stats},rank)=>{
+    const nombreAnalista = RESULTADOS.find(r=>r.user===u.user)?.analista || u.nombre;
+    const fotoKey = fotoKeyAnalista(u.codigo, nombreAnalista);
+    const foto64 = FOTOS[fotoKey] || null;
+    const photo = foto64
+      ? '<img src="'+foto64+'" class="analista-photo" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #a78bfa;flex-shrink:0">'
+      : '<div class="analista-photo-placeholder" style="background:'+(u.color||'#7c3aed')+';width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0">'+ini(u.nombre)+'</div>';
+    const medals = ['🥇','🥈','🥉'];
+    const medal = showRank ? (rank<3?medals[rank]:`#${rank+1}`) : '';
+    const zc = stats.pctSat>=80?{label:'Satisfactorio',bg:'#dcfce7',color:'#15803d'}:
+               stats.pctSat>=60?{label:'Cuestionable',bg:'#fef9c3',color:'#a16207'}:
+               {label:'No satisfactorio',bg:'#fee2e2',color:'#b91c1c'};
+
+    // Separate RBD and CPO results
+    const rbdRes = stats.withRef.filter(r=>r.muestra==='rbd');
+    const cpoRes = stats.withRef.filter(r=>r.muestra==='cpo');
+
+    function buildMuestraTable(resList, muestra) {
+      if(!resList.length) return `<div style="color:#94a3b8;font-size:12px;padding:8px">Sin datos de ${muestra.toUpperCase()}</div>`;
+      
+      // Per-muestra stats
+      const zs = resList.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv,r.paramId,r.muestra); });
+      const satM = zs.filter(z=>Math.abs(z)<=2).length;
+      const pctM = (satM/zs.length*100).toFixed(0);
+      const cvM = resList.map(r=>calcCV(r.reps)).filter(v=>v!==null);
+      const avgCVM = cvM.length ? (cvM.reduce((a,b)=>a+b,0)/cvM.length).toFixed(2) : '—';
+      const biasM = resList.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcBias(r.promedio,rv)); });
+      const avgBiasM = (biasM.reduce((a,b)=>a+b,0)/biasM.length).toFixed(2);
+      const bgM = muestra==='rbd'?'#eff6ff':'#fff7ed';
+      const borderM = muestra==='rbd'?'#3b82f6':'#f97316';
+      const titleM = muestra==='rbd'?'RBD PALMA':'CPO DE PALMA';
+
+      const rows = resList.map(r=>{
+        const rv = r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
+        const z = calcZ(r.promedio,rv,r.paramId,r.muestra);
+        const zc2 = zClass(z);
+        const cv = calcCV(r.reps);
+        const bias = calcBias(r.promedio,rv);
+        const reps = r.reps||[];
+        // DE
+        const vals = reps.filter(x=>x!=null);
+        let de = '—';
+        if(vals.length>=2){
+          const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
+          de = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1)).toFixed(5);
+        }
+        const sigma = Math.abs(rv)*0.03||0.1;
+        return `<tr>
+          <td style="font-weight:600;font-size:12px">${r.paramNombre}</td>
+          <td style="font-size:12px">${reps[0]!=null?Number(reps[0]).toFixed(4):'—'}</td>
+          <td style="font-size:12px">${reps[1]!=null?Number(reps[1]).toFixed(4):'—'}</td>
+          <td style="font-size:12px">${reps[2]!=null?Number(reps[2]).toFixed(4):'—'}</td>
+          <td style="font-weight:700">${r.promedio.toFixed(4)}</td>
+          <td style="font-size:12px;color:#64748b">${de}</td>
+          <td><span style="font-size:11px;font-weight:600;color:${cv!==null&&cv<=2?'#16a34a':cv!==null&&cv<=5?'#ca8a04':'#dc2626'}">${cv!==null?cv.toFixed(2)+'%':'—'}</span></td>
+          <td style="font-size:12px">${rv}</td>
+          <td style="font-size:12px;color:#64748b">${sigma.toFixed(4)}</td>
+          <td style="font-weight:700;color:${Math.abs(z)<=2?'#16a34a':Math.abs(z)<=3?'#ca8a04':'#dc2626'}">${z.toFixed(3)}</td>
+          <td><span class="badge ${zc2.badge}" style="font-size:10px">${zc2.label}</span></td>
+          <td style="font-size:12px;color:${Math.abs(bias)>10?'#dc2626':'#64748b'}">${bias.toFixed(2)}%</td>
+        </tr>`;
+      }).join('');
+
+      return `<div style="background:${bgM};border-radius:10px;padding:10px 14px;margin-bottom:10px;border-left:4px solid ${borderM}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+          <span style="font-weight:700;font-size:13px;color:#1e293b">🧪 ${titleM}</span>
+          <div style="display:flex;gap:12px;font-size:12px">
+            <span>✅ ${pctM}% satisfactorio</span>
+            <span>CV% prom: <strong>${avgCVM}%</strong></span>
+            <span>Sesgo prom: <strong>${avgBiasM}%</strong></span>
+          </div>
+        </div>
+        <div class="table-wrap"><table class="params-detail">
+          <thead><tr>
+            <th style="text-align:left">Parámetro</th>
+            <th>Rep.1</th><th>Rep.2</th><th>Rep.3</th>
+            <th>Promedio</th><th>DE</th><th>CV%</th>
+            <th>Referencia</th><th>σ (3%)</th><th>Z-score</th><th>Calificación</th><th>Sesgo%</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>`;
+    }
+
+    return `<div class="analista-card" style="margin-bottom:16px">
+      <div class="analista-card-header">
+        ${photo}
+        <div class="analista-card-info">
+          <div class="analista-card-name">${medal} ${u.nombre}</div>
+          <div class="analista-card-meta">
+            <span class="code-badge">${u.codigo}</span>
+            <span style="background:${zc.bg};color:${zc.color};padding:2px 10px;border-radius:100px;font-size:11px;font-weight:600">${zc.label}</span>
+            <span style="font-size:11px;color:#64748b">Analista: ${RESULTADOS.find(r=>r.user===u.user)?.analista||'—'}</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:28px;font-weight:800;color:#3730a3">${stats.score.toFixed(1)}</div>
+          <div style="font-size:10px;color:var(--muted)">puntos / 100</div>
+        </div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.pctSat>=80?'#16a34a':stats.pctSat>=60?'#d97706':'#dc2626'}">${stats.pctSat.toFixed(0)}%</div><div class="mini-stat-lbl">% Satisfactorio</div></div>
+        <div class="mini-stat"><div class="mini-stat-val">${stats.sat}/${stats.withRef.length}</div><div class="mini-stat-lbl">Params OK</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.avgCV!==null&&stats.avgCV<=2?'#16a34a':stats.avgCV<=5?'#d97706':'#dc2626'}">${stats.avgCV!==null?stats.avgCV.toFixed(2)+'%':'—'}</div><div class="mini-stat-lbl">CV% promedio</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" style="color:${stats.avgBias<=5?'#16a34a':stats.avgBias<=10?'#d97706':'#dc2626'}">${stats.avgBias.toFixed(2)}%</div><div class="mini-stat-lbl">Sesgo promedio</div></div>
+        <div class="mini-stat"><div class="mini-stat-val">${rbdRes.length}</div><div class="mini-stat-lbl">Params RBD</div></div>
+        <div class="mini-stat"><div class="mini-stat-val">${cpoRes.length}</div><div class="mini-stat-lbl">Params CPO</div></div>
+      </div>
+      ${buildMuestraTable(rbdRes,'rbd')}
+      ${buildMuestraTable(cpoRes,'cpo')}
+    </div>`;
+  }).join('');
+
+  // R&R section
+  renderRR();
+}
+
+// =========================================================
+// R&R — REPETIBILIDAD Y REPRODUCIBILIDAD
+// =========================================================
+function renderRR(){
+  const wrap = document.getElementById('rr-section');
+  if(!wrap) return;
+  if(!RESULTADOS.length){ wrap.innerHTML='<p style="color:#94a3b8;font-size:13px">Sin datos suficientes para R&R.</p>'; return; }
+
+  const muestras = ['rbd','cpo'];
+  let html = '';
+
+  muestras.forEach(muestra => {
+    const params = (muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO).filter(function(p){return !p.soloInterno;});
+    const label = muestra==='rbd' ? 'RBD PALMA' : 'CPO DE PALMA';
+    const color = muestra==='rbd' ? '#3b82f6' : '#f97316';
+    
+    let paramRows = '';
+    params.forEach(p => {
+      const res = RESULTADOS.filter(r=>r.muestra===muestra && r.paramId===p.id);
+      if(res.length < 2) return; // need at least 2 labs
+
+      // Repetibilidad: average CV% within each operator
+      const repVals = res.map(r=>calcCV(r.reps)).filter(v=>v!==null);
+      const repetibilidad = repVals.length ? repVals.reduce((a,b)=>a+b,0)/repVals.length : null;
+
+      // Reproducibilidad: DE of averages between operators
+      const promedios = res.map(r=>r.promedio);
+      let reproducibilidad = null;
+      if(promedios.length >= 2){
+        const mean = promedios.reduce((a,b)=>a+b,0)/promedios.length;
+        const de = Math.sqrt(promedios.reduce((a,b)=>a+(b-mean)**2,0)/(promedios.length-1));
+        reproducibilidad = mean>0 ? (de/mean*100) : null;
+      }
+
+      // % contribution
+      let pctRep='—', pctRepro='—';
+      if(repetibilidad!==null && reproducibilidad!==null){
+        const total = repetibilidad + reproducibilidad;
+        pctRep = total>0 ? (repetibilidad/total*100).toFixed(0)+'%' : '—';
+        pctRepro = total>0 ? (reproducibilidad/total*100).toFixed(0)+'%' : '—';
+      }
+
+      const repCls = repetibilidad===null?'#94a3b8':repetibilidad<=2?'#16a34a':repetibilidad<=5?'#ca8a04':'#dc2626';
+      const reproCls = reproducibilidad===null?'#94a3b8':reproducibilidad<=5?'#16a34a':reproducibilidad<=10?'#ca8a04':'#dc2626';
+
+      // Lab results row
+      const labCols = res.map(r=>`<td style="font-size:11px;text-align:center">
+        <div>${r.promedio.toFixed(4)}</div>
+        <div style="color:#94a3b8;font-size:10px">${r.codigo||r.user}</div>
+      </td>`).join('');
+
+      paramRows += `<tr>
+        <td style="font-weight:600;font-size:12px">${p.nombre}</td>
+        ${labCols}
+        <td style="font-weight:700;color:${repCls};text-align:center">${repetibilidad!==null?repetibilidad.toFixed(2)+'%':'—'}</td>
+        <td style="font-weight:700;color:${reproCls};text-align:center">${reproducibilidad!==null?reproducibilidad.toFixed(2)+'%':'—'}</td>
+        <td style="font-size:11px;text-align:center;color:#64748b">${pctRep} / ${pctRepro}</td>
+      </tr>`;
+    });
+
+    if(!paramRows) return;
+
+    const labs = [...new Set(RESULTADOS.filter(r=>r.muestra===muestra).map(r=>r.codigo||r.user))];
+    const labHeaders = labs.map(l=>`<th style="text-align:center">${l}</th>`).join('');
+
+    html += `<div style="background:${muestra==='rbd'?'#eff6ff':'#fff7ed'};border-radius:10px;padding:12px 16px;margin-bottom:14px;border-left:4px solid ${color}">
+      <div style="font-weight:700;font-size:13px;color:#1e293b;margin-bottom:10px">🔬 R&R — ${label}</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:left">Parámetro</th>
+            ${labHeaders}
+            <th style="text-align:center">Repetibilidad<br><span style="font-weight:400;font-size:10px">CV% intra-lab</span></th>
+            <th style="text-align:center">Reproducibilidad<br><span style="font-weight:400;font-size:10px">CV% inter-lab</span></th>
+            <th style="text-align:center">% Contrib.<br><span style="font-weight:400;font-size:10px">Rep / Repro</span></th>
+          </tr></thead>
+          <tbody>${paramRows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#64748b">
+        <strong>Repetibilidad</strong>: variación dentro del mismo laboratorio (promedio CV% triplicado) · 
+        <strong>Reproducibilidad</strong>: variación entre laboratorios (CV% de promedios) · 
+        Criterio aceptable: Repetibilidad ≤ 5% · Reproducibilidad ≤ 10%
+      </div>
+    </div>`;
+  });
+
+  wrap.innerHTML = html || '<p style="color:#94a3b8;font-size:13px">Se necesitan al menos 2 laboratorios con datos para calcular R&R.</p>';
+}
+
+// Patch gotoSection for evaluacion
+const _origGoto = gotoSection;
+function gotoSection(name,el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(name==='dashboard') refreshDashboard();
+  if(name==='resultados') renderAllResults();
+  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); }
+  if(name==="participantes"){ if(typeof window._cargarFotos==="function"){ window._cargarFotos().then(function(fotosDB){ Object.keys(fotosDB).forEach(function(k){ FOTOS[k]=fotosDB[k]; }); renderParticipants(); }); } else { renderParticipants(); } }
+  if(name==='misresultados') renderMisResultados();
+  if(name==='auditor') renderAuditor();
+  if(name==='evaluacion'){
+    const t=document.getElementById('eval-page-title');
+    const s=document.getElementById('eval-page-sub');
+    const isA = SESSION && SESSION.rol!=='admin';
+    if(t) t.textContent = isA ? '🔬 Mi evaluación' : '🏆 Evaluación & Ranking';
+    if(s) s.textContent = isA ? 'Tus resultados vs laboratorio certificado' : 'Desempeño por analista — Z-score · CV% · Sesgo · Ranking final';
+    renderEvaluacion();
+  }
+}
+// =========================================================
+// INFORME AUDITOR
+// =========================================================
+function renderAuditor(){
+  const tbody = document.getElementById('auditor-tbody');
+  const resumen = document.getElementById('auditor-resumen');
+  if(!tbody) return;
+  if(!RESULTADOS.length){
+    tbody.innerHTML='<tr><td colspan="14" style="text-align:center;color:#94a3b8;padding:20px">Sin datos — esperando resultados de participantes</td></tr>';
+    resumen.innerHTML='<p style="color:#94a3b8;font-size:13px">Sin datos suficientes.</p>';
+    return;
+  }
+  const rows=RESULTADOS.map(r=>{
+    const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
+    if(rv===undefined) return null;
+    const sigma=Math.abs(rv)*0.03||0.1;
+    const z=(r.promedio-rv)/sigma;
+    const reps=r.reps||[];
+    const vals=reps.filter(x=>x!=null);
+    let cv='—';
+    if(vals.length>=2){
+      const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+      const de=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1));
+      cv=mean>0?(de/mean*100).toFixed(2)+'%':'—';
+    }
+    const sesgo=rv?((r.promedio-rv)/rv*100).toFixed(2)+'%':'—';
+    const absZ=Math.abs(z);
+    const cal=absZ<=2?{txt:'✅ Satisfactorio',col:'#16a34a'}:absZ<=3?{txt:'⚠️ Cuestionable',col:'#ca8a04'}:{txt:'❌ No satisfactorio',col:'#dc2626'};
+    return {r,rv,sigma,z,cv,sesgo,cal,reps};
+  }).filter(Boolean);
+  tbody.innerHTML=rows.map(({r,rv,sigma,z,cv,sesgo,cal,reps})=>`
+    <tr>
+      <td><span class="code-badge">${r.codigo||r.user}</span></td>
+      <td style="font-size:12px">${r.analista||r.nombre||'—'}</td>
+      <td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td>
+      <td style="font-size:12px">${r.paramNombre}</td>
+      <td style="font-size:12px">${reps[0]!=null?Number(reps[0]).toFixed(4):'—'}</td>
+      <td style="font-size:12px">${reps[1]!=null?Number(reps[1]).toFixed(4):'—'}</td>
+      <td style="font-size:12px">${reps[2]!=null?Number(reps[2]).toFixed(4):'—'}</td>
+      <td style="font-weight:700">${r.promedio.toFixed(4)}</td>
+      <td>${rv}</td>
+      <td style="font-size:12px;color:#64748b">${sigma.toFixed(4)}</td>
+      <td style="font-weight:700;color:${cal.col}">${z.toFixed(2)}</td>
+      <td style="font-size:12px">${cv}</td>
+      <td style="font-size:12px">${sesgo}</td>
+      <td style="font-size:11px;color:${cal.col};font-weight:600">${cal.txt}</td>
+    </tr>`).join('');
+  const labs=[...new Set(RESULTADOS.map(r=>r.codigo||r.user))];
+  resumen.innerHTML=labs.map(lab=>{
+    const labRows=rows.filter(({r})=>(r.codigo||r.user)===lab);
+    if(!labRows.length) return '';
+    const total=labRows.length;
+    const sat=labRows.filter(({z})=>Math.abs(z)<=2).length;
+    const cues=labRows.filter(({z})=>Math.abs(z)>2&&Math.abs(z)<=3).length;
+    const nosat=labRows.filter(({z})=>Math.abs(z)>3).length;
+    const pct=(sat/total*100).toFixed(0);
+    const nombre=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.nombre||lab;
+    const analista=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.analista||'—';
+    const bg=nosat>0?'#fee2e2':cues>0?'#fef9c3':'#dcfce7';
+    const bdr=nosat>0?'#dc2626':cues>0?'#ca8a04':'#16a34a';
+    return `<div style="background:${bg};border-left:4px solid ${bdr};border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div><span style="font-weight:700;font-size:14px">${lab} · ${nombre}</span><span style="font-size:12px;color:#64748b;margin-left:8px">Analista: ${analista}</span></div>
+        <div style="font-size:13px;font-weight:700">${pct}% satisfactorio</div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:12px">
+        <span>✅ Satisfactorios: <strong>${sat}</strong></span>
+        <span>⚠️ Cuestionables: <strong>${cues}</strong></span>
+        <span>❌ No satisfactorios: <strong>${nosat}</strong></span>
+        <span>Total: <strong>${total}</strong> parámetros</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// =========================================================
+// INFORME AUDITOR
+// =========================================================
+function renderAuditor(){
+  const tbody = document.getElementById('auditor-tbody');
+  const resumen = document.getElementById('auditor-resumen');
+  if(!tbody) return;
+  if(!RESULTADOS.length){
+    tbody.innerHTML='<tr><td colspan="14" style="text-align:center;color:#94a3b8;padding:20px">Sin datos — esperando resultados de participantes</td></tr>';
+    resumen.innerHTML='<p style="color:#94a3b8;font-size:13px">Sin datos suficientes.</p>';
+    return;
+  }
+  const rows=RESULTADOS.map(r=>{
+    const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
+    if(rv===undefined) return null;
+    const sigma=Math.abs(rv)*0.03||0.1;
+    const z=(r.promedio-rv)/sigma;
+    const reps=r.reps||[];
+    const vals=reps.filter(x=>x!=null);
+    let cv='—';
+    if(vals.length>=2){
+      const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+      const de=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1));
+      cv=mean>0?(de/mean*100).toFixed(2)+'%':'—';
+    }
+    const sesgo=rv?((r.promedio-rv)/rv*100).toFixed(2)+'%':'—';
+    const absZ=Math.abs(z);
+    const cal=absZ<=2?{txt:'✅ Satisfactorio',col:'#16a34a'}:absZ<=3?{txt:'⚠️ Cuestionable',col:'#ca8a04'}:{txt:'❌ No satisfactorio',col:'#dc2626'};
+    return {r,rv,sigma,z,cv,sesgo,cal,reps};
+  }).filter(Boolean);
+  tbody.innerHTML=rows.map(({r,rv,sigma,z,cv,sesgo,cal,reps})=>`
+    <tr>
+      <td><span class="code-badge">${r.codigo||r.user}</span></td>
+      <td style="font-size:12px">${r.analista||r.nombre||'—'}</td>
+      <td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td>
+      <td style="font-size:12px">${r.paramNombre}</td>
+      <td style="font-size:12px">${reps[0]!=null?Number(reps[0]).toFixed(4):'—'}</td>
+      <td style="font-size:12px">${reps[1]!=null?Number(reps[1]).toFixed(4):'—'}</td>
+      <td style="font-size:12px">${reps[2]!=null?Number(reps[2]).toFixed(4):'—'}</td>
+      <td style="font-weight:700">${r.promedio.toFixed(4)}</td>
+      <td>${rv}</td>
+      <td style="font-size:12px;color:#64748b">${sigma.toFixed(4)}</td>
+      <td style="font-weight:700;color:${cal.col}">${z.toFixed(2)}</td>
+      <td style="font-size:12px">${cv}</td>
+      <td style="font-size:12px">${sesgo}</td>
+      <td style="font-size:11px;color:${cal.col};font-weight:600">${cal.txt}</td>
+    </tr>`).join('');
+  const labs=[...new Set(RESULTADOS.map(r=>r.codigo||r.user))];
+  resumen.innerHTML=labs.map(lab=>{
+    const labRows=rows.filter(({r})=>(r.codigo||r.user)===lab);
+    if(!labRows.length) return '';
+    const total=labRows.length;
+    const sat=labRows.filter(({z})=>Math.abs(z)<=2).length;
+    const cues=labRows.filter(({z})=>Math.abs(z)>2&&Math.abs(z)<=3).length;
+    const nosat=labRows.filter(({z})=>Math.abs(z)>3).length;
+    const pct=(sat/total*100).toFixed(0);
+    const nombre=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.nombre||lab;
+    const analista=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.analista||'—';
+    const bg=nosat>0?'#fee2e2':cues>0?'#fef9c3':'#dcfce7';
+    const bdr=nosat>0?'#dc2626':cues>0?'#ca8a04':'#16a34a';
+    return `<div style="background:${bg};border-left:4px solid ${bdr};border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div><span style="font-weight:700;font-size:14px">${lab} · ${nombre}</span><span style="font-size:12px;color:#64748b;margin-left:8px">Analista: ${analista}</span></div>
+        <div style="font-size:13px;font-weight:700">${pct}% satisfactorio</div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:12px">
+        <span>✅ Satisfactorios: <strong>${sat}</strong></span>
+        <span>⚠️ Cuestionables: <strong>${cues}</strong></span>
+        <span>❌ No satisfactorios: <strong>${nosat}</strong></span>
+        <span>Total: <strong>${total}</strong> parámetros</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+// =========================================================
+// ESTADÍSTICAS — PASO A PASO
+// =========================================================
+function populateAnalistaFilter(){
+  const sel = document.getElementById('stat-analista');
+  if(!sel) return;
+  // Group by analista name (not lab code — multiple analistas can share same lab)
+  const analistasMap = {};
+  RESULTADOS.forEach(r=>{
+    const key = (r.analista||r.nombre||r.user||'').trim();
+    if(key && !analistasMap[key]) analistasMap[key] = { analista: key, codigo: r.codigo||r.user };
+  });
+  const analistas = Object.values(analistasMap);
+  const current = sel.value;
+  sel.innerHTML = '<option value="todos">— Todos los analistas —</option>' +
+    analistas.map(a=>`<option value="${a.analista}">${a.codigo} · ${a.analista}</option>`).join('');
+  // Restore selection if still valid
+  if(analistas.find(a=>a.analista===current)) sel.value = current;
+}
+
+function refreshEstadisticas(){
+  populateAnalistaFilter();
+  populateStatParams();
+  refreshStatChart();
+  renderZScores();
+  renderPasoAPaso();
+}
+
+function renderPasoAPaso(){
+  const wrap = document.getElementById('stat-paso-wrap');
+  if(!wrap) return;
+
+  const muestra  = document.getElementById('stat-muestra')?.value || 'cpo';
+  const paramId  = document.getElementById('stat-param')?.value;
+  const analista = document.getElementById('stat-analista')?.value || 'todos';
+  if(!paramId){ wrap.innerHTML=''; return; }
+
+  let res = RESULTADOS.filter(r=>r.muestra===muestra && r.paramId===paramId);
+  if(analista!=='todos') res = res.filter(r=>(r.analista||r.nombre||r.user||'').trim()===analista);
+  if(!res.length && analista!=='todos'){
+    res = RESULTADOS.filter(r=>r.muestra===muestra && r.paramId===paramId);
+  }
+  if(!res.length){ wrap.innerHTML='<div class="card" style="padding:20px;text-align:center;color:#94a3b8">Selecciona un parámetro con datos para ver el análisis paso a paso.</div>'; return; }
+
+  const rv = muestra==='rbd' ? REF.rbd[paramId] : REF.cpo[paramId];
+
+  wrap.innerHTML = res.map(r=>{
+    const reps = (r.reps||[]).filter(x=>x!=null);
+    const n = reps.length;
+    if(!n) return '';
+
+    // Step 1: Promedio
+    const sum = reps.reduce((a,b)=>a+b,0);
+    const prom = sum/n;
+
+    // Step 2: Desviacion estandar
+    const diffs = reps.map(x=>(x-prom)**2);
+    const sumdiff = diffs.reduce((a,b)=>a+b,0);
+    const de = Math.sqrt(sumdiff/(n-1));
+
+    // Step 3: CV%
+    const cv = prom>0 ? (de/prom)*100 : null;
+
+    // Step 4: Z-score
+    const sigma = rv!=null ? Math.abs(rv)*0.03||0.1 : null;
+    const z = rv!=null && sigma ? (prom-rv)/sigma : null;
+    const sesgo = rv!=null ? ((prom-rv)/rv)*100 : null;
+
+    // Calificacion
+    const absZ = z!=null ? Math.abs(z) : null;
+    const cal = absZ==null ? {txt:'Sin referencia',bg:'#f1f5f9',color:'#64748b'} :
+                absZ<=2  ? {txt:'✅ SATISFACTORIO',  bg:'#dcfce7',color:'#15803d'} :
+                absZ<=3  ? {txt:'⚠️ CUESTIONABLE',  bg:'#fef9c3',color:'#854d0e'} :
+                           {txt:'❌ NO SATISFACTORIO',bg:'#fee2e2',color:'#991b1b'};
+
+    const cvCal = cv==null?'—':cv<=2?'✅ Excelente (≤2%)':cv<=5?'⚠️ Aceptable (≤5%)':'❌ Deficiente (>5%)';
+    const cvColor = cv==null?'#64748b':cv<=2?'#15803d':cv<=5?'#854d0e':'#991b1b';
+    const sesgoCal = sesgo==null?'—':Math.abs(sesgo)<=5?'✅ Bajo (≤5%)':Math.abs(sesgo)<=10?'⚠️ Moderado (≤10%)':'❌ Alto (>10%)';
+
+    const labName = r.analista||r.nombre||r.user;
+    const labCode = r.codigo||r.user;
+    const muestraLabel = muestra==='rbd'?'RBD PALMA':'CPO DE PALMA';
+    const borderColor = muestra==='rbd'?'#3b82f6':'#f97316';
+
+    return `<div class="card" style="margin-bottom:14px;border-left:4px solid ${borderColor}">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <span class="code-badge">${labCode}</span>
+          <span style="font-weight:700;font-size:15px;margin-left:8px">${labName}</span>
+          <span style="font-size:12px;color:#64748b;margin-left:6px">· ${muestraLabel} · ${r.paramNombre}</span>
+        </div>
+        <div style="background:${cal.bg};color:${cal.color};padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">${cal.txt}</div>
+      </div>
+
+      <!-- Datos originales -->
+      <div style="background:#f8fafc;border-radius:10px;padding:12px 16px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📥 Datos primarios ingresados</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+          ${reps.map((v,i)=>`<div style="text-align:center">
+            <div style="font-size:11px;color:#94a3b8">Réplica ${i+1}</div>
+            <div style="font-size:18px;font-weight:700;color:#1e293b">${v.toFixed(4)}</div>
+          </div>`).join('<div style="color:#cbd5e1;font-size:20px">·</div>')}
+        </div>
+      </div>
+
+      <!-- Paso 1: Promedio -->
+      <div style="background:#f0f9ff;border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid #3b82f6">
+        <div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:6px">📐 PASO 1 — Promedio (x̄)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          x̄ = (${reps.map(v=>v.toFixed(4)).join(' + ')}) ÷ ${n}
+        </div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          x̄ = ${sum.toFixed(4)} ÷ ${n}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:#1d4ed8">x̄ = ${prom.toFixed(4)} ${r.unit||''}</div>
+      </div>
+
+      <!-- Paso 2: DE -->
+      <div style="background:#f0fdf4;border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid #16a34a">
+        <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px">📐 PASO 2 — Desviación estándar (DE)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          DE = √[Σ(xᵢ − x̄)² ÷ (n−1)]
+        </div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          Diferencias al cuadrado: ${reps.map(v=>`(${v.toFixed(4)}−${prom.toFixed(4)})² = ${((v-prom)**2).toFixed(6)}`).join(' | ')}
+        </div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          Suma = ${sumdiff.toFixed(6)} ÷ ${n-1} = ${(sumdiff/(n-1)).toFixed(6)}
+        </div>
+        <div style="font-size:15px;font-weight:700;color:#15803d">DE = √${(sumdiff/(n-1)).toFixed(6)} = ${de.toFixed(5)} ${r.unit||''}</div>
+      </div>
+
+      <!-- Paso 3: CV% -->
+      <div style="background:#fffbeb;border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid #d97706">
+        <div style="font-size:12px;font-weight:700;color:#b45309;margin-bottom:6px">📐 PASO 3 — Coeficiente de variación (CV%)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">CV% = (DE ÷ x̄) × 100</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">
+          CV% = (${de.toFixed(5)} ÷ ${prom.toFixed(4)}) × 100
+        </div>
+        <div style="font-size:15px;font-weight:700;color:#b45309">CV% = ${cv!=null?cv.toFixed(2):'—'}%
+          <span style="font-size:12px;font-weight:600;margin-left:8px;color:${cvColor}">${cvCal}</span>
+        </div>
+        <div style="font-size:11px;color:#78716c;margin-top:4px">💡 El CV% mide la <strong>repetibilidad</strong>: qué tan consistentes son las 3 réplicas. Un CV% bajo indica buena precisión.</div>
+      </div>
+
+      ${rv!=null ? `
+      <!-- Paso 4: Sigma -->
+      <div style="background:#faf5ff;border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid #9333ea">
+        <div style="font-size:12px;font-weight:700;color:#7e22ce;margin-bottom:6px">📐 PASO 4 — Desviación estándar de referencia (σ)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = |X<sub>ref</sub>| × 0.03 &nbsp;(3% del valor certificado)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = |${rv}| × 0.03</div>
+        <div style="font-size:15px;font-weight:700;color:#7e22ce">σ = ${sigma.toFixed(4)} ${r.unit||''}</div>
+        <div style="font-size:11px;color:#78716c;margin-top:4px">💡 El 3% representa la incertidumbre aceptable del método analítico según ISO 13528.</div>
+      </div>
+
+      <!-- Paso 5: Z-score -->
+      <div style="background:${absZ<=2?'#dcfce7':absZ<=3?'#fef9c3':'#fee2e2'};border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid ${absZ<=2?'#16a34a':absZ<=3?'#ca8a04':'#dc2626'}">
+        <div style="font-size:12px;font-weight:700;color:${absZ<=2?'#15803d':absZ<=3?'#854d0e':'#991b1b'};margin-bottom:6px">📐 PASO 5 — Z-score</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Z = (x̄ − X<sub>ref</sub>) ÷ σ</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Z = (${prom.toFixed(4)} − ${rv}) ÷ ${sigma.toFixed(4)}</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Z = ${(prom-rv).toFixed(4)} ÷ ${sigma.toFixed(4)}</div>
+        <div style="font-size:18px;font-weight:800;color:${absZ<=2?'#15803d':absZ<=3?'#854d0e':'#991b1b'}">Z = ${z.toFixed(3)}</div>
+        <div style="margin-top:8px;font-size:12px;color:${absZ<=2?'#15803d':absZ<=3?'#854d0e':'#991b1b'};font-weight:600">
+          ${absZ<=2?`|Z| = ${absZ.toFixed(3)} ≤ 2 → ✅ SATISFACTORIO: el resultado está dentro del rango aceptable.`:
+            absZ<=3?`|Z| = ${absZ.toFixed(3)} entre 2 y 3 → ⚠️ CUESTIONABLE: el resultado se aleja del valor de referencia. Revisar técnica.`:
+                    `|Z| = ${absZ.toFixed(3)} > 3 → ❌ NO SATISFACTORIO: desviación inaceptable. Requiere acción correctiva inmediata.`}
+        </div>
+      </div>
+
+      <!-- Paso 6: Sesgo -->
+      <div style="background:#f0f9ff;border-radius:10px;padding:12px 16px;border-left:3px solid #0284c7">
+        <div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:6px">📐 PASO 6 — Sesgo%</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Sesgo% = ((x̄ − X<sub>ref</sub>) ÷ X<sub>ref</sub>) × 100</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">Sesgo% = ((${prom.toFixed(4)} − ${rv}) ÷ ${rv}) × 100</div>
+        <div style="font-size:15px;font-weight:700;color:#0369a1">Sesgo% = ${sesgo.toFixed(2)}%
+          <span style="font-size:12px;font-weight:600;margin-left:8px;color:${Math.abs(sesgo)<=5?'#15803d':Math.abs(sesgo)<=10?'#854d0e':'#991b1b'}">${sesgoCal}</span>
+        </div>
+        <div style="font-size:11px;color:#78716c;margin-top:4px">💡 El sesgo indica si el laboratorio tiende a reportar valores <strong>sistemáticamente</strong> por encima o por debajo del valor certificado.</div>
+      </div>` : ''}
+
+    </div>`;
+  }).join('');
+}
+// =========================================================
+// TABLA GENERAL RPI — ESTADÍSTICAS DESCRIPTIVAS COMPLETAS
+// =========================================================
+function renderTablaRPI(){
+  const muestra  = document.getElementById('rpi-muestra')?.value || document.getElementById('stat-muestra')?.value || 'cpo';
+  // Sync rpi-muestra with stat-muestra
+  const rpiSel = document.getElementById('rpi-muestra');
+  if(rpiSel) rpiSel.value = muestra;
+  const tbody   = document.getElementById('rpi-tbody');
+  if(!tbody) return;
+
+  // Filter by selected param if one is selected
+  const selectedParam = document.getElementById('stat-param')?.value || null;
+  const allParams = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  const params = selectedParam ? allParams.filter(function(p){return p.id===selectedParam;}) : allParams;
+  const REFm   = muestra==='rbd' ? REF.rbd : REF.cpo;
+
+  const rows = params.map(p => {
+    const res = RESULTADOS.filter(r => r.muestra===muestra && r.paramId===p.id);
+    if(!res.length) return null;
+
+    // All individual rep values (flatten)
+    const allReps = res.flatMap(r => (r.reps||[]).filter(x=>x!=null&&isFinite(x)));
+    // All lab averages
+    const promedios = res.map(r => r.promedio).filter(x=>x!=null&&isFinite(x));
+
+    const n = allReps.length;
+    if(!n) return null;
+
+    // Promedio global
+    const mean = allReps.reduce((a,b)=>a+b,0) / n;
+
+    // Mediana
+    const sorted = [...allReps].sort((a,b)=>a-b);
+    const median = n%2===0 ? (sorted[n/2-1]+sorted[n/2])/2 : sorted[Math.floor(n/2)];
+
+    // Desviación estándar
+    const variance = allReps.reduce((a,b)=>a+(b-mean)**2,0) / (n-1);
+    const de = Math.sqrt(variance);
+
+    // CV%
+    const cv = mean>0 ? (de/mean*100) : null;
+
+    // CV% Global (entre promedios de labs)
+    let cvGlobal = null;
+    if(promedios.length >= 2){
+      const mG = promedios.reduce((a,b)=>a+b,0)/promedios.length;
+      const deG = Math.sqrt(promedios.reduce((a,b)=>a+(b-mG)**2,0)/(promedios.length-1));
+      cvGlobal = mG>0 ? (deG/mG*100) : null;
+    }
+
+    // U Relativa = DE / √n
+    const uRel = de / Math.sqrt(n);
+
+    // Referencia y sesgo
+    const rv = REFm[p.id];
+    const sesgo = rv!=null ? ((mean-rv)/rv*100) : null;
+
+    // Color CV
+    const cvColor = cv===null?'#64748b':cv<=2?'#16a34a':cv<=5?'#ca8a04':'#dc2626';
+    const cvGColor = cvGlobal===null?'#64748b':cvGlobal<=5?'#16a34a':cvGlobal<=10?'#ca8a04':'#dc2626';
+
+    return `<tr>
+      <td style="font-weight:600;font-size:12px">${p.nombre}</td>
+      <td style="text-align:center">${n}</td>
+      <td style="text-align:center">${median.toFixed(4)}</td>
+      <td style="text-align:center;font-weight:700">${mean.toFixed(4)}</td>
+      <td style="text-align:center">${de.toFixed(5)}</td>
+      <td style="text-align:center;color:${cvColor};font-weight:600">${cv!==null?cv.toFixed(2)+'%':'—'}</td>
+      <td style="text-align:center;color:${cvGColor};font-weight:600">${cvGlobal!==null?cvGlobal.toFixed(2)+'%':'—'}</td>
+      <td style="text-align:center">${uRel.toFixed(5)}</td>
+      <td style="text-align:center">${variance.toFixed(6)}</td>
+      <td style="text-align:center">${rv!=null?rv:'—'}</td>
+      <td style="text-align:center;color:${sesgo===null?'#64748b':Math.abs(sesgo)<=5?'#16a34a':Math.abs(sesgo)<=10?'#ca8a04':'#dc2626'};font-weight:600">${sesgo!==null?sesgo.toFixed(2)+'%':'—'}</td>
+    </tr>`;
+  }).filter(Boolean);
+
+  tbody.innerHTML = rows.length ? rows.join('') :
+    '<tr><td colspan="11" style="text-align:center;color:#94a3b8;padding:20px">Sin datos suficientes</td></tr>';
+
+  // Also render ANOVA
+  renderANOVA(muestra);
+}
+
+// =========================================================
+// ANOVA — ANÁLISIS DE VARIANZA
+// =========================================================
+function renderANOVA(muestra){
+  const wrap = document.getElementById('anova-wrap');
+  if(!wrap) return;
+
+  const selectedParam = document.getElementById('stat-param')?.value || null;
+  const allParams = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  const params = selectedParam ? allParams.filter(function(p){return p.id===selectedParam;}) : allParams;
+  const mLabel  = muestra==='rbd' ? 'RBD' : 'CPO';
+  let html = '';
+
+  params.forEach(p => {
+    const res = RESULTADOS.filter(r => r.muestra===muestra && r.paramId===p.id);
+    if(res.length < 2) return;
+
+    const groups = res.map(r => (r.reps||[]).filter(x=>x!=null&&isFinite(x)));
+    const k = groups.length;           // número de grupos (labs)
+    const ni = groups.map(g=>g.length); // tamaño de cada grupo
+    const N = ni.reduce((a,b)=>a+b,0); // total de observaciones
+
+    if(N < k+1) return;
+
+    // Grand mean
+    const allVals = groups.flat();
+    const grandMean = allVals.reduce((a,b)=>a+b,0) / N;
+
+    // SST (total)
+    const SST = allVals.reduce((a,b)=>a+(b-grandMean)**2, 0);
+
+    // SSB (entre grupos — between)
+    const groupMeans = groups.map(g => g.reduce((a,b)=>a+b,0)/g.length);
+    const SSB = groups.reduce((acc,g,i) => acc + g.length*(groupMeans[i]-grandMean)**2, 0);
+
+    // SSW (dentro de grupos — within)
+    const SSW = groups.reduce((acc,g,i) => acc + g.reduce((a,b)=>a+(b-groupMeans[i])**2,0), 0);
+
+    // Degrees of freedom
+    const dfB = k - 1;
+    const dfW = N - k;
+
+    // Mean squares
+    const MSB = SSB / dfB;
+    const MSW = SSW / dfW;
+
+    // F statistic
+    const F = MSW > 0 ? MSB / MSW : null;
+
+    // F crítico aproximado (95%, simplificado)
+    // Para uso práctico usamos tabla: F(dfB, dfW) ≈ 4.0 para grupos pequeños
+    const Fcrit = 4.0; // simplificado para k=2-6, n=3
+
+    const sig = F!==null && F > Fcrit;
+    const sigColor = sig ? '#dc2626' : '#16a34a';
+    const sigTxt   = sig ? '⚠️ Diferencia significativa entre laboratorios' : '✅ Sin diferencia significativa entre laboratorios';
+
+    html += `<div style="margin-bottom:14px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+      <div style="background:#f8fafc;padding:10px 16px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:700;font-size:13px">${p.nombre} · ${mLabel}</span>
+        <span style="font-size:12px;font-weight:600;color:${sigColor}">${sigTxt}</span>
+      </div>
+      <div style="padding:12px 16px">
+        <!-- Tabla ANOVA -->
+        <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
+          <thead><tr style="background:#f1f5f9">
+            <th style="padding:6px 10px;text-align:left;border:1px solid #e2e8f0">Fuente de variación</th>
+            <th style="padding:6px 10px;text-align:center;border:1px solid #e2e8f0">SS</th>
+            <th style="padding:6px 10px;text-align:center;border:1px solid #e2e8f0">gl</th>
+            <th style="padding:6px 10px;text-align:center;border:1px solid #e2e8f0">MS</th>
+            <th style="padding:6px 10px;text-align:center;border:1px solid #e2e8f0">F calculado</th>
+            <th style="padding:6px 10px;text-align:center;border:1px solid #e2e8f0">F crítico (95%)</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;font-weight:600">Entre laboratorios (Reproducibilidad)</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${SSB.toFixed(6)}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${dfB}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${MSB.toFixed(6)}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center;font-weight:700;color:${sigColor}">${F!==null?F.toFixed(3):'—'}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${Fcrit}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;font-weight:600">Dentro de laboratorios (Repetibilidad)</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${SSW.toFixed(6)}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${dfW}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${MSW.toFixed(6)}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">—</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">—</td>
+            </tr>
+            <tr style="background:#f8fafc">
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;font-weight:600">Total</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${SST.toFixed(6)}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">${N-1}</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">—</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">—</td>
+              <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:center">—</td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- Explicación -->
+        <div style="background:${sig?'#fee2e2':'#dcfce7'};border-radius:8px;padding:8px 14px;font-size:12px;color:${sigColor}">
+          <strong>Interpretación:</strong> F calculado = ${F!==null?F.toFixed(3):'—'} 
+          ${sig ? '> ' : '≤ '} F crítico = ${Fcrit} → 
+          ${sig ? 'Existe diferencia estadísticamente significativa entre laboratorios. Se recomienda investigar la causa de la variabilidad.' 
+                : 'No existe diferencia estadísticamente significativa entre laboratorios. Los resultados son consistentes.'}
+        </div>
+        <!-- Resultados por lab -->
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          ${groups.map((g,i)=>{
+            const m=g.reduce((a,b)=>a+b,0)/g.length;
+            const lab=res[i]?.codigo||'—';
+            return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:12px;text-align:center">
+              <div style="font-weight:600">${lab}</div>
+              <div>x̄ = ${m.toFixed(4)}</div>
+              <div style="color:#94a3b8">n = ${g.length}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  wrap.innerHTML = html || '<p style="color:#94a3b8;font-size:13px">Se necesitan al menos 2 laboratorios con datos para calcular ANOVA.</p>';
+}
+// =========================================================
+// COMPETENCIA DEL ANALISTA
+// =========================================================
+function renderCompetencia(){
+  var wrap    = document.getElementById('comp-wrap');
+  var muestra = document.getElementById('comp-muestra') ? document.getElementById('comp-muestra').value : 'cpo';
+  if(!wrap) return;
+  if(!RESULTADOS.length){ wrap.innerHTML='<div class="card"><p style="color:#94a3b8;font-size:13px;padding:10px">Sin datos suficientes.</p></div>'; return; }
+
+  var params = muestra==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  var REFm   = muestra==='rbd' ? REF.rbd    : REF.cpo;
+  var mLabel = muestra==='rbd' ? 'RBD PALMA' : 'CPO DE PALMA';
+  var bColor = muestra==='rbd' ? '#3b82f6'   : '#f97316';
+  var html   = '';
+
+  params.forEach(function(p){
+    var compAnalista = document.getElementById('comp-analista') ? document.getElementById('comp-analista').value : 'todos';
+    var res = RESULTADOS.filter(function(r){ return r.muestra===muestra && r.paramId===p.id; });
+    if(compAnalista!=='todos') res = res.filter(function(r){ return (r.analista||r.user||'').trim()===compAnalista; });
+    if(res.length < 1) return;
+    var rv = REFm[p.id];
+    var ov = SIGMA_OVERRIDE[p.id];
+
+    var rows = res.map(function(r){
+      var reps = (r.reps||[]).filter(function(x){return x!=null&&isFinite(x);});
+      if(reps.length < 2) return null;
+      var mean  = reps.reduce(function(a,b){return a+b;},0)/reps.length;
+      var de    = Math.sqrt(reps.reduce(function(a,b){return a+(b-mean)*(b-mean);},0)/(reps.length-1));
+      var cv    = mean>0 ? (de/mean*100) : null;
+      var rango = Math.max.apply(null,reps)-Math.min.apply(null,reps);
+
+      // Repetibilidad
+      var repPasa, repVal, repCrit, repColor;
+      if(ov){ repPasa=rango<=ov.r; repVal=rango.toFixed(4); repCrit='Rango &le; r = '+ov.r+' (AOCS Cd 16b-93)'; }
+      else   { repPasa=cv!==null&&cv<=5; repVal=cv!==null?cv.toFixed(2)+'%':'--'; repCrit='CV% &le; 5%'; }
+      repColor = repPasa?'#16a34a':'#dc2626';
+
+      // Reproducibilidad vs referencia
+      var reproZ=null, reproPasa=null, reproTxt='Sin referencia', reproColor='#94a3b8';
+      if(rv!=null){
+        reproZ    = calcZ(r.promedio, rv, p.id, r.muestra||muestra);
+        var absZ  = Math.abs(reproZ);
+        reproPasa = absZ<=2;
+        reproColor= absZ<=2?'#16a34a':absZ<=3?'#ca8a04':'#dc2626';
+        reproTxt  = absZ<=2?'&#x2705; PASA':absZ<=3?'&#x26A0;&#xFE0F; CUESTIONABLE':'&#x274c; NO PASA';
+      }
+
+      // Veredicto
+      var ver, verCol, verBg;
+      if(reproPasa===null){
+        ver=repPasa?'&#x2705; Pasa repetibilidad':'&#x274c; Falla repetibilidad';
+        verCol=repPasa?'#15803d':'#991b1b'; verBg=repPasa?'#dcfce7':'#fee2e2';
+      } else if(repPasa&&reproPasa){
+        ver='&#x2705; COMPETENTE: Pasa repetibilidad y reproducibilidad';
+        verCol='#15803d'; verBg='#dcfce7';
+      } else if(repPasa&&!reproPasa){
+        ver='&#x26A0;&#xFE0F; Preciso pero NO exacto: error sistematico (sesgo)';
+        verCol='#854d0e'; verBg='#fef9c3';
+      } else if(!repPasa&&reproPasa){
+        ver='&#x26A0;&#xFE0F; Exacto pero NO preciso: error aleatorio';
+        verCol='#854d0e'; verBg='#fef9c3';
+      } else {
+        ver='&#x274c; NO COMPETENTE: falla repetibilidad y reproducibilidad';
+        verCol='#991b1b'; verBg='#fee2e2';
+      }
+      return {r:r,reps:reps,mean:mean,de:de,cv:cv,rango:rango,
+              repPasa:repPasa,repVal:repVal,repCrit:repCrit,repColor:repColor,
+              reproZ:reproZ,reproPasa:reproPasa,reproTxt:reproTxt,reproColor:reproColor,
+              ver:ver,verCol:verCol,verBg:verBg};
+    }).filter(Boolean);
+
+    if(!rows.length) return;
+
+    // Reproducibilidad entre pares
+    var promedios = rows.map(function(x){return x.mean;});
+    var mG  = promedios.reduce(function(a,b){return a+b;},0)/promedios.length;
+    var deG = promedios.length>=2 ? Math.sqrt(promedios.reduce(function(a,b){return a+(b-mG)*(b-mG);},0)/(promedios.length-1)) : null;
+    var cvG = deG!==null&&mG>0 ? (deG/mG*100) : null;
+    var cvGColor = cvG===null?'#94a3b8':cvG<=5?'#16a34a':cvG<=10?'#ca8a04':'#dc2626';
+    var cvGTxt   = cvG===null?'--':cvG<=5?'&#x2705; Buena reproducibilidad interna':cvG<=10?'&#x26A0;&#xFE0F; Reproducibilidad moderada':'&#x274c; Baja reproducibilidad interna';
+
+    html += '<div class="card" style="margin-bottom:14px;border-left:4px solid '+bColor+'">'
+      +'<div style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:12px">'+p.nombre+' &middot; '+mLabel
+      +(rv!=null?' <span style="font-size:12px;font-weight:400;color:#64748b">&nbsp;Referencia: '+rv+' '+p.unit+'</span>':'')+'</div>'
+      +'<div class="table-wrap" style="margin-bottom:12px"><table>'
+      +'<thead><tr><th style="text-align:left">Analista</th><th>Lab</th>'
+      +'<th>Rep.1</th><th>Rep.2</th><th>Rep.3</th>'
+      +'<th>Promedio</th><th>DE</th>'
+      +'<th>'+(ov?'Rango':'CV%')+'<br><small style="font-weight:400">'+(ov?'r &le; '+ov.r:'CV% &le; 5%')+'</small></th>'
+      +'<th>Repetibilidad</th>'
+      +(rv!=null?'<th>Z-score</th><th>Reproducibilidad</th>':'')
+      +'<th>Veredicto</th></tr></thead><tbody>'
+      +rows.map(function(x){
+        return '<tr>'
+          +'<td style="font-weight:600;font-size:12px">'+(x.r.analista||x.r.nombre||x.r.user)+'</td>'
+          +'<td><span class="code-badge">'+(x.r.codigo||x.r.user)+'</span></td>'
+          +x.reps.map(function(v){return '<td style="font-size:12px">'+v.toFixed(4)+'</td>';}).join('')
+          +(x.reps.length<3?'<td>--</td>'.repeat(3-x.reps.length):'')
+          +'<td style="font-weight:700">'+x.mean.toFixed(4)+'</td>'
+          +'<td style="font-size:12px">'+x.de.toFixed(5)+'</td>'
+          +'<td style="font-size:12px;color:'+x.repColor+';font-weight:600">'+x.repVal+'</td>'
+          +'<td style="font-weight:700;color:'+x.repColor+'">'+(x.repPasa?'&#x2705; PASA':'&#x274c; FALLA')+'</td>'
+          +(rv!=null?'<td style="font-weight:700;color:'+x.reproColor+'">'+(x.reproZ!==null?x.reproZ.toFixed(2):'--')+'</td>'
+            +'<td style="font-weight:600;font-size:12px;color:'+x.reproColor+'">'+x.reproTxt+'</td>':'')
+          +'<td style="font-size:11px;font-weight:700;padding:6px 8px;background:'+x.verBg+';color:'+x.verCol+'">'+x.ver+'</td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>'
+      +'<div style="background:#f8fafc;border-radius:10px;padding:10px 14px;margin-bottom:8px">'
+      +'<div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:6px">&#128202; Reproducibilidad entre pares (comparacion interna)</div>'
+      +'<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px">'
+      +'<span>Promedio global: <strong>'+mG.toFixed(4)+'</strong></span>'
+      +'<span>DE entre analistas: <strong>'+(deG!==null?deG.toFixed(5):'--')+'</strong></span>'
+      +'<span style="color:'+cvGColor+';font-weight:700">CV% entre pares: '+(cvG!==null?cvG.toFixed(2)+'%':'--')+' &mdash; '+cvGTxt+'</span>'
+      +'</div><div style="font-size:11px;color:#64748b;margin-top:4px">CV% &le; 5%: todos los analistas obtienen resultados equivalentes para esta tecnica</div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:#64748b;background:#f1f5f9;border-radius:8px;padding:8px 14px">'
+      +'<strong>Criterios:</strong> Repetibilidad &mdash; '+rows[0].repCrit
+      +(rv!=null?' &nbsp;&middot;&nbsp; Reproducibilidad &mdash; |Z| &le; 2, sigma = '+getSigma(p.id,rv||1).toFixed(3):'')
+      +'</div></div>';
+  });
+
+  wrap.innerHTML = html || '<div class="card"><p style="color:#94a3b8;font-size:13px;padding:10px">Sin datos suficientes para comparar analistas.</p></div>';
+}
+// =========================================================
+// FILTROS DE ANALISTA — Competencia y Ranking
+// =========================================================
+function populateCompAnalistaFilter(){
+  var sel = document.getElementById('comp-analista');
+  var muestra = document.getElementById('comp-muestra') ? document.getElementById('comp-muestra').value : 'cpo';
+  if(!sel) return;
+  var map = {};
+  RESULTADOS.filter(function(r){return r.muestra===muestra;}).forEach(function(r){
+    var k = (r.analista||r.user||'').trim();
+    if(k) map[k] = r.codigo||r.user;
+  });
+  var cur = sel.value;
+  sel.innerHTML = '<option value="todos">— Todos —</option>'
+    + Object.keys(map).map(function(a){ return '<option value="'+a+'">'+map[a]+' · '+a+'</option>'; }).join('');
+  if(Object.keys(map).indexOf(cur)>=0) sel.value = cur;
+}
+
+function populateRankAnalistaFilter(){
+  var sel = document.getElementById('rank-analista');
+  var muestra = document.getElementById('rank-muestra') ? document.getElementById('rank-muestra').value : 'todos';
+  if(!sel) return;
+  var map = {};
+  var res = muestra==='todos' ? RESULTADOS : RESULTADOS.filter(function(r){return r.muestra===muestra;});
+  res.forEach(function(r){
+    var k = (r.analista||r.user||'').trim();
+    if(k) map[k] = r.codigo||r.user;
+  });
+  var cur = sel.value;
+  sel.innerHTML = '<option value="todos">— Todos —</option>'
+    + Object.keys(map).map(function(a){ return '<option value="'+a+'">'+map[a]+' · '+a+'</option>'; }).join('');
+  if(Object.keys(map).indexOf(cur)>=0) sel.value = cur;
+}
+
+// =========================================================
+// MEJOR ANALISTA POR PARÁMETRO
+// =========================================================
+function renderMejorPorParametro(){
+  var wrap    = document.getElementById('mejor-param-wrap');
+  if(!wrap) return;
+  var muestra = document.getElementById('rank-muestra') ? document.getElementById('rank-muestra').value : 'todos';
+  var muestras = muestra==='todos' ? ['cpo','rbd'] : [muestra];
+  var html = '';
+
+  muestras.forEach(function(m){
+    var params = (m==='rbd' ? PARAMS_RBD : PARAMS_CPO).filter(function(p){ return !p.soloInterno; });
+    var REFm   = m==='rbd' ? REF.rbd    : REF.cpo;
+    var mLabel = m==='rbd' ? 'RBD' : 'CPO';
+    var bColor = m==='rbd' ? '#3b82f6' : '#f97316';
+    var rows   = '';
+
+    params.forEach(function(p){
+      var res = RESULTADOS.filter(function(r){ return r.muestra===m && r.paramId===p.id && !esExcluido(r.paramId); });
+      if(!res.length) return;
+      var rv = REFm[p.id];
+
+      // Find best: lowest |Z| if ref exists, else lowest CV%
+      var scored = res.map(function(r){
+        var reps = (r.reps||[]).filter(function(x){return x!=null&&isFinite(x);});
+        var mean = reps.length ? reps.reduce(function(a,b){return a+b;},0)/reps.length : r.promedio;
+        var de   = reps.length>=2 ? Math.sqrt(reps.reduce(function(a,b){return a+(b-mean)*(b-mean);},0)/(reps.length-1)) : 0;
+        var cv   = mean>0 ? de/mean*100 : 999;
+        var absZ = rv!=null ? Math.abs(calcZ(r.promedio,rv,p.id)) : null;
+        return {r:r, mean:mean, cv:cv, absZ:absZ};
+      });
+
+      // Sort: by absZ first, then CV%
+      scored.sort(function(a,b){
+        if(a.absZ!==null && b.absZ!==null) return a.absZ-b.absZ;
+        return a.cv-b.cv;
+      });
+
+      var best = scored[0];
+      var calColor = best.absZ===null?'#64748b':best.absZ<=2?'#16a34a':best.absZ<=3?'#ca8a04':'#dc2626';
+      var calTxt   = best.absZ===null?'Sin ref.':best.absZ<=2?'Satisfactorio':best.absZ<=3?'Cuestionable':'No satisfactorio';
+
+      rows += '<tr>'
+        +'<td style="font-weight:600;font-size:12px">'+p.nombre+'</td>'
+        +'<td>&#x1F947;</td>'
+        +'<td style="font-weight:700;font-size:12px">'+(best.r.analista||best.r.nombre||best.r.user)+'</td>'
+        +'<td><span class="code-badge">'+(best.r.codigo||best.r.user)+'</span></td>'
+        +'<td style="font-weight:700">'+best.mean.toFixed(4)+'</td>'
+        +(rv!=null?'<td>'+rv+'</td>':'<td>--</td>')
+        +(best.absZ!==null?'<td style="font-weight:700;color:'+calColor+'">'+best.absZ.toFixed(2)+'</td>':'<td>--</td>')
+        +'<td style="font-size:12px;color:'+calColor+';font-weight:600">'+calTxt+'</td>'
+        +'<td style="font-size:12px;color:'+(best.cv<=2?'#16a34a':best.cv<=5?'#ca8a04':'#dc2626')+';font-weight:600">'+best.cv.toFixed(2)+'%</td>'
+        // Other analistas
+        +'<td style="font-size:11px;color:#94a3b8">'
+        +scored.slice(1).map(function(s){
+          return (s.r.analista||s.r.user)+(s.absZ!==null?' (Z='+s.absZ.toFixed(2)+')':'');
+        }).join(' &middot; ')
+        +'</td>'
+        +'</tr>';
+    });
+
+    if(!rows) return;
+
+    html += '<div style="margin-bottom:14px">'
+      +'<div style="font-weight:700;font-size:13px;color:#1e293b;margin-bottom:8px;padding:6px 10px;background:'+(m==='rbd'?'#eff6ff':'#fff7ed')+';border-radius:8px;border-left:3px solid '+bColor+'">'+mLabel+' DE PALMA</div>'
+      +'<div class="table-wrap"><table>'
+      +'<thead><tr><th style="text-align:left">Parametro</th><th></th><th>Mejor analista</th><th>Lab</th><th>Promedio</th><th>Referencia</th><th>|Z|</th><th>Calificacion</th><th>CV%</th><th>Otros analistas</th></tr></thead>'
+      +'<tbody>'+rows+'</tbody></table></div></div>';
+  });
+
+  wrap.innerHTML = html || '<p style="color:#94a3b8;font-size:13px">Sin datos suficientes.</p>';
+}
+function syncRPIMuestra(){
+  var m = document.getElementById('stat-muestra')?.value;
+  var rpiSel = document.getElementById('rpi-muestra');
+  if(rpiSel && m) rpiSel.value = m;
+}
+// =========================================================
+// HUMEDAD POR HORNO — MONITOREO INTERNO
+// =========================================================
+function renderHornoInterno(){
+  var wrap    = document.getElementById('horno-wrap');
+  var muestra = document.getElementById('horno-muestra') ? document.getElementById('horno-muestra').value : 'rbd';
+  if(!wrap) return;
+
+  var res = RESULTADOS.filter(function(r){ return r.muestra===muestra && esExcluido(r.paramId); });
+  if(!res.length){
+    wrap.innerHTML='<div class="card"><p style="color:#94a3b8;font-size:13px;padding:10px">Sin datos de humedad por horno para '+muestra.toUpperCase()+'.</p></div>';
+    return;
+  }
+
+  var html = '<div class="card">'
+    +'<div class="card-title">&#128293; Resultados Humedad por Horno &mdash; '+muestra.toUpperCase()+' &mdash; Solo monitoreo interno (sin referencia externa)</div>'
+    +'<div class="table-wrap" style="margin-top:12px"><table>'
+    +'<thead><tr><th>Lab</th><th>Analista</th><th>Rep.1</th><th>Rep.2</th><th>Rep.3</th><th>Promedio</th><th>DE</th><th>CV%</th><th>Repetibilidad<br><small>CV% &le; 5%</small></th></tr></thead>'
+    +'<tbody>';
+
+  var promedios = [];
+  res.forEach(function(r){
+    var reps = (r.reps||[]).filter(function(x){return x!=null&&isFinite(x);});
+    var mean  = reps.length ? reps.reduce(function(a,b){return a+b;},0)/reps.length : r.promedio;
+    var de    = reps.length>=2 ? Math.sqrt(reps.reduce(function(a,b){return a+(b-mean)*(b-mean);},0)/(reps.length-1)) : 0;
+    var cv    = mean>0 ? de/mean*100 : 0;
+    var cvColor = cv<=2?'#16a34a':cv<=5?'#ca8a04':'#dc2626';
+    var repPasa = cv<=5;
+    promedios.push(mean);
+
+    html += '<tr>'
+      +'<td><span class="code-badge">'+(r.codigo||r.user)+'</span></td>'
+      +'<td style="font-size:12px;font-weight:600">'+(r.analista||r.nombre||'--')+'</td>'
+      +(reps[0]!=null?'<td>'+Number(reps[0]).toFixed(4)+'</td>':'<td>--</td>')
+      +(reps[1]!=null?'<td>'+Number(reps[1]).toFixed(4)+'</td>':'<td>--</td>')
+      +(reps[2]!=null?'<td>'+Number(reps[2]).toFixed(4)+'</td>':'<td>--</td>')
+      +'<td style="font-weight:700">'+mean.toFixed(4)+'</td>'
+      +'<td style="font-size:12px">'+de.toFixed(5)+'</td>'
+      +'<td style="font-weight:700;color:'+cvColor+'">'+cv.toFixed(2)+'%</td>'
+      +'<td style="font-weight:700;color:'+(repPasa?'#16a34a':'#dc2626')+'">'+(repPasa?'&#x2705; PASA':'&#x274c; FALLA')+'</td>'
+      +'</tr>';
+  });
+
+  // Summary stats
+  var mG  = promedios.reduce(function(a,b){return a+b;},0)/promedios.length;
+  var deG = promedios.length>=2 ? Math.sqrt(promedios.reduce(function(a,b){return a+(b-mG)*(b-mG);},0)/(promedios.length-1)) : 0;
+  var cvG = mG>0 ? deG/mG*100 : 0;
+
+  html += '</tbody></table></div>'
+    +'<div style="background:#f8fafc;border-radius:10px;padding:12px 16px;margin-top:12px">'
+    +'<div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:6px">&#128202; Resumen interno &mdash; Variabilidad entre analistas</div>'
+    +'<div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px">'
+    +'<span>N analistas: <strong>'+promedios.length+'</strong></span>'
+    +'<span>Promedio global: <strong>'+mG.toFixed(4)+' %</strong></span>'
+    +'<span>DE entre analistas: <strong>'+deG.toFixed(5)+'</strong></span>'
+    +'<span style="color:'+(cvG<=5?'#16a34a':cvG<=10?'#ca8a04':'#dc2626')+';font-weight:700">CV% entre analistas: '+cvG.toFixed(2)+'%</span>'
+    +'</div>'
+    +'<div style="font-size:11px;color:#64748b;margin-top:6px">&#128161; Este parametro se excluye del calculo de Z-score porque no cuenta con valor de referencia certificado externo. Se usa solo para monitorear la consistencia interna del laboratorio.</div>'
+    +'</div></div>';
+
+  wrap.innerHTML = html;
+}
+// =========================================================
+// EDITOR DE DATOS
+// =========================================================
+var MODAL_DOC = null; // documento actual en edición
+
+function renderEditor(){
+  var tbody = document.getElementById('editor-tbody');
+  if(!tbody) return;
+
+  // Get unique docs from RESULTADOS (group by docId)
+  var docs = {};
+  RESULTADOS.forEach(function(r){
+    if(!r.docId) return;
+    if(!docs[r.docId]) docs[r.docId] = { docId:r.docId, codigo:r.codigo||r.user, nombre:r.nombre||'--', analista:r.analista||'--', muestra:r.muestra, fecha:r.fecha||'--', params:[] };
+    docs[r.docId].params.push(r.paramNombre||r.paramId);
+  });
+
+  var rows = Object.values(docs);
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">Sin datos en Firestore</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function(d){
+    return '<tr>'
+      +'<td><span class="code-badge">'+d.codigo+'</span></td>'
+      +'<td style="font-size:12px;font-weight:600">'+d.analista+'</td>'
+      +'<td><span class="badge '+(d.muestra==='rbd'?'b-rbd':'b-cpo')+'">'+d.muestra.toUpperCase()+'</span></td>'
+      +'<td style="font-size:11px;color:#64748b">'+d.params.slice(0,4).join(', ')+(d.params.length>4?' +'+( d.params.length-4)+' más':'')+'</td>'
+      +'<td style="font-size:11px">'+d.fecha+'</td>'
+      +'<td style="display:flex;gap:6px">'
+      +'<button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;font-size:11px" onclick="abrirModalEditar(this.dataset.id)" data-id="'+d.docId+'">&#9998; Editar</button>'
+      +'<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;font-size:11px" onclick="confirmarEliminar(this.dataset.id,this.dataset.name)" data-id="'+d.docId+'" data-name="'+d.analista+'">&#128465; Eliminar</button>'
+      +'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+function abrirModalEditar(docId){
+  // Find all results for this docId
+  var res = RESULTADOS.filter(function(r){ return r.docId===docId; });
+  if(!res.length){ alert('No se encontraron datos para este documento.'); return; }
+  MODAL_DOC = { docId:docId, items:res };
+
+  document.getElementById('modal-titulo').textContent = 'Editar: '+(res[0].analista||res[0].user)+' · '+(res[0].nombre||res[0].codigo);
+  document.getElementById('btn-guardar-modal').style.display='inline-block';
+
+  var html = '<div style="max-height:60vh;overflow-y:auto">'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<thead><tr style="background:#f8fafc">'
+    +'<th style="padding:8px;text-align:left;border-bottom:1px solid #e2e8f0">Muestra</th>'
+    +'<th style="padding:8px;text-align:left;border-bottom:1px solid #e2e8f0">Parámetro</th>'
+    +'<th style="padding:8px;border-bottom:1px solid #e2e8f0">Rep.1</th>'
+    +'<th style="padding:8px;border-bottom:1px solid #e2e8f0">Rep.2</th>'
+    +'<th style="padding:8px;border-bottom:1px solid #e2e8f0">Rep.3</th>'
+    +'<th style="padding:8px;border-bottom:1px solid #e2e8f0">Promedio</th>'
+    +'</tr></thead><tbody>';
+
+  res.forEach(function(r, idx){
+    var reps = r.reps||[null,null,null];
+    html += '<tr style="border-bottom:1px solid #f1f5f9">'
+      +'<td style="padding:8px"><span class="badge '+(r.muestra==='rbd'?'b-rbd':'b-cpo')+'">'+r.muestra.toUpperCase()+'</span></td>'
+      +'<td style="padding:8px;font-weight:600">'+r.paramNombre+'</td>'
+      +[0,1,2].map(function(i){
+        return '<td style="padding:4px"><input type="number" step="0.0001" style="width:80px;border:1px solid #e2e8f0;border-radius:6px;padding:4px 6px;font-size:12px" '
+          +'id="modal_rep_'+idx+'_'+i+'" value="'+(reps[i]!=null?reps[i]:'')+'" '
+          +'oninput="recalcModalProm('+idx+')"></td>';
+      }).join('')
+      +'<td style="padding:8px;font-weight:700" id="modal_prom_'+idx+'">'+Number(r.promedio).toFixed(4)+'</td>'
+      +'</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-editor').style.display = 'block';
+}
+
+function recalcModalProm(idx){
+  var vals = [0,1,2].map(function(i){
+    var el = document.getElementById('modal_rep_'+idx+'_'+i);
+    return el&&el.value!==''?parseFloat(el.value):null;
+  }).filter(function(v){return v!==null&&isFinite(v);});
+  var prom = vals.length ? vals.reduce(function(a,b){return a+b;},0)/vals.length : null;
+  var el = document.getElementById('modal_prom_'+idx);
+  if(el) el.textContent = prom!==null?prom.toFixed(4):'--';
+}
+
+function guardarModalCambios(){
+  if(!MODAL_DOC) return;
+  var items = MODAL_DOC.items;
+  // Collect updated reps and promedios
+  var nuevosDatos = items.map(function(r, idx){
+    var reps = [0,1,2].map(function(i){
+      var el = document.getElementById('modal_rep_'+idx+'_'+i);
+      return el&&el.value!==''?parseFloat(el.value):null;
+    });
+    var vals = reps.filter(function(v){return v!==null&&isFinite(v);});
+    var prom = vals.length?vals.reduce(function(a,b){return a+b;},0)/vals.length:r.promedio;
+    return Object.assign({},r,{reps:reps,promedio:prom});
+  });
+
+  // Update in Firestore — we need to update the 'datos' array in the doc
+  if(typeof window._actualizarDoc === 'function'){
+    var payload = nuevosDatos.map(function(r){
+      return { paramId:r.paramId, paramNombre:r.paramNombre, unit:r.unit, muestra:r.muestra, reps:r.reps, promedio:r.promedio };
+    });
+    window._actualizarDoc(MODAL_DOC.docId, { datos: payload }).then(function(res){
+      if(res.ok){ alert('✅ Datos actualizados correctamente.'); cerrarModal(); }
+      else alert('Error al guardar: '+res.error);
+    });
+  } else {
+    alert('No hay conexión con Firestore.');
+  }
+}
+
+function cerrarModal(){
+  document.getElementById('modal-editor').style.display='none';
+  MODAL_DOC = null;
+}
+
+function confirmarEliminar(docId, analista){
+  if(!confirm('¿Eliminar TODOS los resultados de "'+analista+'"? Esta acción no se puede deshacer.')) return;
+  if(typeof window._eliminarDoc === 'function'){
+    window._eliminarDoc(docId).then(function(res){
+      if(res.ok){ alert('✅ Eliminado correctamente.'); renderEditor(); }
+      else alert('Error al eliminar: '+res.error);
+    });
+  }
+}
+
+function abrirModalNuevo(){
+  alert('Para agregar resultados use el formulario de analistas. Esta función agrega entradas manualmente solo en casos especiales — próximamente.');
+}
+</script>
+</body>
+</html>
