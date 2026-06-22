@@ -2331,7 +2331,7 @@ function gotoSection(name,el){
   if(name==='dashboard') refreshDashboard();
   if(name==='resultados') renderAllResults();
   if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); }
-  if(name==="participantes"){ if(typeof window._cargarFotos==="function"){ window._cargarFotos().then(function(fotosDB){ Object.keys(fotosDB).forEach(k=>{ FOTOS[k]=fotosDB[k]; try{localStorage.setItem("foto_"+k,fotosDB[k]);}catch(e){} }); renderParticipants(); }); } else { renderParticipants(); } }
+  if(name==="participantes"){ cargarTodasFotosIDB().then(function(fotosIDB){ Object.keys(fotosIDB).forEach(k=>{ FOTOS[k]=fotosIDB[k]; }); renderParticipants(); }).catch(function(){ renderParticipants(); }); }
   if(name==='misresultados') renderMisResultados();
   if(name==='auditor') renderAuditor();
   if(name==='evaluacion'){
