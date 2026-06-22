@@ -2903,7 +2903,7 @@ function renderCompetencia(){
   params.forEach(function(p){
     var compAnalista = document.getElementById('comp-analista') ? document.getElementById('comp-analista').value : 'todos';
     var res = RESULTADOS.filter(function(r){ return r.muestra===muestra && r.paramId===p.id; });
-    if(compAnalista!=='todos') res = res.filter(function(r){ return (r.analista||r.user||'').trim()===compAnalista; });
+    if(compAnalista!=='todos') res = res.filter(function(r){ return (r.analista||r.nombre||r.user||'').trim()===compAnalista; });
     if(res.length < 1) return;
     var rv = REFm[p.id];
     var ov = SIGMA_OVERRIDE[p.id];
@@ -2979,7 +2979,7 @@ function renderCompetencia(){
       +'<th>Veredicto</th></tr></thead><tbody>'
       +rows.map(function(x){
         return '<tr>'
-          +'<td style="font-weight:600;font-size:12px">'+(x.r.analista||x.r.nombre||x.r.user)+'</td>'
+          +'<td style="font-weight:600;font-size:12px">'+(x.r.analista||x.r.nombre||x.r.user||'')+'</td>'
           +'<td><span class="code-badge">'+(x.r.codigo||x.r.user)+'</span></td>'
           +x.reps.map(function(v){return '<td style="font-size:12px">'+v.toFixed(4)+'</td>';}).join('')
           +(x.reps.length<3?'<td>--</td>'.repeat(3-x.reps.length):'')
@@ -3018,7 +3018,7 @@ function populateCompAnalistaFilter(){
   if(!sel) return;
   var map = {};
   RESULTADOS.filter(function(r){return r.muestra===muestra;}).forEach(function(r){
-    var k = (r.analista||r.user||'').trim();
+    var k = (r.analista||r.nombre||r.user||'').trim();
     if(k) map[k] = r.codigo||r.user;
   });
   var cur = sel.value;
@@ -3034,7 +3034,7 @@ function populateRankAnalistaFilter(){
   var map = {};
   var res = muestra==='todos' ? RESULTADOS : RESULTADOS.filter(function(r){return r.muestra===muestra;});
   res.forEach(function(r){
-    var k = (r.analista||r.user||'').trim();
+    var k = (r.analista||r.nombre||r.user||'').trim();
     if(k) map[k] = r.codigo||r.user;
   });
   var cur = sel.value;
