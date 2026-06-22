@@ -794,7 +794,7 @@ const PARAMS_RBD = [
 const PARAMS_CPO = [
   { id:'acidez',       nombre:'Acidez (palmítico)',      unit:'%',          tipo:'acidez' },
   { id:'humedad_hal',  nombre:'Humedad halógeno',        unit:'%',          tipo:'directo' },
-  { id:'humedad',      nombre:'Humedad',                 unit:'%',          tipo:'directo' },
+  { id:'humedad',      nombre:'Humedad',                 unit:'%',          tipo:'directo', soloInterno:true },
   { id:'impurezas',    nombre:'Impurezas',               unit:'%',          tipo:'directo' },
   { id:'indice_yodo',  nombre:'Índice de Yodo',          unit:'g I₂/100g',  tipo:'yodo' },
   { id:'sfc_20',       nombre:'Perfiles de Sólidos 20°C', unit:'%',         tipo:'directo' },
@@ -1300,7 +1300,8 @@ const SIGMA_OVERRIDE = {
   acidez_cpo:  { sigma:0.058,  r:0.10,  R:0.20, norma:'ISO 660:2020 · Horwitz (ISO 13528) · FFA 2.41%' },
 };
 // Parámetros excluidos del interlaboratorio (solo monitoreo interno)
-const EXCLUIR_INTERLAB = ['humedad'];
+const EXCLUIR_INTERLAB = ['humedad']; // humedad horno — solo monitoreo interno, sin Z-score
+function esExcluido(paramId){ return EXCLUIR_INTERLAB.includes(paramId); }
 function getSigma(paramId, ref, muestra){
   // Horwitz (ISO 13528): σ = 0.02 × C^0.8495
   // C debe estar en fracción (no porcentaje) para Horwitz
@@ -1362,7 +1363,7 @@ function zClass(z){ const a=Math.abs(z); if(a<=2) return{cls:'z-ok',label:'Satis
 function refreshDashboard(){
   const analistas=USERS.filter(u=>u.rol!=='admin');
   const conDatos=new Set(RESULTADOS.map(r=>r.user)).size;
-  const withRef=RESULTADOS.filter(r=>{ if(r.paramId==='humedad') return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+  const withRef=RESULTADOS.filter(r=>{ if(esExcluido(r.paramId)) return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
   const sat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId,r.muestra))<=2; }).length;
   const nosat=withRef.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcZ(r.promedio,rv,r.paramId,r.muestra))>3; }).length;
   document.getElementById('dashboard-metrics').innerHTML=`
@@ -1441,7 +1442,7 @@ function renderMisResultados(){
 function renderAllResults(){
   const tbody=document.getElementById('results-body');
   if(!RESULTADOS.length){ tbody.innerHTML='<tr><td colspan="12" style="text-align:center;padding:28px;color:var(--light)">Sin resultados aún</td></tr>'; return; }
-  var sorted = RESULTADOS.filter(function(r){return r.paramId!=='humedad';}).slice().sort(function(a,b){
+  var sorted = RESULTADOS.filter(function(r){return !esExcluido(r.paramId);}).slice().sort(function(a,b){
     // Sort by analista name, then muestra (rbd before cpo), then param
     var na=(a.analista||a.user||'').toLowerCase();
     var nb=(b.analista||b.user||'').toLowerCase();
@@ -1512,7 +1513,7 @@ function refreshStatChart(){
 function renderZScores(){
   populateAnalistaFilter();
   const tbody=document.getElementById('zscore-body');
-  const withRef=RESULTADOS.filter(r=>{ if(r.paramId==='humedad') return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
+  const withRef=RESULTADOS.filter(r=>{ if(esExcluido(r.paramId)) return false; const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
   if(!withRef.length){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--light)">Sin datos</td></tr>'; return; }
   tbody.innerHTML=withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; const s=Math.abs(rv)*0.03||0.1; const z=calcZ(r.promedio,rv,r.paramId,r.muestra); const zc=zClass(z); return`<tr><td><span class="code-badge">${r.codigo}</span></td><td><span class="badge ${r.muestra==='rbd'?'b-rbd':'b-cpo'}">${r.muestra.toUpperCase()}</span></td><td>${r.paramNombre}</td><td>${r.promedio.toFixed(4)} ${r.unit}</td><td>${rv}</td><td>${s.toFixed(4)}</td><td class="${zc.cls}">${z.toFixed(2)}</td><td><span class="badge ${zc.badge}">${zc.label}</span></td></tr>`; }).join('');
 }
@@ -1564,7 +1565,11 @@ function renderParticipants(){
           return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9">
             <div style="width:30px;height:30px;border-radius:50%;background:${info.color};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0">${ini2}</div>
             <span style="font-size:13px;color:#1e293b;font-weight:500;flex:1">${nombre}</span>
-            <button onclick="verCarta('${nombreEnc}','${cod}')" style="background:${info.color};color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">📄 Ver carta</button>
+            <label style="cursor:pointer;position:relative;display:inline-block">
+            <div style="background:#f5f3ff;border:1px solid #a78bfa;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;color:#7c3aed;white-space:nowrap" title="Subir foto del analista">${getFotoAnalista(cod,nombre)?'🔄':'📷'}</div>
+            <input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="uploadFotoAnalista(this,'${cod}','${nombreEnc}')">
+          </label>
+          <button onclick="verCarta('${nombreEnc}','${cod}')" style="background:${info.color};color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">📄 Ver carta</button>
           </div>`;
         }).join('')
       : `<div style="font-size:12px;color:#94a3b8;padding:6px 0">Sin datos aún</div>`;
@@ -1597,64 +1602,34 @@ function renderParticipants(){
 }
 
 // =========================================================
-// SISTEMA DE FOTOS CON IndexedDB (igual que inventario)
+// SISTEMA DE FOTOS — Firestore como fuente de verdad
 // =========================================================
-const IDB_NAME = 'interlab_fotos';
-const IDB_STORE = 'fotos';
-let _idb = null;
 
-function abrirIDB(){
-  return new Promise((res, rej) => {
-    if(_idb){ res(_idb); return; }
-    const req = indexedDB.open(IDB_NAME, 1);
-    req.onupgradeneeded = e => e.target.result.createObjectStore(IDB_STORE);
-    req.onsuccess = e => { _idb = e.target.result; res(_idb); };
-    req.onerror = e => rej(e);
-  });
-}
-
-function guardarFotoIDB(userKey, base64){
-  return abrirIDB().then(db => new Promise((res, rej) => {
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).put(base64, userKey);
-    tx.oncomplete = () => res(true);
-    tx.onerror = e => rej(e);
-  }));
-}
-
-function cargarFotoIDB(userKey){
-  return abrirIDB().then(db => new Promise((res, rej) => {
-    const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(userKey);
-    req.onsuccess = e => res(e.target.result || null);
-    req.onerror = e => rej(e);
-  }));
-}
-
-function cargarTodasFotosIDB(){
-  return abrirIDB().then(db => new Promise((res, rej) => {
-    const fotos = {};
-    const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).openCursor();
-    req.onsuccess = e => {
-      const cursor = e.target.result;
-      if(cursor){ fotos[cursor.key] = cursor.value; cursor.continue(); }
-      else res(fotos);
-    };
-    req.onerror = e => rej(e);
-  }));
-}
+function guardarFotoIDB(key, base64){ /* no-op, Firestore es la fuente */ return Promise.resolve(true); }
 
 function comprimirFoto(base64, maxSize, callback){
+  comprimirFotoCalidad(base64, maxSize, 0.7, callback);
+}
+
+function comprimirFotoCalidad(base64, maxSize, quality, callback){
   const img = new Image();
   img.onload = function(){
+    // Recorte cuadrado centrado (evita que la cara quede cortada o estirada)
+    const side = Math.min(img.width, img.height);
+    const sx = Math.round((img.width - side) / 2);
+    const sy = Math.round((img.height - side) / 2);
     const canvas = document.createElement('canvas');
-    let w = img.width, h = img.height;
-    if(w>maxSize||h>maxSize){
-      if(w>h){ h=Math.round(h*maxSize/w); w=maxSize; }
-      else { w=Math.round(w*maxSize/h); h=maxSize; }
+    canvas.width = maxSize;
+    canvas.height = maxSize;
+    canvas.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, maxSize, maxSize);
+    // Reducir calidad iterativamente hasta quedar bajo 700KB
+    let result = canvas.toDataURL('image/jpeg', quality);
+    let q = quality;
+    while(result.length > 900000 && q > 0.3){
+      q -= 0.1;
+      result = canvas.toDataURL('image/jpeg', q);
     }
-    canvas.width=w; canvas.height=h;
-    canvas.getContext('2d').drawImage(img,0,0,w,h);
-    callback(canvas.toDataURL('image/jpeg', 0.7));
+    callback(result);
   };
   img.src = base64;
 }
@@ -1663,15 +1638,16 @@ function uploadFotoAdmin(input, userKey){
   if(!input.files||!input.files[0]) return;
   const reader = new FileReader();
   reader.onload = function(e){
-    comprimirFoto(e.target.result, 300, function(compressed){
+    comprimirFotoCalidad(e.target.result, 400, 0.85, function(compressed){
       FOTOS[userKey] = compressed;
       renderParticipants();
-      // Guardar en IndexedDB
-      guardarFotoIDB(userKey, compressed).then(function(){
-        console.log('✅ Foto guardada:', userKey);
-      }).catch(function(err){
-        console.error('❌ Error:', err);
-      });
+      // Guardar en Firestore
+      if(typeof window._guardarFoto === 'function'){
+        window._guardarFoto(userKey, compressed).then(function(res){
+          if(res&&res.ok) console.log('Foto lab guardada:', userKey);
+          else console.warn('Error Firestore foto lab:', res&&res.error);
+        });
+      }
       // Actualizar topbar si es el usuario actual
       if(SESSION && SESSION.user===userKey){
         const tbAvatar = document.getElementById('tb-avatar');
@@ -1685,21 +1661,27 @@ function uploadFotoAdmin(input, userKey){
   reader.readAsDataURL(input.files[0]);
 }
 
-// Cargar todas las fotos al inicio — IDB primero, luego localStorage como fallback
-cargarTodasFotosIDB().then(function(fotosIDB){
-  // Primero cargar desde localStorage (fotos viejas)
-  ['analista1','analista2','analista3','analista4'].forEach(function(u){
-    try{ var f=localStorage.getItem('foto_'+u); if(f && !fotosIDB[u]){ fotosIDB[u]=f; guardarFotoIDB(u,f); } }catch(e){}
-  });
-  Object.keys(fotosIDB).forEach(k => { FOTOS[k] = fotosIDB[k]; });
-  renderParticipants();
-}).catch(function(err){
-  console.warn('IndexedDB no disponible, usando localStorage:', err);
-  ['analista1','analista2','analista3','analista4'].forEach(function(u){
-    try{ var f=localStorage.getItem('foto_'+u); if(f) FOTOS[u]=f; }catch(e){}
-  });
-  renderParticipants();
-});
+// Fotos se cargan desde Firestore via evento fotosListas (ver módulo Firebase)
+
+function uploadFotoAnalista(input, labCodigo, nombreEnc){
+  if(!input.files||!input.files[0]) return;
+  const nombre = decodeURIComponent(nombreEnc);
+  const userKey = fotoKeyAnalista(labCodigo, nombre);
+  const reader = new FileReader();
+  reader.onload = function(e){
+    comprimirFotoCalidad(e.target.result, 400, 0.85, async function(compressed){
+      FOTOS[userKey] = compressed;
+      renderParticipants();
+      // Guardar en IndexedDB local
+      // Guardar en Firestore
+      if(typeof window._guardarFoto === 'function'){
+        const res = await window._guardarFoto(userKey, compressed);
+        if(!res||!res.ok) console.warn('Firestore foto error:', res?.error);
+      }
+    });
+  };
+  reader.readAsDataURL(input.files[0]);
+}
 
 function deleteFoto(userKey){
   delete FOTOS[userKey];
@@ -1742,8 +1724,12 @@ function loadBannerPhoto(input){
 // =========================================================
 // CARTA DE DESEMPEÑO ANALISTA
 // =========================================================
+var CARTA_CURRENT = null; // { nombre, labCodigo, userKey }
+
 function verCarta(nombreEnc, labCodigo){
   const nombre = decodeURIComponent(nombreEnc);
+  const u = USERS.find(x=>x.codigo===labCodigo);
+  CARTA_CURRENT = { nombre, labCodigo, userKey: fotoKeyAnalista(labCodigo, nombre) };
   const labInfo = {
     'LAB-01': { titulo:'Fisico Quimico Codazzi',        color:'#7c3aed' },
     'LAB-02': { titulo:'Extractora Maria la Baja',       color:'#0d9488' },
@@ -1751,10 +1737,9 @@ function verCarta(nombreEnc, labCodigo){
     'LAB-04': { titulo:'Extractora del Sinú',            color:'#d97706' },
   };
   const info = labInfo[labCodigo] || { titulo: labCodigo, color:'#7c3aed' };
-  const u = USERS.find(x=>x.codigo===labCodigo);
-  const foto = u ? FOTOS[u.user] : null;
+  const foto = FOTOS[fotoKeyAnalista(labCodigo, nombre)] || null;
 
-  const resultados = RESULTADOS.filter(r => r.analista === nombre && r.codigo === labCodigo && r.paramId !== 'humedad');
+  const resultados = RESULTADOS.filter(r => r.analista === nombre && r.codigo === labCodigo && !esExcluido(r.paramId));
   if(!resultados.length){ alert('No hay resultados registrados para este analista.'); return; }
 
   const muestras = {};
@@ -1782,10 +1767,14 @@ function verCarta(nombreEnc, labCodigo){
       const calIcon = za<=2?'✅':za<=3?'⚠️':'❌';
       if(za<=2) totalSat++; else if(za<=3) totalCues++; else totalNoSat++;
       const reps = (r.reps||[]).map(v=>v!=null?Number(v).toFixed(4):'—').join(' | ');
+      const repsVals = (r.reps||[]).filter(v=>v!=null&&isFinite(v));
+      const cvPct = (()=>{ if(repsVals.length<2) return null; const m=repsVals.reduce((a,b)=>a+b,0)/repsVals.length; if(!m) return null; const de=Math.sqrt(repsVals.reduce((a,b)=>a+(b-m)**2,0)/(repsVals.length-1)); return (de/m*100); })();
+      const cvColor = cvPct===null?'#94a3b8':cvPct<=2?'#16a34a':cvPct<=5?'#d97706':'#dc2626';
       return `<tr style="border-bottom:1px solid #f1f5f9">
         <td style="padding:8px 10px;font-size:12px;font-weight:600">${r.paramNombre||r.paramId}</td>
         <td style="padding:8px 10px;font-size:11px;color:#64748b;text-align:center">${reps}</td>
         <td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center">${r.promedio!=null?Number(r.promedio).toFixed(4):'—'}</td>
+        <td style="padding:8px 10px;font-size:12px;text-align:center;font-weight:600;color:${cvColor}">${cvPct!==null?cvPct.toFixed(2)+'%':'—'}</td>
         <td style="padding:8px 10px;font-size:12px;text-align:center">${ref}</td>
         <td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center;color:${za>2?'#dc2626':'#16a34a'}">${z.toFixed(2)}</td>
         <td style="padding:8px 10px;text-align:center">
@@ -1803,6 +1792,7 @@ function verCarta(nombreEnc, labCodigo){
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:left">PARÁMETRO</th>
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">REP 1 | REP 2 | REP 3</th>
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">PROMEDIO</th>
+          <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">CV%</th>
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">REFERENCIA</th>
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">Z-SCORE</th>
           <th style="padding:9px 10px;font-size:11px;color:#64748b;text-align:center">CALIFICACIÓN</th>
@@ -1870,20 +1860,31 @@ function verCarta(nombreEnc, labCodigo){
 function subirFotoCarta(input){
   if(!input.files||!input.files[0]) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    // Actualizar el avatar dentro de la carta
-    const avatar = document.querySelector('#carta-content img.carta-avatar, #carta-content div.carta-avatar');
-    const img = document.querySelector('#carta-content img.carta-avatar');
-    const div = document.querySelector('#carta-content .carta-avatar-div');
-    // Buscar cualquier elemento avatar en la carta
-    const avatarEl = document.querySelector('#carta-content [data-avatar]');
-    if(avatarEl){
-      avatarEl.outerHTML = `<img data-avatar src="${e.target.result}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid currentColor">`;
-    } else {
-      // Reemplazar primer img o div avatar
+  reader.onload = function(e){
+    // Comprimir a max 200px y calidad 0.6 para garantizar < 200KB
+    comprimirFotoCalidad(e.target.result, 400, 0.85, async function(compressed){
+
+      // 1. Actualizar avatar en la carta (preview inmediato)
       const first = document.querySelector('#carta-content img[style*="150px"], #carta-content div[style*="150px"]');
-      if(first) first.outerHTML = `<img src="${e.target.result}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid #7c3aed;flex-shrink:0">`;
-    }
+      if(first) first.outerHTML = '<img src="'+compressed+'" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid #7c3aed;flex-shrink:0">';
+
+      // 2. Guardar en Firestore y en memoria local
+      if(CARTA_CURRENT && typeof window._guardarFoto === 'function'){
+        const userKey = CARTA_CURRENT.userKey;
+        FOTOS[userKey] = compressed;
+        const res = await window._guardarFoto(userKey, compressed);
+        if(res && res.ok){
+          cerrarCarta();
+          renderParticipants();
+          renderEvaluacion();
+        } else {
+          alert('No se pudo guardar la foto: ' + (res ? res.error : 'Sin conexion'));
+        }
+      } else {
+        if(CARTA_CURRENT) FOTOS[CARTA_CURRENT.userKey] = compressed;
+        cerrarCarta();
+      }
+    });
   };
   reader.readAsDataURL(input.files[0]);
 }
@@ -1902,7 +1903,24 @@ function imprimirCarta(){
 }
 
 populateStatParams();
-const FOTOS = {}; // user -> dataURL
+const FOTOS = {}; // clave -> dataURL (LAB-01::Nombre Analista)
+
+// Escuchar cuando Firestore carga las fotos al inicio
+window.addEventListener('fotosListas', function(e){
+  const fotosDB = e.detail || {};
+  Object.keys(fotosDB).forEach(function(k){ FOTOS[k] = fotosDB[k]; });
+  renderParticipants();
+  renderEvaluacion();
+});
+
+// Clave única por ANALISTA individual: "LAB-01::Adriana Guzman"
+function fotoKeyAnalista(labCodigo, nombreAnalista){
+  return labCodigo + '::' + (nombreAnalista||'').trim();
+}
+function getFotoAnalista(labCodigo, nombreAnalista){
+  const key = fotoKeyAnalista(labCodigo, nombreAnalista);
+  return FOTOS[key] || null;
+}
 
 function previewPhoto(input){
   if(!input.files||!input.files[0]) return;
@@ -1972,7 +1990,7 @@ function calcBias(val,ref){ return ((val-ref)/ref)*100; }
 function calcSigma(ref){ return Math.abs(ref)*0.03||0.1; }
 
 function getAnalistaStats(user){
-  const myRes = RESULTADOS.filter(r=>r.user===user && r.paramId!=='humedad');
+  const myRes = RESULTADOS.filter(r=>r.user===user && !esExcluido(r.paramId));
   const withRef = myRes.filter(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return rv!==undefined; });
   if(!withRef.length) return null;
   const zScores = withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv,r.paramId,r.muestra); });
@@ -2033,7 +2051,12 @@ function renderPodio(ranked){
   const podioItems = order.map(i=>{
     if(i>=ranked.length) return '<div class="podio-item"></div>';
     const {u,stats} = ranked[i];
-    const photo = getPhotoEl(u.user, 68, i===0?'podio-photo':'podio-photo');
+    const nombreAn = RESULTADOS.find(r=>r.user===u.user)?.analista || u.nombre;
+    const fotoAnKey = fotoKeyAnalista(u.codigo, nombreAn);
+    const fotoAn = FOTOS[fotoAnKey] || null;
+    const photo = fotoAn
+      ? '<img src="'+fotoAn+'" class="podio-photo" style="width:68px;height:68px">'
+      : '<div class="podio-photo-placeholder" style="background:'+(u.color||'#7c3aed')+';width:68px;height:68px">'+ini(u.nombre)+'</div>';
     return `<div class="podio-item podio-${i+1}">
       <div class="podio-medal">${medals[i]}</div>
       ${photo}
@@ -2055,7 +2078,12 @@ function renderRankingTable(ranked){
     const medal = i<3?medals[i]:`${i+1}°`;
     const zc = stats.pctSat>=80?'b-ok':stats.pctSat>=60?'b-warn':'b-fail';
     const cvc = stats.avgCV===null?'b-gray':stats.avgCV<=2?'b-ok':stats.avgCV<=5?'b-warn':'b-fail';
-    const photo = getPhotoEl(u.user, 32, '');
+    const nombreAnR = RESULTADOS.find(r=>r.user===u.user)?.analista || u.nombre;
+    const fotoRKey = fotoKeyAnalista(u.codigo, nombreAnR);
+    const fotoR = FOTOS[fotoRKey] || null;
+    const photo = fotoR
+      ? '<img src="'+fotoR+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #a78bfa;flex-shrink:0">'
+      : '<div style="width:32px;height:32px;border-radius:50%;background:'+(u.color||'#7c3aed')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0">'+ini(u.nombre)+'</div>';
     return `<tr>
       <td style="font-size:18px;text-align:center">${medal}</td>
       <td><div style="display:flex;align-items:center;gap:8px">${photo}<span style="font-size:12px;font-weight:600">${u.nombre}</span></div></td>
@@ -2127,7 +2155,12 @@ function renderAnalistaCards(ranked, showRank=true){
   if(!ranked.length){ wrap.innerHTML='<p style="color:var(--light);font-size:13px">Sin datos suficientes.</p>'; return; }
 
   wrap.innerHTML = ranked.map(({u,stats},rank)=>{
-    const photo = getPhotoEl(u.user, 64, 'analista-photo');
+    const nombreAnalista = RESULTADOS.find(r=>r.user===u.user)?.analista || u.nombre;
+    const fotoKey = fotoKeyAnalista(u.codigo, nombreAnalista);
+    const foto64 = FOTOS[fotoKey] || null;
+    const photo = foto64
+      ? '<img src="'+foto64+'" class="analista-photo" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #a78bfa;flex-shrink:0">'
+      : '<div class="analista-photo-placeholder" style="background:'+(u.color||'#7c3aed')+';width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0">'+ini(u.nombre)+'</div>';
     const medals = ['🥇','🥈','🥉'];
     const medal = showRank ? (rank<3?medals[rank]:`#${rank+1}`) : '';
     const zc = stats.pctSat>=80?{label:'Satisfactorio',bg:'#dcfce7',color:'#15803d'}:
@@ -2339,17 +2372,7 @@ function gotoSection(name,el){
   if(name==='dashboard') refreshDashboard();
   if(name==='resultados') renderAllResults();
   if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); }
-  if(name==="participantes"){ cargarTodasFotosIDB().then(function(fotosIDB){
-    ["analista1","analista2","analista3","analista4"].forEach(function(u){
-      try{ var f=localStorage.getItem("foto_"+u); if(f&&!fotosIDB[u]){ fotosIDB[u]=f; guardarFotoIDB(u,f); } }catch(e){}
-    });
-    Object.keys(fotosIDB).forEach(k=>{ FOTOS[k]=fotosIDB[k]; }); renderParticipants();
-  }).catch(function(){
-    ["analista1","analista2","analista3","analista4"].forEach(function(u){
-      try{ var f=localStorage.getItem("foto_"+u); if(f) FOTOS[u]=f; }catch(e){}
-    });
-    renderParticipants();
-  }); }
+  if(name==="participantes"){ if(typeof window._cargarFotos==="function"){ window._cargarFotos().then(function(fotosDB){ Object.keys(fotosDB).forEach(function(k){ FOTOS[k]=fotosDB[k]; }); renderParticipants(); }); } else { renderParticipants(); } }
   if(name==='misresultados') renderMisResultados();
   if(name==='auditor') renderAuditor();
   if(name==='evaluacion'){
@@ -2921,7 +2944,7 @@ function renderCompetencia(){
   params.forEach(function(p){
     var compAnalista = document.getElementById('comp-analista') ? document.getElementById('comp-analista').value : 'todos';
     var res = RESULTADOS.filter(function(r){ return r.muestra===muestra && r.paramId===p.id; });
-    if(compAnalista!=='todos') res = res.filter(function(r){ return (r.analista||r.nombre||r.user||'').trim()===compAnalista; });
+    if(compAnalista!=='todos') res = res.filter(function(r){ return (r.analista||r.user||'').trim()===compAnalista; });
     if(res.length < 1) return;
     var rv = REFm[p.id];
     var ov = SIGMA_OVERRIDE[p.id];
@@ -2997,7 +3020,7 @@ function renderCompetencia(){
       +'<th>Veredicto</th></tr></thead><tbody>'
       +rows.map(function(x){
         return '<tr>'
-          +'<td style="font-weight:600;font-size:12px">'+(x.r.analista||x.r.nombre||x.r.user||'')+'</td>'
+          +'<td style="font-weight:600;font-size:12px">'+(x.r.analista||x.r.nombre||x.r.user)+'</td>'
           +'<td><span class="code-badge">'+(x.r.codigo||x.r.user)+'</span></td>'
           +x.reps.map(function(v){return '<td style="font-size:12px">'+v.toFixed(4)+'</td>';}).join('')
           +(x.reps.length<3?'<td>--</td>'.repeat(3-x.reps.length):'')
@@ -3036,7 +3059,7 @@ function populateCompAnalistaFilter(){
   if(!sel) return;
   var map = {};
   RESULTADOS.filter(function(r){return r.muestra===muestra;}).forEach(function(r){
-    var k = (r.analista||r.nombre||r.user||'').trim();
+    var k = (r.analista||r.user||'').trim();
     if(k) map[k] = r.codigo||r.user;
   });
   var cur = sel.value;
@@ -3052,7 +3075,7 @@ function populateRankAnalistaFilter(){
   var map = {};
   var res = muestra==='todos' ? RESULTADOS : RESULTADOS.filter(function(r){return r.muestra===muestra;});
   res.forEach(function(r){
-    var k = (r.analista||r.nombre||r.user||'').trim();
+    var k = (r.analista||r.user||'').trim();
     if(k) map[k] = r.codigo||r.user;
   });
   var cur = sel.value;
@@ -3079,7 +3102,7 @@ function renderMejorPorParametro(){
     var rows   = '';
 
     params.forEach(function(p){
-      var res = RESULTADOS.filter(function(r){ return r.muestra===m && r.paramId===p.id && r.paramId!=='humedad'; });
+      var res = RESULTADOS.filter(function(r){ return r.muestra===m && r.paramId===p.id && !esExcluido(r.paramId); });
       if(!res.length) return;
       var rv = REFm[p.id];
 
@@ -3146,7 +3169,7 @@ function renderHornoInterno(){
   var muestra = document.getElementById('horno-muestra') ? document.getElementById('horno-muestra').value : 'rbd';
   if(!wrap) return;
 
-  var res = RESULTADOS.filter(function(r){ return r.muestra===muestra && r.paramId==='humedad'; });
+  var res = RESULTADOS.filter(function(r){ return r.muestra===muestra && esExcluido(r.paramId); });
   if(!res.length){
     wrap.innerHTML='<div class="card"><p style="color:#94a3b8;font-size:13px;padding:10px">Sin datos de humedad por horno para '+muestra.toUpperCase()+'.</p></div>';
     return;
