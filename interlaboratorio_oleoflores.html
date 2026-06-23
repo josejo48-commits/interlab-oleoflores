@@ -777,28 +777,28 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
 // DEFINICIÓN DE PARÁMETROS
 // =========================================================
 const PARAMS_RBD = [
-  { id:'color_y',      nombre:'Color Lovibond Y',       unit:'Y',          tipo:'directo' },
-  { id:'color_r',      nombre:'Color Lovibond R',       unit:'R',          tipo:'directo' },
-  { id:'color_a',      nombre:'Color Lovibond A (Azul)',unit:'A',          tipo:'directo' },
-  { id:'acidez',       nombre:'Acidez (palmítico)',     unit:'%',          tipo:'acidez' },
-  { id:'humedad_hal',  nombre:'Humedad halógeno',       unit:'%',          tipo:'directo' },
-  { id:'peroxido',     nombre:'Índice de Peróxido',     unit:'meq O₂/kg',  tipo:'peroxido' },
+  { id:'color_y',      nombre:'Color Lovibond Y',       unit:'Y',          tipo:'directo', metodo:'AOCS Cc 13j-97' },
+  { id:'color_r',      nombre:'Color Lovibond R',       unit:'R',          tipo:'directo', metodo:'AOCS Cc 13j-97' },
+  { id:'color_a',      nombre:'Color Lovibond A (Azul)',unit:'A',          tipo:'directo', metodo:'AOCS Cc 13j-97' },
+  { id:'acidez',       nombre:'Acidez (palmítico)',     unit:'%',          tipo:'acidez', metodo:'AOCS Ca 5a-40' },
+  { id:'humedad_hal',  nombre:'Humedad halógeno',       unit:'%',          tipo:'directo', metodo:'AOCS Ca 2f-93' },
+  { id:'peroxido',     nombre:'Índice de Peróxido',     unit:'meq O₂/kg',  tipo:'peroxido', metodo:'NTC 236' },
   { id:'punto_fusion', nombre:'Punto de fusión',        unit:'°C',         tipo:'directo' },
-  { id:'indice_yodo',  nombre:'Índice de Yodo',         unit:'g I₂/100g',  tipo:'yodo' },
-  { id:'sfc_20',       nombre:'SFC 20°C',               unit:'%',          tipo:'directo' },
-  { id:'sfc_30',       nombre:'SFC 30°C',               unit:'%',          tipo:'directo' },
-  { id:'sfc_35',       nombre:'SFC 35°C',               unit:'%',          tipo:'directo' },
-  { id:'sfc_40',       nombre:'SFC 40°C',               unit:'%',          tipo:'directo' },
+  { id:'indice_yodo',  nombre:'Índice de Yodo',         unit:'g I₂/100g',  tipo:'yodo', metodo:'AOCS Cd 1d-2' },
+  { id:'sfc_20',       nombre:'SFC 20°C',               unit:'%',          tipo:'directo', metodo:'AOCS Cd 16b-93' },
+  { id:'sfc_30',       nombre:'SFC 30°C',               unit:'%',          tipo:'directo', metodo:'AOCS Cd 16b-93' },
+  { id:'sfc_35',       nombre:'SFC 35°C',               unit:'%',          tipo:'directo', metodo:'AOCS Cd 16b-93' },
+  { id:'sfc_40',       nombre:'SFC 40°C',               unit:'%',          tipo:'directo', metodo:'AOCS Cd 16b-93' },
 ];
 
 const PARAMS_CPO = [
-  { id:'acidez',       nombre:'Acidez (palmítico)',      unit:'%',          tipo:'acidez' },
-  { id:'humedad_hal',  nombre:'Humedad halógeno',        unit:'%',          tipo:'directo' },
+  { id:'acidez',       nombre:'Acidez (palmítico)',      unit:'%',          tipo:'acidez', metodo:'AOCS Ca 5a-40' },
+  { id:'humedad_hal',  nombre:'Humedad halógeno',        unit:'%',          tipo:'directo', metodo:'AOCS Ca 2f-93' },
   { id:'humedad',      nombre:'Humedad',                 unit:'%',          tipo:'directo', soloInterno:true },
-  { id:'impurezas',    nombre:'Impurezas',               unit:'%',          tipo:'directo' },
-  { id:'indice_yodo',  nombre:'Índice de Yodo',          unit:'g I₂/100g',  tipo:'yodo' },
-  { id:'sfc_20',       nombre:'Perfiles de Sólidos 20°C', unit:'%',         tipo:'directo' },
-  { id:'dobi',         nombre:'DOBI',                    unit:'',           tipo:'dobi', dobi:true },
+  { id:'impurezas',    nombre:'Impurezas',               unit:'%',          tipo:'directo', metodo:'AOCS Ca 3a-46' },
+  { id:'indice_yodo',  nombre:'Índice de Yodo',          unit:'g I₂/100g',  tipo:'yodo', metodo:'AOCS Cd 1d-2' },
+  { id:'sfc_20',       nombre:'Perfiles de Sólidos 20°C', unit:'%',         tipo:'directo', metodo:'AOCS Cd 16b-93' },
+  { id:'dobi',         nombre:'DOBI',                    unit:'',           tipo:'dobi', dobi:true, metodo:'PORIM p3.7' },
 ];
 
 // =========================================================
@@ -1757,6 +1757,8 @@ function verCarta(nombreEnc, labCodigo){
     const mIcon   = muestra==='rbd' ? '⚪' : '🟡';
     const filas = params.map(r=>{
       const ref = (REF[muestra]||{})[r.paramId];
+      const paramDef = (muestra==='rbd'?PARAMS_RBD:PARAMS_CPO).find(p=>p.id===r.paramId);
+      const metodoNorma = paramDef&&paramDef.metodo ? paramDef.metodo : '';
       if(ref===undefined||ref===null) return '';
       const sigma = getSigma(r.paramId, ref, muestra);
       const z = (r.promedio - ref) / sigma;
@@ -1771,7 +1773,7 @@ function verCarta(nombreEnc, labCodigo){
       const cvPct = (()=>{ if(repsVals.length<2) return null; const m=repsVals.reduce((a,b)=>a+b,0)/repsVals.length; if(!m) return null; const de=Math.sqrt(repsVals.reduce((a,b)=>a+(b-m)**2,0)/(repsVals.length-1)); return (de/m*100); })();
       const cvColor = cvPct===null?'#94a3b8':cvPct<=2?'#16a34a':cvPct<=5?'#d97706':'#dc2626';
       return `<tr style="border-bottom:1px solid #f1f5f9">
-        <td style="padding:8px 10px;font-size:12px;font-weight:600">${r.paramNombre||r.paramId}</td>
+        <td style="padding:8px 10px;font-size:12px;font-weight:600">${r.paramNombre||r.paramId}<br><span style='font-size:10px;color:#94a3b8;font-weight:400'>${metodoNorma}</span></td>
         <td style="padding:8px 10px;font-size:11px;color:#64748b;text-align:center">${reps}</td>
         <td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center">${r.promedio!=null?Number(r.promedio).toFixed(4):'—'}</td>
         <td style="padding:8px 10px;font-size:12px;text-align:center;font-weight:600;color:${cvColor}">${cvPct!==null?cvPct.toFixed(2)+'%':'—'}</td>
@@ -1803,7 +1805,7 @@ function verCarta(nombreEnc, labCodigo){
   }).join('');
 
   const total = totalSat+totalCues+totalNoSat;
-  const pct = total>0?Math.round(((totalSat + totalCues*0.5)/total)*100):0;
+  const pct = total>0?Math.round((totalSat/total)*100):0;
   const globalColor = pct>=80?'#16a34a':pct>=60?'#d97706':'#dc2626';
   const globalLabel = pct>=80?'Desempeño Satisfactorio':pct>=60?'Desempeño Cuestionable':'Desempeño No Satisfactorio';
   const avatarEl = foto
@@ -1997,7 +1999,7 @@ function getAnalistaStats(user){
   const sat = zScores.filter(z=>Math.abs(z)<=2).length;
   const cues = zScores.filter(z=>Math.abs(z)>2&&Math.abs(z)<=3).length;
   const nosat = zScores.filter(z=>Math.abs(z)>3).length;
-  const pctSat = ((sat + cues*0.5)/zScores.length)*100;
+  const pctSat = (sat/zScores.length)*100;
   const cvVals = withRef.map(r=>calcCV(r.reps)).filter(v=>v!==null);
   const avgCV = cvVals.length ? cvVals.reduce((a,b)=>a+b,0)/cvVals.length : null;
   const biasVals = withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcBias(r.promedio,rv)); });
@@ -2177,8 +2179,7 @@ function renderAnalistaCards(ranked, showRank=true){
       // Per-muestra stats
       const zs = resList.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv,r.paramId,r.muestra); });
       const satM = zs.filter(z=>Math.abs(z)<=2).length;
-      const cuesM = zs.filter(z=>Math.abs(z)>2&&Math.abs(z)<=3).length;
-      const pctM = ((satM + cuesM*0.5)/zs.length*100).toFixed(0);
+      const pctM = (satM/zs.length*100).toFixed(0);
       const cvM = resList.map(r=>calcCV(r.reps)).filter(v=>v!==null);
       const avgCVM = cvM.length ? (cvM.reduce((a,b)=>a+b,0)/cvM.length).toFixed(2) : '—';
       const biasM = resList.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcBias(r.promedio,rv)); });
@@ -2439,7 +2440,7 @@ function renderAuditor(){
     const sat=labRows.filter(({z})=>Math.abs(z)<=2).length;
     const cues=labRows.filter(({z})=>Math.abs(z)>2&&Math.abs(z)<=3).length;
     const nosat=labRows.filter(({z})=>Math.abs(z)>3).length;
-    const pct=((sat + cues*0.5)/total*100).toFixed(0);
+    const pct=(sat/total*100).toFixed(0);
     const nombre=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.nombre||lab;
     const analista=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.analista||'—';
     const bg=nosat>0?'#fee2e2':cues>0?'#fef9c3':'#dcfce7';
@@ -2514,7 +2515,7 @@ function renderAuditor(){
     const sat=labRows.filter(({z})=>Math.abs(z)<=2).length;
     const cues=labRows.filter(({z})=>Math.abs(z)>2&&Math.abs(z)<=3).length;
     const nosat=labRows.filter(({z})=>Math.abs(z)>3).length;
-    const pct=((sat + cues*0.5)/total*100).toFixed(0);
+    const pct=(sat/total*100).toFixed(0);
     const nombre=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.nombre||lab;
     const analista=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.analista||'—';
     const bg=nosat>0?'#fee2e2':cues>0?'#fef9c3':'#dcfce7';
