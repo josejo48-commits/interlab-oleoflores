@@ -694,13 +694,13 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
             <table>
               <thead><tr><th>Parámetro</th><th>Norma</th><th>Fórmula de cálculo</th><th>Unidad</th></tr></thead>
               <tbody>
-                <tr><td>Acidez (F.F.A. palmítico)</td><td>ISO 660:2020</td><td>% = (V × N × 25.6) / Pm</td><td>%</td></tr>
-                <tr><td>Humedad y Materia Volátil</td><td>ISO 662:2016</td><td>Promedio de triplicado gravimétrico</td><td>%</td></tr>
-                <tr><td>Impurezas insolubles</td><td>ISO 663:2017</td><td>Promedio de triplicado gravimétrico</td><td>%</td></tr>
-                <tr><td>Color Lovibond</td><td>ISO 15305:1998</td><td>Lectura directa celda 5¼"</td><td>R / Y / A</td></tr>
-                <tr><td>Índice de Yodo (Wijs)</td><td>ISO 3961:2024</td><td>IV = ((Vblanco − V) × N × 12.69) / Pm</td><td>g I₂/100g</td></tr>
-                <tr><td>Índice de Peróxido</td><td>ISO 3960:2017</td><td>IP = (V × 10) / Pm</td><td>meq O₂/kg</td></tr>
-                <tr><td>DOBI</td><td>ISO 17932:2011</td><td>DOBI = A₄₄₆ / A₂₆₉</td><td>adimensional</td></tr>
+                <tr><td>Acidez (F.F.A. palmítico)</td><td>AOCS Ca 5a-40</td><td>% = (V × N × 25.6) / Pm</td><td>%</td></tr>
+                <tr><td>Humedad y Materia Volátil</td><td>AOCS Ca 2f-93</td><td>Promedio de triplicado gravimétrico</td><td>%</td></tr>
+                <tr><td>Impurezas insolubles</td><td>AOCS Ca 3a-46</td><td>Promedio de triplicado gravimétrico</td><td>%</td></tr>
+                <tr><td>Color Lovibond</td><td>AOCS Cc 13j-97</td><td>Lectura directa celda 5¼"</td><td>R / Y / A</td></tr>
+                <tr><td>Índice de Yodo (Wijs)</td><td>AOCS Cd 1d-2</td><td>IV = ((Vblanco − V) × N × 12.69) / Pm</td><td>g I₂/100g</td></tr>
+                <tr><td>Índice de Peróxido</td><td>NTC 236</td><td>IP = (V × 10) / Pm</td><td>meq O₂/kg</td></tr>
+                <tr><td>DOBI</td><td>PORIM p3.7</td><td>DOBI = A₄₄₆ / A₂₆₉</td><td>adimensional</td></tr>
                 <tr><td>SFC (Contenido grasa sólida)</td><td>AOCS Cd 16b-93</td><td>RMN pulsada a 20/30/35/40°C</td><td>%</td></tr>
               </tbody>
             </table>
@@ -866,13 +866,13 @@ const REF_META = {
   lote_rbd:    '010626 - RBD PALMA TK 13',
   lote_cpo:    'L010626 - CPO DE PALMA',
   normas: {
-    acidez:      'ISO 660:2020',
-    humedad:     'ISO 662:2016',
-    impurezas:   'ISO 663:2017',
-    color:       'ISO 15305:1998',
-    indice_yodo: 'ISO 3961:2024',
-    peroxido:    'ISO 3960:2017',
-    dobi:        'ISO 17932:2011',
+    acidez:      'AOCS Ca 5a-40',
+    humedad:     'AOCS Ca 2f-93',
+    impurezas:   'AOCS Ca 3a-46',
+    color:       'AOCS Cc 13j-97',
+    indice_yodo: 'AOCS Cd 1d-2',
+    peroxido:    'NTC 236',
+    dobi:        'PORIM p3.7',
     sfc:         '*Cd 16b-93 (AOCS)',
   }
 };
@@ -1294,10 +1294,10 @@ const SIGMA_OVERRIDE = {
   sfc_30:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
   sfc_35:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
   sfc_40:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
-  humedad_hal: { sigma:0.025,  r:0.05,  R:0.05, norma:'ISO 662:2016 · σ aptitud para uso ISO 13528 §9.3 (rango 0.15%-0.25%)'   },
+  humedad_hal: { sigma:0.025,  r:0.05,  R:0.05, norma:'AOCS Ca 2f-93 · σ aptitud para uso ISO 13528 §9.3 (rango 0.15%-0.25%)'   },
   color_a:     { sigma:0.5,    r:0.5,   R:1.0,  norma:'AOCS Cc 13e-92' },
-  acidez_rbd:  { sigma:0.0027, r:0.005, R:0.01, norma:'ISO 660:2020 · Horwitz (ISO 13528) · FFA 0.05%' },
-  acidez_cpo:  { sigma:0.058,  r:0.10,  R:0.20, norma:'ISO 660:2020 · Horwitz (ISO 13528) · FFA 2.41%' },
+  acidez_rbd:  { sigma:0.0027, r:0.005, R:0.01, norma:'AOCS Ca 5a-40 · Horwitz (ISO 13528) · FFA 0.05%' },
+  acidez_cpo:  { sigma:0.058,  r:0.10,  R:0.20, norma:'AOCS Ca 5a-40 · Horwitz (ISO 13528) · FFA 2.41%' },
 };
 // Parámetros excluidos del interlaboratorio (solo monitoreo interno)
 const EXCLUIR_INTERLAB = ['humedad']; // humedad horno — solo monitoreo interno, sin Z-score
