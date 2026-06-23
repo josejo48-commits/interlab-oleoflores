@@ -1805,7 +1805,7 @@ function verCarta(nombreEnc, labCodigo){
   }).join('');
 
   const total = totalSat+totalCues+totalNoSat;
-  const pct = total>0?Math.round((totalSat/total)*100):0;
+  const pct = total>0?Math.round(((totalSat + totalCues*0.5)/total)*100):0;
   const globalColor = pct>=80?'#16a34a':pct>=60?'#d97706':'#dc2626';
   const globalLabel = pct>=80?'Desempeño Satisfactorio':pct>=60?'Desempeño Cuestionable':'Desempeño No Satisfactorio';
   const avatarEl = foto
@@ -1999,7 +1999,7 @@ function getAnalistaStats(user){
   const sat = zScores.filter(z=>Math.abs(z)<=2).length;
   const cues = zScores.filter(z=>Math.abs(z)>2&&Math.abs(z)<=3).length;
   const nosat = zScores.filter(z=>Math.abs(z)>3).length;
-  const pctSat = (sat/zScores.length)*100;
+  const pctSat = ((sat + cues*0.5)/zScores.length)*100;
   const cvVals = withRef.map(r=>calcCV(r.reps)).filter(v=>v!==null);
   const avgCV = cvVals.length ? cvVals.reduce((a,b)=>a+b,0)/cvVals.length : null;
   const biasVals = withRef.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcBias(r.promedio,rv)); });
@@ -2179,7 +2179,8 @@ function renderAnalistaCards(ranked, showRank=true){
       // Per-muestra stats
       const zs = resList.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return calcZ(r.promedio,rv,r.paramId,r.muestra); });
       const satM = zs.filter(z=>Math.abs(z)<=2).length;
-      const pctM = (satM/zs.length*100).toFixed(0);
+      const cuesM = zs.filter(z=>Math.abs(z)>2&&Math.abs(z)<=3).length;
+      const pctM = ((satM + cuesM*0.5)/zs.length*100).toFixed(0);
       const cvM = resList.map(r=>calcCV(r.reps)).filter(v=>v!==null);
       const avgCVM = cvM.length ? (cvM.reduce((a,b)=>a+b,0)/cvM.length).toFixed(2) : '—';
       const biasM = resList.map(r=>{ const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId]; return Math.abs(calcBias(r.promedio,rv)); });
@@ -2440,7 +2441,7 @@ function renderAuditor(){
     const sat=labRows.filter(({z})=>Math.abs(z)<=2).length;
     const cues=labRows.filter(({z})=>Math.abs(z)>2&&Math.abs(z)<=3).length;
     const nosat=labRows.filter(({z})=>Math.abs(z)>3).length;
-    const pct=(sat/total*100).toFixed(0);
+    const pct=((sat + cues*0.5)/total*100).toFixed(0);
     const nombre=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.nombre||lab;
     const analista=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.analista||'—';
     const bg=nosat>0?'#fee2e2':cues>0?'#fef9c3':'#dcfce7';
@@ -2515,7 +2516,7 @@ function renderAuditor(){
     const sat=labRows.filter(({z})=>Math.abs(z)<=2).length;
     const cues=labRows.filter(({z})=>Math.abs(z)>2&&Math.abs(z)<=3).length;
     const nosat=labRows.filter(({z})=>Math.abs(z)>3).length;
-    const pct=(sat/total*100).toFixed(0);
+    const pct=((sat + cues*0.5)/total*100).toFixed(0);
     const nombre=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.nombre||lab;
     const analista=RESULTADOS.find(r=>(r.codigo||r.user)===lab)?.analista||'—';
     const bg=nosat>0?'#fee2e2':cues>0?'#fef9c3':'#dcfce7';
