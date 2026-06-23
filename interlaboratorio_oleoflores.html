@@ -1989,7 +1989,7 @@ function calcCV(reps){
   return (std/mean)*100;
 }
 function calcBias(val,ref){ return ((val-ref)/ref)*100; }
-function calcSigma(ref){ return Math.abs(ref)*0.03||0.1; }
+function calcSigma(ref, paramId, muestra){ return getSigma(paramId||'', ref, muestra||''); }
 
 function getAnalistaStats(user){
   const myRes = RESULTADOS.filter(r=>r.user===user && !esExcluido(r.paramId));
@@ -2203,7 +2203,7 @@ function renderAnalistaCards(ranked, showRank=true){
           const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
           de = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1)).toFixed(5);
         }
-        const sigma = Math.abs(rv)*0.03||0.1;
+        const sigma = getSigma(p.id||r.paramId||'', rv, muestra||r.muestra||'');
         return `<tr>
           <td style="font-weight:600;font-size:12px">${r.paramNombre}</td>
           <td style="font-size:12px">${reps[0]!=null?Number(reps[0]).toFixed(4):'—'}</td>
@@ -2401,7 +2401,7 @@ function renderAuditor(){
   const rows=RESULTADOS.map(r=>{
     const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
     if(rv===undefined) return null;
-    const sigma=Math.abs(rv)*0.03||0.1;
+    const sigma=getSigma(p&&p.id||r&&r.paramId||'', rv, muestra||r&&r.muestra||'');
     const z=(r.promedio-rv)/sigma;
     const reps=r.reps||[];
     const vals=reps.filter(x=>x!=null);
@@ -2476,7 +2476,7 @@ function renderAuditor(){
   const rows=RESULTADOS.map(r=>{
     const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
     if(rv===undefined) return null;
-    const sigma=Math.abs(rv)*0.03||0.1;
+    const sigma=getSigma(p&&p.id||r&&r.paramId||'', rv, muestra||r&&r.muestra||'');
     const z=(r.promedio-rv)/sigma;
     const reps=r.reps||[];
     const vals=reps.filter(x=>x!=null);
@@ -2599,7 +2599,7 @@ function renderPasoAPaso(){
     const cv = prom>0 ? (de/prom)*100 : null;
 
     // Step 4: Z-score
-    const sigma = rv!=null ? Math.abs(rv)*0.03||0.1 : null;
+    const sigma = rv!=null ? getSigma(p&&p.id||r&&r.paramId||'', rv, muestra||r&&r.muestra||'') : null;
     const z = rv!=null && sigma ? (prom-rv)/sigma : null;
     const sesgo = rv!=null ? ((prom-rv)/rv)*100 : null;
 
@@ -2685,10 +2685,9 @@ function renderPasoAPaso(){
       <!-- Paso 4: Sigma -->
       <div style="background:#faf5ff;border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid #9333ea">
         <div style="font-size:12px;font-weight:700;color:#7e22ce;margin-bottom:6px">📐 PASO 4 — Desviación estándar de referencia (σ)</div>
-        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = |X<sub>ref</sub>| × 0.03 &nbsp;(3% del valor certificado)</div>
-        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = |${rv}| × 0.03</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = Según norma / aptitud para uso (ISO 13528 §9.3)</div>
         <div style="font-size:15px;font-weight:700;color:#7e22ce">σ = ${sigma.toFixed(4)} ${r.unit||''}</div>
-        <div style="font-size:11px;color:#78716c;margin-top:4px">💡 El 3% representa la incertidumbre aceptable del método analítico según ISO 13528.</div>
+        <div style="font-size:11px;color:#78716c;margin-top:4px">💡 Sigma basado en SIGMA_OVERRIDE o Horwitz según el parámetro.</div>
       </div>
 
       <!-- Paso 5: Z-score -->
