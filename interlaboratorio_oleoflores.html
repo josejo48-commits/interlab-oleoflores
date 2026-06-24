@@ -2119,7 +2119,7 @@ function renderControlChart(){
   if(!ctx) return;
   if(controlChart) controlChart.destroy();
   if(!filtered.length||refV===undefined){ ctx.clearRect(0,0,800,280); return; }
-  const sigma = calcSigma(refV);
+  const sigma = calcSigma(refV, p&&p.id||'', muestra||'');
   const labels = filtered.map(r=>r.codigo);
   const zData = filtered.map(r=>calcZ(r.promedio,refV));
   const isAdminCtrl = SESSION && SESSION.rol==='admin';
@@ -2203,7 +2203,7 @@ function renderAnalistaCards(ranked, showRank=true){
           const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
           de = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1)).toFixed(5);
         }
-        const sigma = getSigma(p.id||r.paramId||'', rv, muestra||r.muestra||'');
+        const sigma = getSigma(r.paramId||'', rv, r.muestra||'');
         return `<tr>
           <td style="font-weight:600;font-size:12px">${r.paramNombre}</td>
           <td style="font-size:12px">${reps[0]!=null?Number(reps[0]).toFixed(4):'—'}</td>
@@ -2401,7 +2401,7 @@ function renderAuditor(){
   const rows=RESULTADOS.map(r=>{
     const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
     if(rv===undefined) return null;
-    const sigma=getSigma(p&&p.id||r&&r.paramId||'', rv, muestra||r&&r.muestra||'');
+    const sigma=getSigma(r&&r.paramId||'', rv, r&&r.muestra||'');
     const z=(r.promedio-rv)/sigma;
     const reps=r.reps||[];
     const vals=reps.filter(x=>x!=null);
@@ -2476,7 +2476,7 @@ function renderAuditor(){
   const rows=RESULTADOS.map(r=>{
     const rv=r.muestra==='rbd'?REF.rbd[r.paramId]:REF.cpo[r.paramId];
     if(rv===undefined) return null;
-    const sigma=getSigma(p&&p.id||r&&r.paramId||'', rv, muestra||r&&r.muestra||'');
+    const sigma=getSigma(r&&r.paramId||'', rv, r&&r.muestra||'');
     const z=(r.promedio-rv)/sigma;
     const reps=r.reps||[];
     const vals=reps.filter(x=>x!=null);
@@ -2599,7 +2599,7 @@ function renderPasoAPaso(){
     const cv = prom>0 ? (de/prom)*100 : null;
 
     // Step 4: Z-score
-    const sigma = rv!=null ? getSigma(p&&p.id||r&&r.paramId||'', rv, muestra||r&&r.muestra||'') : null;
+    const sigma = rv!=null ? getSigma(r&&r.paramId||'', rv, r&&r.muestra||'') : null;
     const z = rv!=null && sigma ? (prom-rv)/sigma : null;
     const sesgo = rv!=null ? ((prom-rv)/rv)*100 : null;
 
@@ -2610,8 +2610,8 @@ function renderPasoAPaso(){
                 absZ<=3  ? {txt:'⚠️ CUESTIONABLE',  bg:'#fef9c3',color:'#854d0e'} :
                            {txt:'❌ NO SATISFACTORIO',bg:'#fee2e2',color:'#991b1b'};
 
-    const cvCal = cv==null?'—':cv<=2?'✅ Excelente (≤2%)':cv<=5?'⚠️ Aceptable (≤5%)':'❌ Deficiente (>5%)';
-    const cvColor = cv==null?'#64748b':cv<=2?'#15803d':cv<=5?'#854d0e':'#991b1b';
+    const cvLim2=(r&&r.paramId==='humedad_hal')?25:5; const cvCal = cv==null?'—':cv<=2?'✅ Excelente (≤2%)':cv<=cvLim2?'⚠️ Aceptable (≤'+cvLim2+'%)':'❌ Deficiente (>'+cvLim2+'%)';
+    const cvColor = cv==null?'#64748b':cv<=2?'#15803d':cv<=cvLim2?'#854d0e':'#991b1b';
     const sesgoCal = sesgo==null?'—':Math.abs(sesgo)<=5?'✅ Bajo (≤5%)':Math.abs(sesgo)<=10?'⚠️ Moderado (≤10%)':'❌ Alto (>10%)';
 
     const labName = r.analista||r.nombre||r.user;
@@ -2685,9 +2685,10 @@ function renderPasoAPaso(){
       <!-- Paso 4: Sigma -->
       <div style="background:#faf5ff;border-radius:10px;padding:12px 16px;margin-bottom:10px;border-left:3px solid #9333ea">
         <div style="font-size:12px;font-weight:700;color:#7e22ce;margin-bottom:6px">📐 PASO 4 — Desviación estándar de referencia (σ)</div>
-        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = Según norma / aptitud para uso (ISO 13528 §9.3)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = |X<sub>ref</sub>| × 0.03 &nbsp;(3% del valor certificado)</div>
+        <div style="font-size:12px;color:#475569;font-family:monospace;margin-bottom:4px">σ = |${rv}| × 0.03</div>
         <div style="font-size:15px;font-weight:700;color:#7e22ce">σ = ${sigma.toFixed(4)} ${r.unit||''}</div>
-        <div style="font-size:11px;color:#78716c;margin-top:4px">💡 Sigma basado en SIGMA_OVERRIDE o Horwitz según el parámetro.</div>
+        <div style="font-size:11px;color:#78716c;margin-top:4px">💡 El 3% representa la incertidumbre aceptable del método analítico según ISO 13528.</div>
       </div>
 
       <!-- Paso 5: Z-score -->
@@ -2961,7 +2962,7 @@ function renderCompetencia(){
       // Repetibilidad
       var repPasa, repVal, repCrit, repColor;
       if(ov){ repPasa=rango<=ov.r; repVal=rango.toFixed(4); repCrit='Rango &le; r = '+ov.r+' (AOCS Cd 16b-93)'; }
-      else   { repPasa=cv!==null&&cv<=5; repVal=cv!==null?cv.toFixed(2)+'%':'--'; repCrit='CV% &le; 5%'; }
+      else   { var cvLim=(p.id==='humedad_hal')?25:5; repPasa=cv!==null&&cv<=cvLim; repVal=cv!==null?cv.toFixed(2)+'%':'--'; repCrit='CV% &le; '+cvLim+'%'; }
       repColor = repPasa?'#16a34a':'#dc2626';
 
       // Reproducibilidad vs referencia
