@@ -431,6 +431,19 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
           <div style="position:relative;height:260px"><canvas id="stat-chart" role="img" aria-label="Comparación"></canvas></div>
         </div>
 
+        <!-- DISPERSIÓN -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title">📉 Gráfica de dispersión — por analista (código ciego) y laboratorio</div>
+          <div style="padding:12px 18px 0 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div class="fg" style="flex:1;min-width:150px;margin:0"><label class="fl">Laboratorio</label>
+              <select id="scatter-lab" onchange="renderScatterChart()">
+                <option value="todos">Todos</option>
+              </select></div>
+          </div>
+          <div style="position:relative;height:320px;padding:8px 18px 18px"><canvas id="scatter-chart" role="img" aria-label="Dispersión por analista"></canvas></div>
+          <div style="padding:0 18px 14px;font-size:11px;color:#94a3b8">Cada punto es una réplica individual. Eje X = código de analista (anónimo) · línea azul = referencia · líneas punteadas = ±2σ</div>
+        </div>
+
         <!-- PASO A PASO -->
         <div id="stat-paso-wrap"></div>
 
@@ -878,7 +891,7 @@ const REF_META = {
 };
 let RESULTADOS = [];
 let SESSION = null;
-let statChart = null, dashChart = null;
+let statChart = null, dashChart = null, scatterChart = null;
 let _sugHL = -1;
 const SUG_COLORS = ['#7c3aed','#0d9488','#2563eb','#d97706','#dc2626','#16a34a'];
 
@@ -1504,7 +1517,7 @@ function refreshStatChart(){
   const pid=document.getElementById('stat-param').value;
   const param=(m==='rbd'?PARAMS_RBD:PARAMS_CPO).find(p=>p.id===pid);
   const refV=(m==='rbd'?REF.rbd:REF.cpo)[pid];
-  // Group by lab — one bar per lab
+  // Group by lab — one bar por lab
   const allFiltered=RESULTADOS.filter(r=>r.muestra===m&&r.paramId===pid);
   // Get unique labs and average their promedio (in case of duplicates)
   const labMap={};
@@ -1512,10 +1525,89 @@ function refreshStatChart(){
   const filtered=Object.values(labMap).map(l=>({ codigo:l.codigo, nombre:l.nombre, promedio:l.promedios.reduce((a,b)=>a+b,0)/l.promedios.length }));
   const ctx=document.getElementById('stat-chart').getContext('2d');
   if(statChart) statChart.destroy();
-  if(!filtered.length){ ctx.clearRect(0,0,800,260); return; }
-  const datasets=[{label:'Promedio',data:filtered.map(r=>r.promedio),backgroundColor:filtered.map(r=>{ if(!refV) return'#378ADD'; const z=Math.abs(calcZ(r.promedio,refV)); return z<=2?'#16a34a':z<=3?'#d97706':'#dc2626'; }),borderRadius:5,borderSkipped:false}];
-  if(refV!==undefined) datasets.push({type:'line',label:'Referencia',data:Array(filtered.length).fill(refV),borderColor:'#185FA5',borderDash:[5,3],borderWidth:2,pointRadius:0,fill:false});
-  statChart=new Chart(ctx,{type:'bar',data:{labels:filtered.map(r=>r.codigo+' · '+(r.nombre||'')),datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(4)}`}}},scales:{y:{title:{display:true,text:param?param.unit:''},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+  if(filtered.length){
+    const datasets=[{label:'Promedio',data:filtered.map(r=>r.promedio),backgroundColor:filtered.map(r=>{ if(!refV) return'#378ADD'; const z=Math.abs(calcZ(r.promedio,refV)); return z<=2?'#16a34a':z<=3?'#d97706':'#dc2626'; }),borderRadius:5,borderSkipped:false}];
+    if(refV!==undefined) datasets.push({type:'line',label:'Referencia',data:Array(filtered.length).fill(refV),borderColor:'#185FA5',borderDash:[5,3],borderWidth:2,pointRadius:0,fill:false});
+    statChart=new Chart(ctx,{type:'bar',data:{labels:filtered.map(r=>r.codigo+' · '+(r.nombre||'')),datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(4)}`}}},scales:{y:{title:{display:true,text:param?param.unit:''},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+  } else { ctx.clearRect(0,0,800,260); }
+  populateScatterLabFilter();
+  renderScatterChart();
+}
+
+// =========================================================
+// DISPERSIÓN — código de analista (ciego, no muestra nombres)
+// =========================================================
+const ANALISTA_CODE_CACHE = {};
+function getAnalistaCode(labCodigo, nombreAnalista){
+  const nm = (nombreAnalista||'').trim();
+  if(!nm) return labCodigo||'—';
+  const cacheKey = labCodigo+'|'+nm;
+  if(ANALISTA_CODE_CACHE[cacheKey]) return ANALISTA_CODE_CACHE[cacheKey];
+  const names = Array.from(new Set(RESULTADOS.filter(r=>(r.codigo||r.user)===labCodigo).map(r=>(r.analista||r.nombre||r.user||'').trim()).filter(Boolean))).sort();
+  names.forEach((n,i)=>{ ANALISTA_CODE_CACHE[labCodigo+'|'+n] = labCodigo+'-A'+String(i+1).padStart(2,'0'); });
+  return ANALISTA_CODE_CACHE[cacheKey] || labCodigo || '—';
+}
+function populateScatterLabFilter(){
+  const sel=document.getElementById('scatter-lab');
+  if(!sel) return;
+  const current=sel.value;
+  const labs=Array.from(new Set(RESULTADOS.map(r=>r.codigo||r.user).filter(Boolean))).sort();
+  sel.innerHTML='<option value="todos">Todos</option>'+labs.map(l=>`<option value="${l}">${l}</option>`).join('');
+  if(labs.includes(current)) sel.value=current;
+}
+function renderScatterChart(){
+  const canvasEl=document.getElementById('scatter-chart');
+  if(!canvasEl) return;
+  const m=document.getElementById('stat-muestra').value;
+  const pid=document.getElementById('stat-param').value;
+  const labFiltro=document.getElementById('scatter-lab')?document.getElementById('scatter-lab').value:'todos';
+  const param=(m==='rbd'?PARAMS_RBD:PARAMS_CPO).find(p=>p.id===pid);
+  const refV=(m==='rbd'?REF.rbd:REF.cpo)[pid];
+  const sigma=refV!=null?getSigma(pid,refV,m):null;
+
+  let filtered=RESULTADOS.filter(r=>r.muestra===m&&r.paramId===pid);
+  if(labFiltro!=='todos') filtered=filtered.filter(r=>(r.codigo||r.user)===labFiltro);
+
+  const ctx=canvasEl.getContext('2d');
+  if(scatterChart) scatterChart.destroy();
+  if(!filtered.length){ ctx.clearRect(0,0,800,320); return; }
+
+  // Agrupar puntos por laboratorio, etiquetando cada analista con un código ciego
+  const labGroups={};
+  const allCodes=[];
+  filtered.forEach(r=>{
+    const labCodigo=r.codigo||r.user;
+    const u=USERS.find(x=>x.codigo===labCodigo);
+    const color=u?u.color:'#64748b';
+    const acode=getAnalistaCode(labCodigo, r.analista||r.nombre||r.user);
+    if(!allCodes.includes(acode)) allCodes.push(acode);
+    if(!labGroups[labCodigo]) labGroups[labCodigo]={ color:color, label:labCodigo, points:[] };
+    (r.reps||[]).forEach(v=>{ if(v!=null&&isFinite(v)) labGroups[labCodigo].points.push({x:acode,y:v}); });
+  });
+  allCodes.sort();
+
+  const datasets=Object.values(labGroups).map(g=>({ label:g.label, data:g.points, backgroundColor:g.color, borderColor:g.color, pointRadius:5, pointHoverRadius:7, showLine:false }));
+
+  if(refV!=null){
+    datasets.push({ type:'line', label:'Referencia', data:allCodes.map(c=>({x:c,y:refV})), borderColor:'#185FA5', borderDash:[6,4], borderWidth:2, pointRadius:0, fill:false, order:0 });
+    if(sigma){
+      datasets.push({ type:'line', label:'+2σ', data:allCodes.map(c=>({x:c,y:refV+2*sigma})), borderColor:'#ca8a04', borderDash:[3,3], borderWidth:1, pointRadius:0, fill:false, order:0 });
+      datasets.push({ type:'line', label:'-2σ', data:allCodes.map(c=>({x:c,y:refV-2*sigma})), borderColor:'#ca8a04', borderDash:[3,3], borderWidth:1, pointRadius:0, fill:false, order:0 });
+    }
+  }
+
+  scatterChart=new Chart(ctx,{
+    type:'scatter',
+    data:{ datasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:10}}}, tooltip:{ callbacks:{ label:c=>`${c.dataset.label}: ${c.parsed.y.toFixed(4)}` } } },
+      scales:{
+        x:{ type:'category', labels:allCodes, title:{display:true,text:'Código analista'}, grid:{display:false}, ticks:{font:{size:10}} },
+        y:{ title:{display:true,text:param?param.unit:''}, grid:{color:'#f1f5f9'} }
+      }
+    }
+  });
 }
 function renderZScores(){
   populateAnalistaFilter();
