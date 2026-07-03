@@ -447,7 +447,8 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
             <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:2px;background:#7c3aed;display:inline-block"></span>Referencia</span>
           </div>
           <div id="scatter-lab-legend" style="padding:6px 18px 0;display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#64748b"></div>
-          <div id="scatter-scroll-hint" style="display:none;padding:6px 18px 0;font-size:11px;color:#7c3aed;font-weight:600">⇔ Desliza horizontalmente dentro del gráfico para ver a todos los laboratorios/analistas</div>
+          <div id="scatter-param-label" style="padding:6px 18px 0;font-size:12px;font-weight:700;color:#1e293b"></div>
+          <div id="scatter-scroll-hint" style="display:none;padding:4px 18px 0;font-size:11px;color:#7c3aed;font-weight:600">⇔ Desliza horizontalmente dentro del gráfico para ver a todos los laboratorios/analistas</div>
           <div id="scatter-scroll-wrap" style="overflow-x:auto;padding:8px 18px 18px">
             <div id="scatter-chart-inner" style="position:relative;height:400px;min-width:700px">
               <canvas id="scatter-chart" role="img" aria-label="Dispersión por analista"></canvas>
@@ -1610,6 +1611,8 @@ function renderScatterChart(){
       return `<span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;border:2.5px solid ${c};background:white;display:inline-block"></span>${l}</span>`;
     }).join('');
   }
+  const paramLabelEl=document.getElementById('scatter-param-label');
+  if(paramLabelEl) paramLabelEl.textContent = (param?param.nombre:pid) + (param&&param.unit?' ('+param.unit+')':'') + ' — Muestra: ' + m.toUpperCase();
 
   // Todo debe caber en una sola vista: calculamos el radio de burbuja según el espacio disponible
   const innerEl=document.getElementById('scatter-chart-inner');
@@ -1619,9 +1622,18 @@ function renderScatterChart(){
   if(scrollHint) scrollHint.style.display = 'none';
 
   const nPuntos = puntos.length;
-  const anchoDisponible = (scrollWrap ? scrollWrap.clientWidth : 900) - 60; // margen para eje Y
+  const anchoContenedor = scrollWrap ? scrollWrap.clientWidth : 900;
+  const MIN_ANCHO_UTIL = 320; // por debajo de esto, mejor scroll que aplastar todo
+  const necesitaFallbackScroll = (anchoContenedor - 55) / (nPuntos + 1) < 34; // <34px por punto sería ilegible
+  if(necesitaFallbackScroll){
+    const anchoNecesario = Math.max(anchoContenedor, nPuntos*46 + 80);
+    if(innerEl) innerEl.style.width = anchoNecesario + 'px';
+    if(scrollHint && anchoNecesario > anchoContenedor + 2) scrollHint.style.display = 'block';
+  }
+  const anchoEfectivo = necesitaFallbackScroll ? Math.max(anchoContenedor, nPuntos*46 + 80) : anchoContenedor;
+  const anchoDisponible = Math.max(MIN_ANCHO_UTIL, anchoEfectivo) - 50; // margen para eje Y (sin título largo)
   const espacioPorPunto = anchoDisponible / (nPuntos + 1);
-  const radio = Math.max(6, Math.min(15, espacioPorPunto/2 - 3));
+  const radio = Math.max(7, Math.min(15, espacioPorPunto/2 - 3));
   const borde = radio < 9 ? 1.8 : 2.5;
   const fuenteCodigo = radio < 8 ? 6 : radio < 11 ? 7 : 8;
 
@@ -1660,7 +1672,7 @@ function renderScatterChart(){
       },
       scales:{
         x:{ min:0, max:puntos.length+1, ticks:{ stepSize:1, callback:v=>codes[v-1]||'', font:{size:10} }, grid:{color:'rgba(0,0,0,0.05)'} },
-        y:{ min:yMin, max:yMax, ticks:{font:{size:11}}, grid:{color:'rgba(0,0,0,0.05)'}, title:{display:true,text:(param?param.nombre:'')+' · ref='+refV, font:{size:11}, color:'#64748b'} }
+        y:{ min:yMin, max:yMax, ticks:{font:{size:11}}, grid:{color:'rgba(0,0,0,0.05)'} }
       }
     },
     plugins:[
@@ -1678,8 +1690,9 @@ function renderScatterChart(){
           const py=y.getPixelForValue(val);
           ctx.strokeStyle=color; ctx.lineWidth=1.3; ctx.setLineDash([4,4]);
           ctx.beginPath(); ctx.moveTo(left,py); ctx.lineTo(right,py); ctx.stroke(); ctx.setLineDash([]);
-          ctx.fillStyle=color; ctx.font='9px sans-serif';
-          ctx.fillText(label, left+4, py + (labelAbove?-4:11));
+          ctx.fillStyle=color; ctx.font='9px sans-serif'; ctx.textAlign='right';
+          ctx.fillText(label, right-4, py + (labelAbove?-4:11));
+          ctx.textAlign='left';
         };
         // Línea mínimo satisfactorio (ref-2σ) y máximo satisfactorio (ref+2σ)
         dashedLine(refV-sigma*2, '#16a34a', 'Mín ✓ '+fmt(refV-sigma*2), false);
@@ -1687,7 +1700,7 @@ function renderScatterChart(){
         // Línea de referencia (centro)
         ctx.strokeStyle='#7c3aed'; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
         ctx.beginPath(); const ry=y.getPixelForValue(refV); ctx.moveTo(left,ry); ctx.lineTo(right,ry); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle='#7c3aed'; ctx.font='10px sans-serif'; ctx.fillText('Ref '+fmt(refV), left+4, ry-4);
+        ctx.fillStyle='#7c3aed'; ctx.font='10px sans-serif'; ctx.textAlign='right'; ctx.fillText('Ref '+fmt(refV), right-4, ry-4); ctx.textAlign='left';
       } },
       { id:'codes', afterDatasetsDraw(chart){
         const {ctx}=chart;
