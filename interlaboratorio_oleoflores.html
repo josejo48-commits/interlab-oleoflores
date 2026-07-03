@@ -447,7 +447,11 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
             <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:2px;background:#7c3aed;display:inline-block"></span>Referencia</span>
           </div>
           <div id="scatter-lab-legend" style="padding:6px 18px 0;display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#64748b"></div>
-          <div style="position:relative;height:440px;padding:8px 18px 18px"><canvas id="scatter-chart" role="img" aria-label="Dispersión por analista"></canvas></div>
+          <div style="overflow-x:auto;padding:8px 18px 18px">
+            <div id="scatter-chart-inner" style="position:relative;height:400px;min-width:700px">
+              <canvas id="scatter-chart" role="img" aria-label="Dispersión por analista"></canvas>
+            </div>
+          </div>
           <div style="padding:0 18px 14px;font-size:11px;color:#94a3b8">Cada burbuja es el promedio de un analista (código anónimo dentro de la burbuja) · relleno = clasificación Z-score · borde de color = laboratorio</div>
         </div>
 
@@ -1579,7 +1583,7 @@ function renderScatterChart(){
 
   const ctx=canvasEl.getContext('2d');
   if(scatterChart) scatterChart.destroy();
-  if(!filtered.length || refV==null || !sigma){ ctx.clearRect(0,0,800,440); return; }
+  if(!filtered.length || refV==null || !sigma){ ctx.clearRect(0,0,800,400); return; }
 
   // Un punto (burbuja) por analista = su promedio, código ciego, orden por lab+código
   const puntos=filtered.map(r=>{
@@ -1587,11 +1591,12 @@ function renderScatterChart(){
     const u=USERS.find(x=>x.codigo===labCodigo);
     const labColor=u?u.color:'#64748b';
     const acode=getAnalistaCode(labCodigo, r.analista||r.nombre||r.user);
+    const shortLabel=acode.split('-').pop(); // ej: 'A01' en vez de 'LAB-01-A01'
     const nombreReal=r.analista||r.nombre||r.user||'';
     const z=calcZ(r.promedio, refV, pid, m);
     const az=Math.abs(z);
     const fillColor = az<=2 ? '#22c55e' : az<=3 ? '#f59e0b' : '#ef4444';
-    return { acode, labCodigo, labColor, nombreReal, valor:r.promedio, z, fillColor };
+    return { acode, shortLabel, labCodigo, labColor, nombreReal, valor:r.promedio, z, fillColor };
   }).sort((a,b)=> a.acode<b.acode?-1:a.acode>b.acode?1:0);
 
   // Leyenda de laboratorios (color de borde)
@@ -1605,15 +1610,23 @@ function renderScatterChart(){
     }).join('');
   }
 
+  // Ancho dinámico para que las burbujas no se amontonen (scroll horizontal si hay muchos analistas)
+  const innerEl=document.getElementById('scatter-chart-inner');
+  if(innerEl) innerEl.style.width = Math.max(700, puntos.length*72) + 'px';
+
   const codes = puntos.map(p=>p.acode);
-  const pad = sigma*4.5;
-  const yMin = refV-pad, yMax = refV+pad;
+  const valores = puntos.map(p=>p.valor);
+  // Rango Y: cubre bandas ±3σ Y también todos los valores reales (para que ninguna burbuja quede cortada)
+  const padBanda = sigma*3.5;
+  const margenBurbuja = sigma*1.2;
+  const yMin = Math.min(refV-padBanda, Math.min(...valores)-margenBurbuja);
+  const yMax = Math.max(refV+padBanda, Math.max(...valores)+margenBurbuja);
 
   const datasets = puntos.map((p,i)=>({
-    label:p.acode, lab:p.labCodigo, nom:p.nombreReal,
+    label:p.acode, shortLabel:p.shortLabel, lab:p.labCodigo, nom:p.nombreReal,
     data:[{x:i+1, y:p.valor}],
-    backgroundColor:p.fillColor, borderColor:p.labColor, borderWidth:3.5,
-    pointRadius:21, pointHoverRadius:24
+    backgroundColor:p.fillColor, borderColor:p.labColor, borderWidth:3,
+    pointRadius:15, pointHoverRadius:18
   }));
 
   scatterChart=new Chart(ctx,{
@@ -1625,7 +1638,7 @@ function renderScatterChart(){
       plugins:{
         legend:{display:false},
         tooltip:{ callbacks:{
-          title:c=>`${c[0].dataset.nom} · ${c[0].dataset.lab}`,
+          title:c=>`${c[0].dataset.nom} · ${c[0].dataset.lab} (${c[0].dataset.label})`,
           label:c=>{
             const z=((c.parsed.y-refV)/sigma).toFixed(2);
             const cal=Math.abs(z)<=2?'✅ Satisfactorio':Math.abs(z)<=3?'⚠️ Cuestionable':'❌ No satisfactorio';
@@ -1657,8 +1670,8 @@ function renderScatterChart(){
           const meta=chart.getDatasetMeta(i);
           if(!meta.data[0]) return;
           const pt=meta.data[0];
-          ctx.fillStyle='white'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-          ctx.fillText(d.label, pt.x, pt.y);
+          ctx.fillStyle='white'; ctx.font='bold 8px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText(d.shortLabel, pt.x, pt.y);
         });
       } }
     ]
