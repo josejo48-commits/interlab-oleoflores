@@ -490,6 +490,25 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
           </div>
           <div id="anova-wrap"><p style="color:#94a3b8;font-size:13px">Sin datos suficientes para ANOVA (se necesitan al menos 2 laboratorios).</p></div>
         </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-title">🔵 Gráfica de dispersión — Resultados por analista</div>
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
+            <div class="fg" style="flex:1;min-width:140px;margin:0"><label class="fl">Muestra</label>
+              <select id="disp-muestra" onchange="populateDispParams();renderDispersion()">
+                <option value="rbd">RBD</option><option value="cpo">CPO</option>
+              </select></div>
+            <div class="fg" style="flex:2;min-width:180px;margin:0"><label class="fl">Parámetro</label>
+              <select id="disp-param" onchange="renderDispersion()"></select></div>
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11px">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:rgba(34,197,94,0.3);display:inline-block;border:1px solid #22c55e"></span>Satisfactorio (±2σ)</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:rgba(245,158,11,0.3);display:inline-block;border:1px solid #f59e0b"></span>Cuestionable (±3σ)</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:rgba(239,68,68,0.2);display:inline-block;border:1px solid #ef4444"></span>No satisfactorio</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:2px;height:12px;background:#7c3aed;display:inline-block"></span>Referencia</span>
+          </div>
+          <div style="position:relative;height:320px"><canvas id="disp-chart" role="img" aria-label="Grafica de dispersion de resultados interlaboratorio">Dispersion de resultados.</canvas></div>
+        </div>
         <div class="card">
           <div class="card-title">📋 Tabla resumen Z-scores</div>
           <div class="table-wrap"><table>
@@ -1039,7 +1058,7 @@ function gotoSection(name,el){
   if(el) el.classList.add('active');
   if(name==='dashboard') refreshDashboard();
   if(name==='resultados') renderAllResults();
-  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); }
+  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); populateDispParams(); renderDispersion(); }
   if(name==='participantes') renderParticipants();
   if(name==='misresultados') renderMisResultados();
 }
@@ -1512,6 +1531,140 @@ function populateStatParams(){
   // Restore previous selection if still valid
   if(params.find(p=>p.id===current)) sel.value = current;
 }
+
+function populateDispParams(){
+  var m = document.getElementById('disp-muestra').value;
+  var sel = document.getElementById('disp-param');
+  if(!sel) return;
+  var params = m==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  sel.innerHTML = '';
+  params.forEach(function(p,i){
+    var o = document.createElement('option');
+    o.value = i; o.textContent = p.nombre; sel.appendChild(o);
+  });
+}
+
+var _dispChart = null;
+function renderDispersion(){
+  var m = document.getElementById('disp-muestra') ? document.getElementById('disp-muestra').value : 'rbd';
+  var pi = parseInt(document.getElementById('disp-param') ? document.getElementById('disp-param').value : 0)||0;
+  var params = m==='rbd' ? PARAMS_RBD : PARAMS_CPO;
+  var p = params[pi];
+  if(!p) return;
+  var ref = (REF[m]||{})[p.id];
+  if(ref==null) return;
+  var sigma = getSigma(p.id, ref, m);
+  var pad = sigma * 4;
+  var yMin = ref - pad, yMax = ref + pad;
+
+  // Get all results grouped by analista code
+  var byCode = {};
+  RESULTADOS.filter(function(r){ return r.muestra===m || r.codigoMuestra===m; }).forEach(function(r){
+    var dato = (r.datos||[]).find(function(d){ return d.paramId===p.id; });
+    if(!dato) return;
+    var code = r.codigo || r.user || 'LAB';
+    var analista = r.analista || r.nombre || r.user || code;
+    if(!byCode[code]) byCode[code] = {code:code, analista:analista, vals:[]};
+    byCode[code].vals.push(dato.promedio);
+  });
+
+  var codes = Object.keys(byCode).sort();
+  var colors = ['#2a78d6','#1baf7a','#eda100','#008300','#4a3aa7','#e34948','#e87ba4','#eb6834','#7c3aed'];
+
+  var datasets = codes.map(function(code, i){
+    var entry = byCode[code];
+    var avg = entry.vals.reduce(function(a,b){return a+b;},0)/entry.vals.length;
+    var z = (avg-ref)/sigma;
+    var bc = Math.abs(z)>3 ? '#ef4444' : Math.abs(z)>2 ? '#f59e0b' : '#22c55e';
+    return {
+      label: code,
+      analista: entry.analista,
+      data: [{x: i+1, y: avg}],
+      backgroundColor: bc,
+      borderColor: bc,
+      pointRadius: 14,
+      pointHoverRadius: 16,
+      zval: z.toFixed(2)
+    };
+  });
+
+  var canvas = document.getElementById('disp-chart');
+  if(!canvas) return;
+  if(_dispChart) _dispChart.destroy();
+
+  _dispChart = new Chart(canvas, {
+    type: 'scatter',
+    data: {datasets: datasets},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {display: false},
+        tooltip: {
+          callbacks: {
+            title: function(ctx){ return ctx[0].dataset.analista+' ('+ctx[0].dataset.label+')'; },
+            label: function(ctx){
+              var z = ((ctx.parsed.y-ref)/sigma).toFixed(2);
+              var cal = Math.abs(z)<=2?'✅ Satisfactorio':Math.abs(z)<=3?'⚠️ Cuestionable':'❌ No satisfactorio';
+              return ['Promedio: '+ctx.parsed.y.toFixed(4), 'Z-score: '+z, cal];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          min: 0, max: codes.length+1,
+          ticks: {stepSize:1, callback: function(v){ return codes[v-1]||''; }, font:{size:11}},
+          grid: {color:'rgba(0,0,0,0.06)'}
+        },
+        y: {
+          min: yMin, max: yMax,
+          ticks: {font:{size:11}},
+          grid: {color:'rgba(0,0,0,0.06)'},
+          title: {display:true, text: p.nombre+' (ref: '+ref+')', font:{size:11}}
+        }
+      }
+    },
+    plugins: [{
+      id:'dispBands',
+      beforeDraw: function(ch){
+        var ctx=ch.ctx, ca=ch.chartArea, ys=ch.scales.y;
+        var draw=function(y1,y2,color){
+          var py1=ys.getPixelForValue(Math.min(y1,yMax));
+          var py2=ys.getPixelForValue(Math.max(y2,yMin));
+          ctx.fillStyle=color;
+          ctx.fillRect(ca.left,py1,ca.right-ca.left,py2-py1);
+        };
+        draw(ref-sigma*2,ref+sigma*2,'rgba(34,197,94,0.12)');
+        draw(ref+sigma*2,Math.min(ref+sigma*3,yMax),'rgba(245,158,11,0.12)');
+        draw(Math.max(ref-sigma*3,yMin),ref-sigma*2,'rgba(245,158,11,0.12)');
+        draw(ref+sigma*3,yMax,'rgba(239,68,68,0.1)');
+        draw(yMin,ref-sigma*3,'rgba(239,68,68,0.1)');
+        ctx.strokeStyle='#7c3aed'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
+        ctx.beginPath();
+        var ry=ys.getPixelForValue(ref);
+        ctx.moveTo(ca.left,ry); ctx.lineTo(ca.right,ry); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='#7c3aed'; ctx.font='11px sans-serif';
+        ctx.fillText('Ref: '+ref, ca.left+4, ry-5);
+      }
+    },{
+      id:'dispCodes',
+      afterDatasetsDraw: function(ch){
+        var ctx=ch.ctx;
+        ch.data.datasets.forEach(function(ds,i){
+          var meta=ch.getDatasetMeta(i);
+          if(!meta.data[0]) return;
+          var pt=meta.data[0];
+          ctx.fillStyle='white'; ctx.font='bold 9px sans-serif';
+          ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText(ds.label, pt.x, pt.y);
+        });
+      }
+    }]
+  });
+}
+
 function refreshStatChart(){
   const m=document.getElementById('stat-muestra').value;
   const pid=document.getElementById('stat-param').value;
@@ -2472,7 +2625,7 @@ function gotoSection(name,el){
   if(el) el.classList.add('active');
   if(name==='dashboard') refreshDashboard();
   if(name==='resultados') renderAllResults();
-  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); }
+  if(name==='estadisticas'){ populateAnalistaFilter(); populateStatParams(); refreshStatChart(); renderZScores(); renderPasoAPaso(); renderTablaRPI(); populateDispParams(); renderDispersion(); }
   if(name==="participantes"){ if(typeof window._cargarFotos==="function"){ window._cargarFotos().then(function(fotosDB){ Object.keys(fotosDB).forEach(function(k){ FOTOS[k]=fotosDB[k]; }); renderParticipants(); }); } else { renderParticipants(); } }
   if(name==='misresultados') renderMisResultados();
   if(name==='auditor') renderAuditor();
