@@ -1290,15 +1290,17 @@ function cargarRefGuardada(){
 // Z-SCORE
 // =========================================================
 const SIGMA_OVERRIDE = {
-  sfc_20:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
-  sfc_30:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
-  sfc_35:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
-  sfc_40:      { sigma:1.179,  r:1.3,   R:3.3,  norma:'AOCS Cd 16b-93' },
-  humedad_hal:     { sigma:0.015,  r:0.03,  R:0.03, norma:'AOCS Ca 2f-93 · σ aptitud para uso ISO 13528 §9.3 (rango 0.00%-0.05%)' },
-  humedad_hal_cpo: { sigma:0.025,  r:0.05,  R:0.05, norma:'AOCS Ca 2f-93 · σ aptitud para uso ISO 13528 §9.3 (rango 0.15%-0.25%)' },
-  color_a:     { sigma:0.5,    r:0.5,   R:1.0,  norma:'AOCS Cc 13e-92' },
-  acidez_rbd:  { sigma:0.0027, r:0.005, R:0.01, norma:'AOCS Ca 5a-40 · Horwitz (ISO 13528) · FFA 0.05%' },
-  acidez_cpo:  { sigma:0.058,  r:0.10,  R:0.20, norma:'AOCS Ca 5a-40 · Horwitz (ISO 13528) · FFA 2.41%' },
+  sfc_20:          { sigma:0.59711, r:1.3,   R:3.3,  norma:'Horwitz ISO 13528 · ref=24.1%' },
+  sfc_30:          { sigma:0.25862, r:1.3,   R:3.3,  norma:'Horwitz ISO 13528 · ref=9.0%' },
+  sfc_35:          { sigma:0.16016, r:1.3,   R:3.3,  norma:'Horwitz ISO 13528 · ref=5.12%' },
+  sfc_40:          { sigma:0.07965, r:1.3,   R:3.3,  norma:'Horwitz ISO 13528 · ref=2.25%' },
+  humedad_hal:     { sigma:0.010,  r:0.03,  R:0.03, norma:'Fijo ±0.010% (RBD) · no Horwitz' },
+  humedad_hal_cpo: { sigma:0.01019, r:0.05,  R:0.05, norma:'Horwitz ISO 13528 · ref=0.20%' },
+  color_a:         { sigma:0.5,    r:0.5,   R:1.0,  norma:'AOCS Cc 13e-92 · aptitud para uso (ref=0)' },
+  acidez_rbd:      { sigma:0.00314, r:0.005, R:0.01, norma:'Horwitz ISO 13528 · ref=0.05%' },
+  acidez_cpo:      { sigma:0.08444, r:0.10,  R:0.20, norma:'Horwitz ISO 13528 · ref=2.41%' },
+  indice_yodo_cpo: { sigma:1.08,   norma:'Fijo ±1.08 g I2/100g (CPO) · no Horwitz' },
+  indice_yodo_rbd: { sigma:1.08,   norma:'Fijo ±1.08 g I2/100g (RBD) · no Horwitz' },
 };
 // Parámetros excluidos del interlaboratorio (solo monitoreo interno)
 const EXCLUIR_INTERLAB = ['humedad']; // humedad horno — solo monitoreo interno, sin Z-score
@@ -1311,6 +1313,10 @@ function getSigma(paramId, ref, muestra){
   if(paramId==='acidez'){
     var key = 'acidez_'+(muestra||'cpo');
     if(SIGMA_OVERRIDE[key]) return SIGMA_OVERRIDE[key].sigma;
+  }
+  if(paramId==='indice_yodo'){
+    var ykey = 'indice_yodo_'+((muestra||'cpo').toLowerCase());
+    if(SIGMA_OVERRIDE[ykey]) return SIGMA_OVERRIDE[ykey].sigma;
   }
   // Horwitz: convertir referencia a fracción másica
   var absRef = Math.abs(ref);
