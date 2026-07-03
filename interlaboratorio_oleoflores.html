@@ -447,7 +447,8 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
             <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:2px;background:#7c3aed;display:inline-block"></span>Referencia</span>
           </div>
           <div id="scatter-lab-legend" style="padding:6px 18px 0;display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#64748b"></div>
-          <div style="overflow-x:auto;padding:8px 18px 18px">
+          <div id="scatter-scroll-hint" style="display:none;padding:6px 18px 0;font-size:11px;color:#7c3aed;font-weight:600">⇔ Desliza horizontalmente dentro del gráfico para ver a todos los laboratorios/analistas</div>
+          <div id="scatter-scroll-wrap" style="overflow-x:auto;padding:8px 18px 18px">
             <div id="scatter-chart-inner" style="position:relative;height:400px;min-width:700px">
               <canvas id="scatter-chart" role="img" aria-label="Dispersión por analista"></canvas>
             </div>
@@ -1610,9 +1611,19 @@ function renderScatterChart(){
     }).join('');
   }
 
-  // Ancho dinámico para que las burbujas no se amontonen (scroll horizontal si hay muchos analistas)
+  // Todo debe caber en una sola vista: calculamos el radio de burbuja según el espacio disponible
   const innerEl=document.getElementById('scatter-chart-inner');
-  if(innerEl) innerEl.style.width = Math.max(700, puntos.length*90) + 'px';
+  const scrollWrap=document.getElementById('scatter-scroll-wrap');
+  const scrollHint=document.getElementById('scatter-scroll-hint');
+  if(innerEl) innerEl.style.width = '100%';
+  if(scrollHint) scrollHint.style.display = 'none';
+
+  const nPuntos = puntos.length;
+  const anchoDisponible = (scrollWrap ? scrollWrap.clientWidth : 900) - 60; // margen para eje Y
+  const espacioPorPunto = anchoDisponible / (nPuntos + 1);
+  const radio = Math.max(6, Math.min(15, espacioPorPunto/2 - 3));
+  const borde = radio < 9 ? 1.8 : 2.5;
+  const fuenteCodigo = radio < 8 ? 6 : radio < 11 ? 7 : 8;
 
   const codes = puntos.map(p=>p.acode);
   const valores = puntos.map(p=>p.valor);
@@ -1626,8 +1637,8 @@ function renderScatterChart(){
   const datasets = puntos.map((p,i)=>({
     label:p.acode, shortLabel:p.shortLabel, lab:p.labCodigo, nom:p.nombreReal,
     data:[{x:i+1, y:p.valor}],
-    backgroundColor:p.fillColor, borderColor:p.labColor, borderWidth:2.5,
-    pointRadius:11, pointHoverRadius:14
+    backgroundColor:p.fillColor, borderColor:p.labColor, borderWidth:borde,
+    pointRadius:radio, pointHoverRadius:radio+3
   }));
 
   scatterChart=new Chart(ctx,{
@@ -1684,7 +1695,7 @@ function renderScatterChart(){
           const meta=chart.getDatasetMeta(i);
           if(!meta.data[0]) return;
           const pt=meta.data[0];
-          ctx.fillStyle='white'; ctx.font='bold 7px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillStyle='white'; ctx.font='bold '+fuenteCodigo+'px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
           ctx.fillText(d.shortLabel, pt.x, pt.y);
         });
       } }
