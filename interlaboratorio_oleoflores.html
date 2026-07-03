@@ -446,9 +446,11 @@ label.fl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;t
             <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#ef4444;display:inline-block"></span>No satisfactorio (&gt;3σ)</span>
             <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:2px;background:#7c3aed;display:inline-block"></span>Referencia</span>
           </div>
-          <div style="position:relative;height:320px;padding:8px 18px 18px"><canvas id="scatter-chart" role="img" aria-label="Dispersión por analista"></canvas></div>
-          <div style="padding:0 18px 14px;font-size:11px;color:#94a3b8">Cada burbuja es el promedio de un analista (código anónimo dentro de la burbuja) · color según clasificación Z-score</div>
+          <div id="scatter-lab-legend" style="padding:6px 18px 0;display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#64748b"></div>
+          <div style="position:relative;height:440px;padding:8px 18px 18px"><canvas id="scatter-chart" role="img" aria-label="Dispersión por analista"></canvas></div>
+          <div style="padding:0 18px 14px;font-size:11px;color:#94a3b8">Cada burbuja es el promedio de un analista (código anónimo dentro de la burbuja) · relleno = clasificación Z-score · borde de color = laboratorio</div>
         </div>
+
 
 
         <!-- PASO A PASO -->
@@ -1577,18 +1579,31 @@ function renderScatterChart(){
 
   const ctx=canvasEl.getContext('2d');
   if(scatterChart) scatterChart.destroy();
-  if(!filtered.length || refV==null || !sigma){ ctx.clearRect(0,0,800,320); return; }
+  if(!filtered.length || refV==null || !sigma){ ctx.clearRect(0,0,800,440); return; }
 
   // Un punto (burbuja) por analista = su promedio, código ciego, orden por lab+código
   const puntos=filtered.map(r=>{
     const labCodigo=r.codigo||r.user;
+    const u=USERS.find(x=>x.codigo===labCodigo);
+    const labColor=u?u.color:'#64748b';
     const acode=getAnalistaCode(labCodigo, r.analista||r.nombre||r.user);
     const nombreReal=r.analista||r.nombre||r.user||'';
     const z=calcZ(r.promedio, refV, pid, m);
     const az=Math.abs(z);
-    const color = az<=2 ? '#22c55e' : az<=3 ? '#f59e0b' : '#ef4444';
-    return { acode, labCodigo, nombreReal, valor:r.promedio, z, color };
+    const fillColor = az<=2 ? '#22c55e' : az<=3 ? '#f59e0b' : '#ef4444';
+    return { acode, labCodigo, labColor, nombreReal, valor:r.promedio, z, fillColor };
   }).sort((a,b)=> a.acode<b.acode?-1:a.acode>b.acode?1:0);
+
+  // Leyenda de laboratorios (color de borde)
+  const legendEl=document.getElementById('scatter-lab-legend');
+  if(legendEl){
+    const labsUsed=Array.from(new Set(puntos.map(p=>p.labCodigo)));
+    legendEl.innerHTML = labsUsed.map(l=>{
+      const u=USERS.find(x=>x.codigo===l);
+      const c=u?u.color:'#64748b';
+      return `<span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;border:2.5px solid ${c};background:white;display:inline-block"></span>${l}</span>`;
+    }).join('');
+  }
 
   const codes = puntos.map(p=>p.acode);
   const pad = sigma*4.5;
@@ -1597,8 +1612,8 @@ function renderScatterChart(){
   const datasets = puntos.map((p,i)=>({
     label:p.acode, lab:p.labCodigo, nom:p.nombreReal,
     data:[{x:i+1, y:p.valor}],
-    backgroundColor:p.color, borderColor:p.color,
-    pointRadius:15, pointHoverRadius:17
+    backgroundColor:p.fillColor, borderColor:p.labColor, borderWidth:3.5,
+    pointRadius:21, pointHoverRadius:24
   }));
 
   scatterChart=new Chart(ctx,{
@@ -1606,7 +1621,7 @@ function renderScatterChart(){
     data:{ datasets },
     options:{
       responsive:true, maintainAspectRatio:false,
-      layout:{ padding:{ left:8, right:8, top:16, bottom:8 } },
+      layout:{ padding:{ left:8, right:8, top:20, bottom:8 } },
       plugins:{
         legend:{display:false},
         tooltip:{ callbacks:{
@@ -1642,7 +1657,7 @@ function renderScatterChart(){
           const meta=chart.getDatasetMeta(i);
           if(!meta.data[0]) return;
           const pt=meta.data[0];
-          ctx.fillStyle='white'; ctx.font='bold 8px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillStyle='white'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
           ctx.fillText(d.label, pt.x, pt.y);
         });
       } }
