@@ -1323,7 +1323,7 @@ const SIGMA_OVERRIDE = {
   sfc_35:          { sigma:0.16016, r:1.3,   R:3.3,  norma:'Horwitz ISO 13528 · ref=5.12%' },
   sfc_40:          { sigma:0.07965, r:1.3,   R:3.3,  norma:'Horwitz ISO 13528 · ref=2.25%' },
   humedad_hal:     { sigma:0.010,  r:0.03,  R:0.03, norma:'Fijo ±0.010% (RBD) · no Horwitz' },
-  humedad_hal_cpo: { sigma:0.01019, r:0.05,  R:0.05, norma:'Horwitz ISO 13528 · ref=0.20%' },
+  humedad_hal_cpo: { sigma:0.020,  r:0.05,  R:0.05, norma:'Fijo ±0.04% (CPO, rango 0.16–0.24) · no Horwitz' },
   color_a:         { sigma:0.5,    r:0.5,   R:1.0,  norma:'AOCS Cc 13e-92 · aptitud para uso (ref=0)' },
   acidez_rbd:      { sigma:0.00314, r:0.005, R:0.01, norma:'Horwitz ISO 13528 · ref=0.05%' },
   acidez_cpo:      { sigma:0.08444, r:0.10,  R:0.20, norma:'Horwitz ISO 13528 · ref=2.41%' },
@@ -2010,9 +2010,7 @@ function verCarta(nombreEnc, labCodigo){
   }).join('');
 
   const total = totalSat+totalCues+totalNoSat;
-  const pct = total>0?Math.round(((totalSat + totalCues*0.5)/total)*100):0;
-  const globalColor = pct>=80?'#16a34a':pct>=60?'#d97706':'#dc2626';
-  const globalLabel = pct>=80?'Desempeño Satisfactorio':pct>=60?'Desempeño Cuestionable':'Desempeño No Satisfactorio';
+  const codigoAnalista = getAnalistaCode(labCodigo, nombre);
   const avatarEl = foto
     ? `<img src="${foto}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid ${info.color};flex-shrink:0">`
     : `<div style="width:150px;height:150px;border-radius:50%;background:${info.color};display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:800;color:#fff;flex-shrink:0">${nombre.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>`;
@@ -2039,14 +2037,10 @@ function verCarta(nombreEnc, labCodigo){
         <div style="font-size:13px;color:#64748b;margin-top:3px">🏭 ${info.titulo}</div>
         <div style="font-size:12px;color:#94a3b8;margin-top:2px">Código: <strong>${labCodigo}</strong> · Analista de Laboratorio</div>
       </div>
-      <div style="text-align:center;padding:12px 20px;background:${globalColor}15;border-radius:12px;border:2px solid ${globalColor}40">
-        <div style="font-size:28px;font-weight:900;color:${globalColor}">${pct}%</div>
-        <div style="font-size:10px;font-weight:700;color:${globalColor};text-transform:uppercase;margin-bottom:6px">${globalLabel}</div>
-        <div style="display:flex;gap:6px;justify-content:center">
-          <span style="font-size:10px;background:#f0fdf4;color:#16a34a;border-radius:10px;padding:2px 8px;font-weight:700">✅ ${totalSat}</span>
-          <span style="font-size:10px;background:#fffbeb;color:#d97706;border-radius:10px;padding:2px 8px;font-weight:700">⚠️ ${totalCues}</span>
-          <span style="font-size:10px;background:#fef2f2;color:#dc2626;border-radius:10px;padding:2px 8px;font-weight:700">❌ ${totalNoSat}</span>
-        </div>
+      <div style="text-align:center;padding:12px 20px;background:${info.color}15;border-radius:12px;border:2px solid ${info.color}40">
+        <div style="font-size:10px;font-weight:700;color:${info.color};text-transform:uppercase;margin-bottom:6px">Código Analista</div>
+        <div style="font-size:24px;font-weight:900;color:${info.color};letter-spacing:0.5px">${codigoAnalista}</div>
+        <div style="font-size:9px;color:#94a3b8;margin-top:4px">Usar este código para reportar al laboratorio</div>
       </div>
     </div>
     ${muestrasHTML}
